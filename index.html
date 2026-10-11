@@ -244,6 +244,7 @@ input.hx{width:72px;font-family:inherit}
       <div class="grp">
         <button class="btn" id="bSaveMid" title="Export as a standard MIDI file (Ctrl+S)">Save MIDI</button>
         <button class="btn" id="bSaveProj" title="Save the full project as .json">Save project</button>
+        <button class="btn" id="bKeys" title="Open this song in the Keys piano practice app (new tab)">Open in Keys</button>
       </div>
       <div class="grp transport">
         <button class="btn big ico" id="bHome" title="Back to start (Home)" aria-label="Back to start" data-icon="home"></button>
@@ -1632,6 +1633,15 @@ async function saveMidi(){
   if(hosted){if(await saveBytes(base+'.zip',makeZip(base+'.mid',bytes),'application/zip'))toast('Saved '+base+'.zip – unzip it to get '+base+'.mid');}
   else if(await saveBytes(base+'.mid',bytes,'audio/midi'))toast('Saved '+base+'.mid');
 }
+function openInKeys(bytes,title){
+  let bin='';for(let i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+  const data=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return window.open('https://mike-dta.github.io/piano-keys-web-version/#midi='+data+'&title='+encodeURIComponent(title),'keys');
+}
+function sendToKeys(){
+  if(!lastEnd())return toast('Add some notes first');
+  if(!openInKeys(writeMidi(song),song.name||'Untitled'))toast('The Keys tab was blocked. Allow pop-ups for this page.');
+}
 async function saveProject(){const base=(song.name||'project').replace(/[^\w\- ]+/g,'').trim()||'project';if(await saveBytes(base+'.keyroll.json',projectJSON(),'application/json'))toast('Project saved');}
 function autosave(){if(!S.set.autosave)return;try{localStorage.setItem('keyroll.autosave',projectJSON());}catch(e){}}
 function newProject(){
@@ -1640,7 +1650,7 @@ function newProject(){
 $('bNew').onclick=newProject;
 $('bOpen').onclick=()=>$('file').click();
 $('file').onchange=e=>{const f=e.target.files[0];if(f)openFile(f);e.target.value='';};
-$('bSaveMid').onclick=saveMidi;$('bSaveProj').onclick=saveProject;
+$('bSaveMid').onclick=saveMidi;$('bSaveProj').onclick=saveProject;$('bKeys').onclick=sendToKeys;
 let dragDepth=0;
 window.addEventListener('dragenter',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){dragDepth++;document.body.classList.add('dragging');}});
 window.addEventListener('dragleave',()=>{dragDepth=Math.max(0,dragDepth-1);if(!dragDepth)document.body.classList.remove('dragging');});
