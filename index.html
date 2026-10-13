@@ -80,9 +80,10 @@ body.side-closed #side,body.side-closed #splitV{display:none}
   .trow.ic{flex-wrap:wrap;gap:3px}.trow.ic>span{flex:0 0 100%!important;height:0;margin-top:-3px}
   .trow.ic .mini{flex:1 1 0;min-width:0;height:18px;padding:0 2px}
   .sl label{gap:4px;font-size:11px}#side .sl input[type=range]{flex-basis:112px}.layerbar{padding:6px 4px 5px}.sidefoot{padding:6px 4px}
-  .sl label>input.num,.layerbar input.num{padding:2px;-moz-appearance:textfield;appearance:textfield}.sl input.num::-webkit-inner-spin-button,.layerbar input.num::-webkit-inner-spin-button{display:none}
+  /* number boxes stay just wide enough for three digits or a minus sign next to the up/down arrows */
+  #side .sl label>input.num,#side .layerbar input.num{padding:2px 15px 2px 2px;box-sizing:border-box;min-width:42px}
   .lbrow{gap:4px}.lbrow .mini{white-space:nowrap;padding:1px 4px}.lbt{font-size:12px;min-width:0;overflow:hidden}
-  .layerbar label.lbrow span{width:auto;flex:0 1000 78px;min-width:46px;overflow:hidden}.layerbar label.lbrow input.num{flex:0 1000 50px;min-width:40px}
+  .layerbar label.lbrow span{width:auto;flex:0 1000 78px;min-width:46px;overflow:hidden}.layerbar label.lbrow input.num{flex:0 1000 46px}
   .colrow{gap:4px 6px}.colrow .hx{min-width:0;width:68px}
 }
 #tracks{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px;min-height:0}
@@ -4159,7 +4160,7 @@ $('tracks').addEventListener('contextmenu',e=>{
   box.innerHTML='<button type="button" tabindex="-1" aria-hidden="true" data-d="1">'+arrow('M3.5 10.5L8 6l4.5 4.5')+'</button><button type="button" tabindex="-1" aria-hidden="true" data-d="-1">'+arrow('M3.5 5.5L8 10l4.5-4.5')+'</button>';
   document.body.appendChild(box);
   let cur=null,rep=0,mx=0,my=0;
-  // a box with almost no right padding (the slim sidebar) has no room for them and goes without
+  // a box styled without the right padding has no room for them and goes without
   const ok=el=>!!el&&!!el.matches&&el.matches('input[type=number]')&&!el.disabled&&!el.readOnly&&parseFloat(getComputedStyle(el).paddingRight)>=10;
   const hide=()=>{clearTimeout(rep);rep=0;box.classList.remove('show');cur=null;};
   const place=el=>{
