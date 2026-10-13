@@ -153,6 +153,20 @@ body.dragging #drop{display:flex}
   .bar .grp,.opts>*{flex:none;flex-wrap:nowrap}.grp.right{margin-left:0}
 }
 input.num{width:50px;padding:2px 3px;text-align:right;font-variant-numeric:tabular-nums}
+/* Number boxes: the browser's own up/down buttons are hidden. A pair in the site's style shows over the right edge of
+   the box under the mouse (see "Steppers" in the script); the right padding keeps that edge free of digits. */
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{display:none}
+input[type=number],input.num[type=number]{padding-right:15px}#insp label.f input[type=number]{padding-right:14px}
+#stepper{position:fixed;z-index:1001;display:none;flex-direction:column;width:13px;border-left:1px solid var(--line);border-radius:0 5px 5px 0;overflow:hidden}
+#stepper.show{display:flex}
+#stepper button{flex:1;min-height:0;padding:0;border:0;background:var(--panel2);color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#stepper button:hover{background:var(--line);color:var(--text)}
+#stepper button:active{background:var(--accent);color:var(--accent-ink)}
+/* hints (the title="..." texts) in the site's style instead of the browser's own tooltip */
+#tip{position:fixed;z-index:1002;left:0;top:0;max-width:min(300px,90vw);padding:5px 9px;border-radius:7px;background:var(--panel);color:var(--text);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.28);font-size:12px;font-weight:400;line-height:1.35;white-space:normal;text-align:left;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s}
+#tip.show{opacity:1;visibility:visible}
+@media (prefers-reduced-motion: reduce){#tip{transition:none}}
 input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
 .btn.ico{display:inline-flex;align-items:center;justify-content:center;min-width:38px}
 .btn.ico svg{display:block}
@@ -4110,6 +4124,77 @@ $('tracks').addEventListener('contextmenu',e=>{
 
 
 /* ================= Boot ================= */
+/* ================= Hints: the title="..." texts, shown in the site's own style ================= */
+(function(){
+  const tip=document.createElement('div');tip.id='tip';tip.setAttribute('role','tooltip');document.body.appendChild(tip);
+  let cur=null,timer=0,mx=0,my=0;
+  // the title is taken off while the mouse is over the element (that is what keeps the browser's own tooltip away) and put back after
+  const hide=()=>{clearTimeout(timer);tip.classList.remove('show');if(cur){if(!cur.hasAttribute('title'))cur.setAttribute('title',cur.dataset.tip);delete cur.dataset.tip;cur=null;}};
+  const show=()=>{
+    if(!cur||!cur.isConnected){hide();return;}
+    const host=cur.closest('dialog[open]')||document.body;if(tip.parentNode!==host)host.appendChild(tip);
+    tip.textContent=cur.dataset.tip;
+    const r=cur.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,small=r.width<=280&&r.height<=70;
+    // small things get the hint centered underneath, large areas (the roll, a whole pane) get it next to the mouse
+    let x=small?r.left+r.width/2-w/2:mx+12,y=small?r.bottom+7:my+18;
+    if(y+h>innerHeight-6)y=(small?r.top:my)-h-8;
+    tip.style.left=clamp(x,6,Math.max(6,innerWidth-w-6))+'px';tip.style.top=Math.max(6,y)+'px';tip.classList.add('show');
+  };
+  document.addEventListener('pointerover',e=>{
+    mx=e.clientX;my=e.clientY;if(e.pointerType!=='mouse')return;
+    const el=e.target.closest?e.target.closest('[title],[data-tip]'):null;
+    if(el===cur)return;hide();
+    if(!el||!el.getAttribute('title'))return;
+    cur=el;el.dataset.tip=el.getAttribute('title');el.removeAttribute('title');timer=setTimeout(show,500);
+  },true);
+  document.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;},true);
+  document.addEventListener('pointerout',e=>{if(cur&&(!e.relatedTarget||!cur.contains(e.relatedTarget)))hide();},true);
+  for(const ev of ['pointerdown','keydown','wheel','scroll','blur'])window.addEventListener(ev,hide,true);
+})();
+
+/* ================= Steppers: up/down buttons for the number box under the mouse ================= */
+(function(){
+  const arrow=d=>'<svg viewBox="0 0 16 16" width="9" height="9" aria-hidden="true"><path d="'+d+'" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const box=document.createElement('div');box.id='stepper';
+  box.innerHTML='<button type="button" tabindex="-1" aria-hidden="true" data-d="1">'+arrow('M3.5 10.5L8 6l4.5 4.5')+'</button><button type="button" tabindex="-1" aria-hidden="true" data-d="-1">'+arrow('M3.5 5.5L8 10l4.5-4.5')+'</button>';
+  document.body.appendChild(box);
+  let cur=null,rep=0,mx=0,my=0;
+  // a box with almost no right padding (the slim sidebar) has no room for them and goes without
+  const ok=el=>!!el&&!!el.matches&&el.matches('input[type=number]')&&!el.disabled&&!el.readOnly&&parseFloat(getComputedStyle(el).paddingRight)>=10;
+  const hide=()=>{clearTimeout(rep);rep=0;box.classList.remove('show');cur=null;};
+  const place=el=>{
+    cur=el;const host=el.closest('dialog[open]')||document.body;if(box.parentNode!==host)host.appendChild(box);
+    const r=el.getBoundingClientRect();box.style.left=(r.right-14)+'px';box.style.top=(r.top+1)+'px';box.style.height=Math.max(8,r.height-2)+'px';box.classList.add('show');
+  };
+  const step=d=>{
+    const el=cur;if(!el||!el.isConnected){hide();return false;}
+    const before=el.value;
+    try{if(d>0)el.stepUp();else el.stepDown();}
+    catch(err){el.value=clamp((+el.value||0)+d*(+el.step||1),el.min===''?-Infinity:+el.min,el.max===''?Infinity:+el.max);}
+    if(el.value===before)return false;
+    el.dispatchEvent(new Event('input',{bubbles:true}));return true;
+  };
+  document.addEventListener('pointerover',e=>{
+    mx=e.clientX;my=e.clientY;if(e.pointerType!=='mouse'||box.contains(e.target))return;
+    if(ok(e.target)){if(e.target!==cur)place(e.target);}else if(cur)hide();
+  },true);
+  box.addEventListener('pointerdown',e=>{
+    const b=e.target.closest('button'),el=cur;if(!b||e.button!==0||!el)return;
+    e.preventDefault();mx=e.clientX;my=e.clientY;
+    const d=+b.dataset.d;step(d);
+    // holding the button keeps stepping; letting go (or sliding off) finishes the change, as typing a value and leaving the box does
+    rep=setTimeout(function again(){if(step(d))rep=setTimeout(again,60);},400);
+    const end=()=>{
+      clearTimeout(rep);rep=0;window.removeEventListener('pointerup',end,true);box.removeEventListener('pointerleave',end);
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+      // the change may have redrawn the box; pick up the new one under the mouse so it can be clicked again
+      if(!el.isConnected){hide();const t=document.elementFromPoint(mx,my);if(ok(t))place(t);}
+    };
+    window.addEventListener('pointerup',end,true);box.addEventListener('pointerleave',end);
+  });
+  for(const ev of ['wheel','scroll','resize'])window.addEventListener(ev,()=>{if(cur)hide();},true);
+})();
+
 /* ================= Reset buttons: one per setting, shown while it differs from its default ================= */
 const RST=[];
 const rstVal=el=>el.type==='checkbox'?el.checked:el.value;
