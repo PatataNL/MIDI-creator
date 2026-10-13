@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -34,12 +34,14 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.35 Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
-#app{display:grid;grid-template-rows:auto minmax(0,1fr);height:100%}
-#top{background:var(--panel);border-bottom:1px solid var(--line)}
+#app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%}
+#top{background:var(--panel);border-bottom:1px solid var(--line);min-width:0}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 10px}
 .bar2{display:grid;grid-template-columns:1fr auto 1fr;border-top:1px solid var(--line);padding-top:5px;padding-bottom:5px}
 .bar2 .transport{justify-content:center}
-.brand{font-weight:700;font-size:15px;letter-spacing:.2px;margin-right:2px}
+/* below this width the three columns no longer fit side by side: the groups wrap onto centered rows instead of squeezing the save buttons into a narrow stack */
+@media (max-width:1240px){.bar2{display:flex;flex-wrap:wrap;justify-content:center}.bar2 .grp:empty{display:none}}
+.brand{font-weight:700;font-size:15px;letter-spacing:.2px;margin-right:2px;white-space:nowrap}
 .grp{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .grp.right{margin-left:auto}
 .btn,.mini{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:4px 9px;cursor:pointer;line-height:1.2}
@@ -71,6 +73,18 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .trow.ic{gap:3px}.trow.ic .mini{min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:1px 5px}
 .trk.hidden{opacity:.7}
 #side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line)}
+#side{container-type:inline-size;container-name:side}
+/* slim sidebar: tighter layer cards, shorter layer buttons with the second group of four on a row of its own */
+@container side (max-width:270px){
+  #tracks{padding:4px 3px}.trk{padding:5px 4px;border-left-width:4px;gap:4px}
+  .trow.ic{flex-wrap:wrap;gap:3px}.trow.ic>span{flex:0 0 100%!important;height:0;margin-top:-3px}
+  .trow.ic .mini{flex:1 1 0;min-width:0;height:18px;padding:0 2px}
+  .sl label{gap:4px;font-size:11px}#side .sl input[type=range]{flex-basis:112px}.layerbar{padding:6px 4px 5px}.sidefoot{padding:6px 4px}
+  .sl label>input.num,.layerbar input.num{padding:2px;-moz-appearance:textfield;appearance:textfield}.sl input.num::-webkit-inner-spin-button,.layerbar input.num::-webkit-inner-spin-button{display:none}
+  .lbrow{gap:4px}.lbrow .mini{white-space:nowrap;padding:1px 4px}.lbt{font-size:12px;min-width:0;overflow:hidden}
+  .layerbar label.lbrow span{width:auto;flex:0 1000 78px;min-width:46px;overflow:hidden}.layerbar label.lbrow input.num{flex:0 1000 50px;min-width:40px}
+  .colrow{gap:4px 6px}.colrow .hx{min-width:0;width:68px}
+}
 #tracks{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px;min-height:0}
 .trk{--lc:#6366f1;border:1px solid var(--line);border-left:5px solid var(--lc);border-radius:7px;padding:6px 7px;background:var(--panel2);display:flex;flex-direction:column;gap:5px;cursor:pointer}
 .trk.on{outline:2px solid var(--accent);outline-offset:-1px;background:var(--roll-bg)}
@@ -79,29 +93,36 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .trow .nm:hover,.trow .nm:focus{border-color:var(--line);background:var(--panel)}
 .ins{width:100%}
 .sl{display:flex;flex-direction:column;gap:2px}
-.sl label{display:grid;grid-template-columns:62px 1fr 50px;align-items:center;gap:6px;color:var(--dim);font-size:12px}
-.sl input[type=range]{width:100%;margin:0;accent-color:var(--accent)}
+/* the label and the number box give way first when the sidebar gets slim; the slider only shrinks as a last resort */
+.sl label{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12px;min-width:0}
+.sl label>span{flex:0 1000 62px;min-width:46px;overflow:hidden}
+.sl label>input.num{flex:0 1000 46px;box-sizing:border-box;min-width:36px}
+.sl input[type=range]{flex:1 1 90px;width:auto;min-width:36px;margin:0;accent-color:var(--accent)}
 .sl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
 .sidefoot{border-top:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:6px}
-.sidefoot .sl label{grid-template-columns:62px 1fr 50px}
 #work{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0}
 .opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 #rollwrap{display:flex;min-height:120px;min-width:0}
-#rollcol{position:relative;flex:1;min-width:0}
+#rollcol{position:relative;flex:1;min-width:0;overflow:hidden}
 #lanepanel{width:var(--laneW,200px);display:flex;background:var(--roll-bg);min-width:0}
 #lanecol{flex:1;min-height:0;position:relative;overflow:hidden}
 #lane{position:absolute;left:0;top:0;display:block;touch-action:none}
 .lanebottom{flex:none;height:calc(var(--keyH,124px) + var(--sb,0px));box-sizing:border-box;padding:5px 6px;background:var(--panel);border-top:1px solid var(--line);overflow:hidden}
-.lanetabs{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;height:100%}
-.lanetabs .btn{min-height:0}
+.lanetabs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:repeat(3,minmax(0,1fr));gap:4px;height:100%}
+.lanetabs .btn,.lanetabs .vstep{min-height:0;min-width:0;overflow:hidden}
 .lanetabs .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:0 6px;font-size:12px;font-weight:600;border-radius:7px;line-height:1}
 .lanetabs .lastrow{display:contents}
-#roll{position:absolute;inset:0;overflow:auto;background:var(--roll-bg)}
+/* the up/down scrollbar is pushed out of view (the progress bar under the roll does that job); the left/right one stays */
+#roll{position:absolute;inset:0 calc(-1*var(--sbw,0px)) 0 0;overflow:auto;background:var(--roll-bg)}
 #stage{position:relative}
 #cv{position:sticky;top:0;left:0;display:block;touch-action:none}
-#insp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 10px;background:var(--panel);border-top:1px solid var(--line)}
+/* one slim row that keeps its height whether or not a note is selected; on a narrow window it scrolls sideways instead of growing */
+#insp{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;padding:4px 10px;min-height:31px;box-sizing:border-box;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;font-size:12px;background:var(--panel);border-top:1px solid var(--line)}
+#insp::-webkit-scrollbar{display:none}
+#insp>*{flex:none}#insp .hint,#insp #iPos{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #insp .hint{color:var(--dim)}
-#insp label.f input{width:58px}
+#insp label.f{gap:3px}#insp label.f input{width:40px;height:21px;padding:0 3px;box-sizing:border-box}#insp label.f input[data-k="s"],#insp label.f input[data-k="d"]{width:56px}
+#insp .mini{height:19px;padding:0 3px;margin-left:-3px}
 #insp .nn{min-width:30px;font-weight:600}
 .lanehead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--panel);border-top:1px solid var(--line)}
 .lanehead .hint{color:var(--dim);margin-left:8px}
@@ -123,6 +144,13 @@ body.dragging #drop{display:flex}
   body.side-open #side{display:flex;position:fixed;z-index:30;left:0;top:0;bottom:0;width:min(92vw,330px);padding-top:env(safe-area-inset-top,0px)}
   body.side-closed #main{grid-template-columns:minmax(0,1fr)}
   .readout{min-width:0}
+  #lanepanel{max-width:40vw}
+}
+/* phones: each toolbar is one row you can swipe sideways, so the piano roll keeps most of the height */
+@media (max-width:600px){
+  .bar,.opts{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start}
+  .bar::-webkit-scrollbar,.opts::-webkit-scrollbar{display:none}
+  .bar .grp,.opts>*{flex:none;flex-wrap:nowrap}.grp.right{margin-left:0}
 }
 input.num{width:50px;padding:2px 3px;text-align:right;font-variant-numeric:tabular-nums}
 input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
@@ -144,10 +172,14 @@ dialog#settings::backdrop,dialog#vidDlg::backdrop,dialog#confirmDlg::backdrop{ba
 .setHead h2{font-size:16px;margin:0}
 .setBody{padding:2px 16px 12px}
 .setBody h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin:16px 0 4px}
-.setRow{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.setRow{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.rst{flex:none;width:20px;height:20px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--dim);border-color:transparent;background:transparent}.rst:hover{color:var(--text);border-color:var(--line);background:var(--panel2)}
+.rst:not(.show){display:none}.setRow>.rst{margin-right:-6px}.setRow>.rst:not(.show){display:inline-flex;visibility:hidden}
 .setRow small{display:block;color:var(--dim);margin-top:1px}
 .setRow .ctl{display:flex;align-items:center;gap:8px}
 .setRow input[type=range]{width:150px;accent-color:var(--accent)}
+/* narrow dialogs: a slider goes on its own line under its description instead of squeezing the text into a thin column */
+@media (max-width:520px){.setRow:has(.ctl){grid-template-columns:minmax(0,1fr) auto;gap:6px 8px}.setRow:has(.ctl)>label{grid-column:1/-1}.setRow .ctl{order:1;min-width:0}.setRow:has(.ctl)>.rst{order:2;margin-right:0}.setRow .ctl input[type=range]{flex:1;width:auto;min-width:0}}
 .setMore{border-bottom:1px solid var(--line)}.setMore summary{cursor:pointer;padding:8px 0 8px 14px;list-style:none;position:relative}.setMore summary::-webkit-details-marker{display:none}.setMore summary::before{content:"";position:absolute;left:1px;top:13px;width:5px;height:5px;border:solid currentColor;border-width:1.5px 1.5px 0 0;transform:rotate(45deg);transition:transform .12s}.setMore[open] summary::before{transform:rotate(135deg);top:12px}.setMore summary small{display:block;color:var(--dim);margin:1px 0 0 1px}.setMore[open] summary{border-bottom:1px solid var(--line)}.setMore .setRow{padding-left:14px}.setMore .setRow:last-child{border-bottom:0}
 .setFoot{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel)}
 dialog#vidDlg{width:min(1120px,96vw)}
@@ -160,7 +192,7 @@ dialog#vidDlg{width:min(1120px,96vw)}
 .vidRight h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px}
 .vidRight h3:first-child{margin-top:0}
 .vrow{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:3px 0}
-.vrow label{display:flex;align-items:center;gap:6px;color:var(--dim)}
+.vrow label{display:flex;align-items:center;gap:6px;color:var(--dim);flex-wrap:wrap;max-width:100%;min-width:0}
 .vsteps{display:flex;flex-direction:column;gap:4px;margin:6px 0}
 .vsteps .btn{text-align:left}.vsteps .btn.done::after{content:' \2713'}
 .vlayer{display:flex;align-items:center;gap:8px;padding:3px 0}.vlayer .sw{width:16px;height:16px;border-radius:4px;flex:none}.vlayer input[type=text]{flex:1;min-width:0}.vlayer small{color:var(--dim)}
@@ -202,6 +234,8 @@ body.stage #bExpand{display:none!important}
 .pane{flex:1;min-height:0;display:flex;flex-direction:column}.pane[hidden]{display:none}
 .vstep{display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;min-height:0;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
 .vstep select{padding:0 2px;height:22px}
+.lanetabs .vstep{padding:0 4px;gap:3px;font-size:11px}.lanetabs .vstep select{flex:1;min-width:30px;font-size:11px}
+.lanebottom{container-type:inline-size}@container (max-width:150px){.lanetabs .vstep{font-size:0;padding:0 2px}}
 .histHead{display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
 #histList{list-style:none;margin:0;padding:4px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:2px}
 #histList button{width:100%;text-align:left;font:inherit;color:var(--text);background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px;cursor:pointer;display:flex;gap:8px}
@@ -468,11 +502,12 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     <div class="setRow"><label for="sHover">Preview under the cursor<small>Show the note you would place, with its name, near the cursor.</small></label><input type="checkbox" id="sHover"></div>
     <h3>Sound</h3>
     <div class="setRow"><label for="sFancy">Fancy playback<small>Realistic piano, electric piano, guitars, basses, harp, mallet instruments and drums. The first time, they are calculated on your device, which takes a few seconds. Other instruments keep the standard sound.</small></label><input type="checkbox" id="sFancy"></div>
-    <details class="setMore"><summary>Piano tweaks<small>Brightness and low-note balance of the Fancy piano.</small></summary>
+    <details class="setMore"><summary>Piano tweaks<small>Brightness, low-note balance and hammer knock of the Fancy piano.</small></summary>
     <div class="setRow"><label for="sPnoBright">Piano brightness<small>Fancy piano only. Higher is a harder, brighter hammer; lower is mellower.</small></label><div class="ctl"><input type="range" id="sPnoBright" min="-100" max="100" step="5"><input type="number" class="num" id="sPnoBrightN" min="-100" max="100" aria-label="Piano brightness value"></div></div>
     <div class="setRow"><label for="sPnoLow">Piano low-note volume<small>Fancy piano only. Makes the notes below middle C louder or quieter compared to the high notes, the lowest ones the most. 50 matches the balance of a real grand piano.</small></label><div class="ctl"><input type="range" id="sPnoLow" min="0" max="100" step="5"><input type="number" class="num" id="sPnoLowN" min="0" max="100" aria-label="Piano low-note volume value"></div></div>
     <div class="setRow"><label for="sPnoLowCurve">Piano low-note focus<small>Fancy piano only. Where the low-note volume change lands: higher keeps it to the very lowest octaves, lower spreads it up towards middle C.</small></label><div class="ctl"><input type="range" id="sPnoLowCurve" min="-100" max="100" step="5"><input type="number" class="num" id="sPnoLowCurveN" min="-100" max="100" aria-label="Piano low-note focus value"></div></div>
     <div class="setRow"><label for="sPnoBass">Piano bass reduction<small>Fancy piano only. Removes the deepest rumble you feel more than hear; the rest of the bass stays.</small></label><div class="ctl"><input type="range" id="sPnoBass" min="0" max="100" step="5"><input type="number" class="num" id="sPnoBassN" min="0" max="100" aria-label="Piano bass reduction value"></div></div>
+    <div class="setRow"><label for="sPnoKnock">Piano hammer knock<small>Fancy piano only. The woody knock of the hammer under the high notes. 50 matches a real grand piano, 0 turns it off.</small></label><div class="ctl"><input type="range" id="sPnoKnock" min="0" max="100" step="5"><input type="number" class="num" id="sPnoKnockN" min="0" max="100" aria-label="Piano hammer knock value"></div></div>
     </details>
     <h3>Editing</h3>
     <div class="setRow"><label for="sAnti">Anti-resize delay<small>After you place a note, dragging won't stretch it until this many milliseconds have passed.</small></label><div class="ctl"><input type="range" id="sAnti" min="0" max="600" step="10"><input type="number" class="num" id="sAntiN" min="0" max="600" aria-label="Anti-resize delay in milliseconds"></div></div>
@@ -570,14 +605,15 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
             <details class="vsec vsub"><summary>Advanced detection</summary>
               <div class="vrow"><label title="When the whole screen fades in or out, or flashes, every key changes at once. This removes that change so it is not read as notes."><input type="checkbox" id="vFlash" checked> Ignore fades and flashes of the whole screen</label></div>
               <div class="vrow"><label title="If more keys than this are pressed at the same moment, the notes starting then are discarded, because that is almost always a flash or a smash of the whole screen. 0 turns this off.">Simultaneous keys pressed to discard these notes <input type="number" class="num" id="vMaxKeys" min="0" max="128" value="24"></label></div>
-              <div class="vrow"><label>Ignore flashes shorter than (ms) <input type="number" class="num" id="vMin" min="0" max="500" value="50"></label></div>
-              <div class="vrow"><label>Join gaps shorter than (ms) <input type="number" class="num" id="vGap" min="0" max="500" value="40"></label></div>
+              <div class="vrow"><label>Ignore flashes shorter than (ms) <input type="number" class="num" id="vMin" min="0" max="500" value="0"></label></div>
+              <div class="vrow"><label>Join gaps shorter than (ms) <input type="number" class="num" id="vGap" min="0" max="500" value="0"></label></div>
               <div class="vrow"><label title="Notes shorter than this are made longer, without running into the next note on the same key">Minimum note length (ms) <input type="number" class="num" id="vMinLen" min="0" max="2000" step="10" value="0"></label><small class="vdim" id="vMinLenHint"></small></div>
               <div class="vrow"><label title="How different two shades can be and still count as the same layer">Color tolerance (degrees) <input type="number" class="num" id="vTol" min="5" max="90" value="28"></label></div>
             </details>
             <details class="vsec vsub"><summary>Advanced timing</summary>
               <div class="vrow"><label>Velocity <input type="number" class="num" id="vVel" min="1" max="127" value="90"></label><label><input type="checkbox" id="vTrim" checked> Start at the first note</label></div>
               <div class="vrow"><label title="Moves every black-key note earlier (negative) or later (positive)">Black notes timing (ms) <input type="number" class="num" id="vBlackMs" min="-300" max="300" step="5" value="0"></label><label title="Moves every note earlier (negative) or later (positive)">All notes timing (ms) <input type="number" class="num" id="vShiftMs" min="-500" max="500" step="5" value="0"></label></div>
+              <div class="vrow"><label title="Ends every white-key note this much earlier. Handy when the lights stay on longer than the notes sound.">Shorten white notes (ms) <input type="number" class="num" id="vShortW" min="0" max="1000" step="5" value="0"></label><label title="Ends every black-key note this much earlier">Shorten black notes (ms) <input type="number" class="num" id="vShortB" min="0" max="1000" step="5" value="0"></label></div>
             </details>
           </section>
         </div>
@@ -772,38 +808,72 @@ const pianoF0=m=>fHz(m)*Math.pow(2,pianoStretch(m)/1200);
 // hammer cut-off in Hz for a key, a velocity v (0..1) and a brightness bias: harder and higher hammers are brighter
 // (it falls only half as fast below middle C: low notes get their loudness from their upper partials)
 const pianoFc=(m,v,bias=0)=>Math.max(fHz(m)*1.2,4500*Math.pow(2,(m-60)/(m<60?48:24)+2.2*(v-1)+1.6*bias));
+// How each key dies away, matched to measurements of two real grands: a fast first part (the "ping") over a much
+// quieter, long-lasting second part. Rows are [key, time of the fast part for the fundamental (s), level of the slow
+// part against the fast one, time of the slow part (s)]; keys in between are interpolated.
+const PIANO_DECAY=[[21,1.93,.415,5.2],[27,1.7,.381,5.3],[33,1.25,.266,5.5],[36,.98,.205,5.7],[42,.79,.143,5.9],[48,.78,.108,5.9],[54,.7,.103,5.4],
+  [60,.54,.099,5],[66,.46,.087,5],[72,.38,.072,5.2],[78,.3,.053,5.6],[84,.25,.043,5.9],[96,.22,.036,7],[108,.19,.032,7.6]];
+function pianoDecay(m){const D=PIANO_DECAY;let i=1;while(i<D.length-1&&m>D[i][0])i++;const a=D[i-1],b=D[i],u=fClamp((m-a[0])/(b[0]-a[0]),0,1);return[1,2,3].map(j=>a[j]*Math.pow(b[j]/a[j],u));}
+// longest sample per key in seconds: long enough for the low strings to ring out, shorter where notes die sooner
+const pianoLen=m=>m<=47?11:m<=60?11-2.5*(m-47)/13:m<=72?8.5-2*(m-60)/12:m<=84?6.5-2*(m-72)/12:4.5-2.3*(m-84)/24;
+// partial k of a string: its frequency, and its starting level (strike point, string and soundboard losses)
+function pianoPartial(k,f0,B){
+  const fk=k*f0*Math.sqrt(1+B*k*k),m=69+12*Math.log2(f0/440),q=fk*fk*fk*fk; // q/(q+62^4): as on a real piano, the soundboard gives next to nothing below about 60 Hz
+  const a=(Math.abs(Math.sin(Math.PI*k*.118))+.14)/Math.pow(k,.9)*Math.pow(fk/(fk+110),1.3)/(1+Math.pow(fk/11000,2))*(1+.6/k)*q/(q+1.478e7);
+  return[fk,a*Math.pow(10,(pianoTone(m,k)+8*Math.min(1,.15+.2*k)*pianoGrain(fk,1))/20)];
+}
+// Balance of the overtones, set against two real grands. Rows are keys; the columns are overtone 1, 2, 3-4, 5-8, 9-16
+// and 17 up, in dB. An ideal struck string has far stronger middle overtones than a piano, whose hammer stays on the
+// string too long to excite them, and that excess is what makes a string model sound electric.
+const PIANO_TONE=[[21,0,-1.5,-3,-7,-7,-4],[36,0,-1.5,-10,-9,-6,-3],[48,0,-1.5,-11,-7,-3,-3],[60,0,-3.5,-10,-5,-3,-3],[72,0,-4.5,-10,-2,-3,-3],[84,0,-4.5,-10,-17,-11,-3],[96,0,-13.5,-23,-28,-23,-3],[108,0,-15.5,-28,-33,-23,-3]];
+function pianoTone(m,k){
+  const T=PIANO_TONE,X=[0,1,1.8,2.66,3.58,4.6],x=Math.log2(k);let i=1,j=1;while(i<T.length-1&&m>T[i][0])i++;while(j<5&&x>X[j])j++;
+  const a=T[i-1],b=T[i],u=fClamp((m-a[0])/(b[0]-a[0]),0,1),v=fClamp((x-X[j-1])/(X[j]-X[j-1]),0,1),col=c=>a[c+1]+(b[c+1]-a[c+1])*u;
+  return col(j-1)+(col(j)-col(j-1))*v;
+}
+// The instrument's own unevenness: a fixed bumpy curve over pitch, from -1 to 1, the same for every key, so overtones
+// that land close together are treated alike (as a soundboard does). Real overtones are far less tidy in level,
+// fading and pitch than a formula; salt picks which of those three the curve is for.
+function pianoGrain(f,salt){
+  const x=8*Math.log2(f/20),i=Math.floor(x),u=x-i,w=u*u*(3-2*u);
+  const h=j=>{let s=Math.imul(j+salt*7919,2654435761)>>>0;s^=s>>>15;s=Math.imul(s,2246822519)>>>0;s^=s>>>13;return(s>>>0)/2147483648-1;};
+  return h(i)*(1-w)+h(i+1)*w;
+}
 function renderPiano(midi,fs){
   const f0=pianoF0(midi),rnd=fRng(midi*7919+5);
-  const tauA=pianoTau(f0),tauP=fClamp(1.15*Math.pow(261.6/f0,.3),.1,2.4),damp1=1/(1+Math.pow(f0/700,1.15));
-  const T=fClamp(tauA*damp1*5+.8,1.2,8.5),N=Math.floor(T*fs),out=new Float32Array(N);
-  const B=pianoB(midi),beta=.118,fmax=Math.min(fs*.45,16000);
-  const nS=midi<29?1:midi<41?2:3,cents=[],wS=[[1],[.9,.44],[.42,.85,.3]][nS-1]; // unequal string levels, so the unison beats never cancel out
+  const [tauP,aft,tauA]=pianoDecay(midi),damp1=1/(1+Math.pow(f0/700,1.15));
+  // the sample runs until the slow part is about 42 dB down, or the limit for this key, and fades out over its last quarter
+  const T=fClamp(Math.min(tauA*damp1*(42+20*Math.log10(aft))/8.69+.5,pianoLen(midi)),1.2,11),N=Math.floor(T*fs),out=new Float32Array(N);
+  const B=pianoB(midi),fmax=Math.min(fs*.45,16000);
+  const nS=midi<29?1:midi<41?2:3,cents=[],wS=[[1],[.93,.3],[.25,.9,.18]][nS-1]; // one string leads, so the unison beating stays a gentle shimmer and never a wobble
   for(let s=0;s<nS;s++)cents.push(nS===1?.3:(s-(nS-1)/2)*(.7+rnd()*.6)+(rnd()-.5)*.3);
   const A=[0],F=[0];
   for(let k=1;k<=400;k++){
-    const fk=k*f0*Math.sqrt(1+B*k*k);if(fk>fmax)break;
-    const sb=Math.pow(fk/(fk+110),1.3),air=1/(1+Math.pow(fk/11000,2));
-    const a=(Math.abs(Math.sin(Math.PI*k*beta))+.14)/Math.pow(k,.9)*sb*air*(1+.6/k);
-    const damp=1/(1+Math.pow(fk/700,1.15)),w=2*Math.PI*fk/fs,spread=Math.min(6.283,.25*k);
+    const [fk,a]=pianoPartial(k,f0,B);if(fk>fmax)break;
+    // above the first one, each overtone fades a little faster or slower than the formula says, sits a cent or so off
+    // it, and has a stronger or weaker slow part (the 2.4 and .5 keep the average where the table puts it)
+    const aftK=aft*Math.pow(10,((k>1?10:4)*pianoGrain(fk,4)-(k>1?2.4:.5))/20),damp=Math.pow(2,(k>1?.8:0)*pianoGrain(fk,2))/(1+Math.pow(fk/700,1.15)),w=2*Math.PI*fk/fs*(k>1?Math.pow(2,1.5*pianoGrain(fk,3)/1200):1),spread=Math.min(6.283,.25*k);
     addRes(out,N,a,w,tauP*Math.pow(damp,.8)+.01,fs,(rnd()-.5)*spread);
-    cents.forEach((c,s)=>addRes(out,N,a*.34*wS[s],w*Math.pow(2,(c+(rnd()-.5)*.5)/1200),tauA*damp*(.92+rnd()*.2)+.03,fs,(rnd()-.5)*(spread+.5)));
+    cents.forEach((c,s)=>addRes(out,N,a*aftK*wS[s],w*Math.pow(2,(c+(rnd()-.5)*.5)/1200),tauA*damp*(.92+rnd()*.2)+.03,fs,(rnd()-.5)*(spread+.5)));
     A.push(a);F.push(fk);
   }
   if(midi<60){
     const amax=Math.max(...A);
     for(let k=2;k<A.length-1&&k<28;k++){
       const fp=F[k]+F[k+1];if(fp>fmax)break;
-      addRes(out,N,.6*A[k]*A[k+1]/amax,2*Math.PI*fp/fs,tauP*Math.pow(1/(1+Math.pow(F[k]/700,1.15)),.8)/2+.01,fs,rnd()*6.283);
+      // (kept far below the real overtones next to them: any louder and they beat against those and sound out of tune)
+      addRes(out,N,.03*A[k]*A[k+1]/amax,2*Math.PI*fp/fs,tauP*Math.pow(1/(1+Math.pow(F[k]/700,1.15)),.8)/2+.01,fs,rnd()*6.283);
     }
   }
   const M=Math.floor(.04*fs),cf=1-Math.exp(-2*Math.PI*2600/fs),amp=fRms(out,0,Math.floor(.05*fs))*(.1+.16*fClamp((midi-55)/50,0,1));let lp=0;
   for(let i=0;i<M;i++){lp+=((rnd()*2-1)-lp)*cf;out[i]+=lp*amp*Math.exp(-i/(fs*.006));}
-  const ramp=Math.floor(.0008*fs),fade=Math.floor(.08*fs);
+  const ramp=Math.floor(.0008*fs),fade=Math.floor(.25*N);
   for(let i=0;i<ramp;i++)out[i]*=i/ramp;
-  for(let i=0;i<fade;i++)out[N-1-i]*=i/fade;
+  for(let i=0;i<fade;i++)out[N-1-i]*=.5-.5*Math.cos(Math.PI*i/fade);
   let pk=0;for(let i=0;i<N;i++){const v=Math.abs(out[i]);if(v>pk)pk=v;}
-  // key-to-key level follows measured grand pianos: even from the bottom up to middle C, then about 0.1 dB quieter per semitone
-  const g=Math.min(.98/pk,.13*Math.pow(10,-Math.max(0,midi-60)*.005)/fRms(out,0,Math.floor(.1*fs)));
+  // key-to-key level follows measured grand pianos: even from the bottom up to middle C, then about 0.1 dB quieter per
+  // semitone, and another 0.55 dB per semitone above F#6, where the notes are nearly pure tones
+  const g=Math.min(.98/pk,.13*Math.pow(10,-Math.max(0,midi-60)*.005-Math.max(0,midi-90)*.0275)/fRms(out,0,Math.floor(.1*fs)));
   for(let i=0;i<N;i++)out[i]*=g;
   return out;
 }
@@ -947,7 +1017,7 @@ const LANES={vel:'Velocity',pan:'Pan',rev:'Reverb',muf:'Muffle',pedal:'Sustain p
 let nextId=100000,nextTrackId=1;
 const song={name:'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},tracks:[]};
 const S={tool:'draw',gridIdx:4,fineIdx:0,pxBeat:96,keyW:24,active:0,sel:new Set(),playhead:0,startTick:0,playing:false,rec:false,
-  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:0,pnoLow:40,pnoLowCurve:0,pnoBass:35,satBase:0,satAcc:80,ver:2,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,audition:true,names:true,mode:'auto',palette:'forest',sideRight:false,clickVol:50,autosave:true}};
+  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:0,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:4,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true}};
 const gridT=()=>GRIDS[S.gridIdx].t,fineT=()=>FINES[S.fineIdx].t;
 const pxTick=()=>S.pxBeat/PPQ;
 const barTicks=()=>PPQ*4*song.ts.n/song.ts.d;
@@ -1261,6 +1331,7 @@ function updateStage(){
 function sizeCanvases(){
   dpr=Math.max(1,window.devicePixelRatio||1);
   document.documentElement.style.setProperty('--sb',(((roll.offsetHeight-roll.clientHeight)||0))+'px');
+  document.documentElement.style.setProperty('--sbw',(((roll.offsetWidth-roll.clientWidth)||0))+'px');
   const w=roll.clientWidth,h=roll.clientHeight;cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';
   const lc=$('lanecol'),lw=lc.clientWidth,lh=lc.clientHeight;lane.width=Math.round(lw*dpr);lane.height=Math.round(lh*dpr);lane.style.width=lw+'px';lane.style.height=lh+'px';
   if(S.fit)refit();
@@ -1365,9 +1436,11 @@ function drawRoll(){
   if(!any){
     g.fillStyle=C.dim;g.font='14px Figtree,system-ui,sans-serif';g.textAlign='center';
     const cx=RULERW+(W-RULERW)/2,cy=AH/2;
-    g.fillText('Click and drag above the keys to draw a note',cx,cy-22);
-    g.fillText('Play the computer keyboard (A–L row) or connect a MIDI keyboard',cx,cy);
-    g.fillText('Or drop a .mid file anywhere on this window',cx,cy+22);
+    // on a narrow roll the hints are shorter and, if needed, smaller, so they are never cut off
+    const room=W-RULERW-16,full=['Click and drag above the keys to draw a note','Play the computer keyboard (A–L row) or connect a MIDI keyboard','Or drop a .mid file anywhere on this window'];
+    const lines=g.measureText(full[1]).width<=room?full:['Drag above the keys to draw a note','Or play a keyboard, or drop a .mid file'];
+    const wd=Math.max(...lines.map(l=>g.measureText(l).width));if(wd>room)g.font=Math.max(9,Math.floor(14*room/wd))+'px Figtree,system-ui,sans-serif';
+    lines.forEach((l,i)=>g.fillText(l,cx,cy+22*(i-(lines.length-1)/2)));
     g.textAlign='left';
   }
   if(P.mode==='box'&&P.box){const b=P.box,bx=Math.min(b.x0,b.x),by=Math.min(b.y0,b.y),bw=Math.abs(b.x-b.x0),bh=Math.abs(b.y-b.y0);g.fillStyle=C.accentSoft;g.strokeStyle=C.accent;g.lineWidth=1;g.setLineDash([4,3]);g.fillRect(bx,by,bw,bh);g.strokeRect(bx+.5,by+.5,bw,bh);g.setLineDash([]);}
@@ -1486,7 +1559,7 @@ function drawLane(){
   g.font='10px Figtree,system-ui,sans-serif';g.fillStyle=C.dim;
   if(key==='pedal')g.fillText('Drag to add · right-click to remove',LW/2,24);
   else{const labs=key==='pan'?['L','R']:['0','127'];g.textAlign='left';g.fillText(labs[0],LANEPAD,9);g.textAlign='right';g.fillText(labs[1],LW-LANEPAD,9);}
-  if(key!=='pedal'&&!tr.notes.length){g.fillStyle=C.dim;g.font='12px Figtree,system-ui,sans-serif';g.textAlign='center';g.fillText('No notes in this layer yet',LW/2,AH/2);}
+  if(key!=='pedal'&&!tr.notes.length){g.fillStyle=C.dim;g.font='12px Figtree,system-ui,sans-serif';g.textAlign='center';{const m='No notes in this layer yet';if(g.measureText(m).width<=LW-8)g.fillText(m,LW/2,AH/2);else{g.fillText('No notes in',LW/2,AH/2-8);g.fillText('this layer yet',LW/2,AH/2+8);}}}
   g.textAlign='left';
 }
 const laneFmt=(k,v)=>k==='pan'?panLabel(v):String(v);
@@ -1499,7 +1572,20 @@ function frame(){
     if(!S.rec&&!S.loop.on&&S.playhead>lastEnd()+PPQ*2&&lastEnd()>0&&schedTick>lastEnd()){pause();toast('Reached the end');}
     updatePos();needDraw=true;
   }
-  if(PG.target!=null){const mx=Math.max(0,roll.scrollHeight-roll.clientHeight),tg=clamp(PG.target,0,mx),d=tg-roll.scrollTop;if(Math.abs(d)<1.5){roll.scrollTop=tg;PG.target=null;}else roll.scrollTop+=d*.22;needDraw=true;}
+  if(PG.target!=null){
+    // while following, glide to where the playhead is now, not to where it was when the bar was let go
+    // (the playhead keeps moving, so the glide hands over to Follow once it is within a few frames of it)
+    let near=1.5;
+    if(S.playing&&S.follow&&!PG.drag){const t=lenPx-S.playhead*pxTick()-areaH();near=Math.max(24,6*Math.abs(t-PG.target));PG.target=t;}
+    const mx=Math.max(0,roll.scrollHeight-roll.clientHeight),tg=clamp(PG.target,0,mx),was=roll.scrollTop,d=tg-was;
+    if(Math.abs(d)<near){roll.scrollTop=tg;PG.target=null;}
+    else{
+      // always move at least one whole pixel: browsers round the scroll position, so a smaller step can stall and Follow would never take over again
+      roll.scrollTop=was+(Math.abs(d*.22)<1?Math.sign(d):d*.22);
+      if(roll.scrollTop===was){roll.scrollTop=tg;PG.target=null;}
+    }
+    needDraw=true;
+  }
   pgUpdate();
   if(live.held.size)needDraw=true;
   if(STAGE.on){
@@ -2412,8 +2498,9 @@ const KSPRE={
   koto:{T:1.8,s:.28,pick:.2,bright:.8,len:2.4},dulcimer:{T:1.8,s:.22,pick:.15,bright:.8,len:2.5}
 };
 const FM={};
-// piano: rendered at the output rate, top keys have no dampers so they ring on after the key is released
-FM.piano={fsFor:()=>Math.min(Audio_.ctx.sampleRate,48000),keys:krange(21,108,3),layers:1,job:(k,l,fs)=>['renderPiano',[k,fs]],jobs:ctx=>pianoIrJobs(ctx),fc:pianoFc,curve:1.4,gain:1.15,rel:p=>p>=90?4:fClamp(.3-(p-36)*.0035,.07,.33)};
+// piano: every key has its own sample at its exact pitch and at the output rate, so it plays back untouched (the
+// browser's repitching adds a gritty mirror image to the high overtones). Top keys have no dampers and ring on.
+FM.piano={fsFor:()=>Math.min(Audio_.ctx.sampleRate,48000),keys:krange(21,108,1),layers:1,job:(k,l,fs)=>['renderPiano',[k,fs]],jobs:ctx=>pianoIrJobs(ctx),done:ctx=>{for(const sr in PIR)delete PIR[sr].voice;pianoVoice(ctx,60);},fc:pianoFc,knock:pianoKnock,curve:1.4,gain:1.15,rel:p=>p>=90?4:fClamp(.3-(p-36)*.0035,.07,.33)};
 FM.ep={fs:32000,keys:krange(28,100,4),layers:2,job:(k,l,fs)=>['renderEP',[k,fs,l===1]],rel:()=>.18};
 for(const name of Object.keys(KSPRE)){
   const P=KSPRE[name],[a,b]=P.body==='bass'?[24,72]:P.body==='guitar'?[36,92]:name==='harp'?[30,102]:[36,96];
@@ -2436,14 +2523,21 @@ function fancySoon(){if(S.set.fancy&&!FANCY.busy&&fancyMissing().length)prepareF
 function fancyVoice(ctx,out,tr,pitch,vel,t,A){
   const cfg=fancyCfg(tr),m=cfg&&FM[cfg.m];if(!m||!m.ready)return null;
   const step=m.keys[1]-m.keys[0],ki=clamp(Math.round((pitch-m.keys[0])/step),0,m.keys.length-1),rate=Math.pow(2,(pitch-m.keys[ki])/12);
-  const dets=cfg.det||[0],level=Math.pow(vel/127,m.curve||1.3)*(m.gain||.95)/Math.sqrt(dets.length)*(m.fc?Math.pow(10,pnoLowDb(pitch)/20):1),rel=m.rel(pitch);
+  const dets=cfg.det||[0],level=Math.pow(vel/127,m.curve||1.3)*(m.gain||.95)/Math.sqrt(dets.length)*(m.fc?Math.pow(10,pnoLowDb(pitch)/20)*pianoVoice(ctx,pitch):1),rel=m.rel(pitch);
   let gains=[1];if(m.layers===2){const w=clamp((vel-35)/75+(cfg.bias||0),0,1);gains=[Math.cos(w*Math.PI/2),Math.sin(w*Math.PI/2)];}
   const env=ctx.createGain();env.gain.setValueAtTime(level,t);env.connect(out);
   let dst=env,tune=0;
-  if(m.fc){dst=ctx.createBiquadFilter();dst.type='lowpass';dst.Q.value=-3;dst.frequency.value=Math.min(m.fc(pitch,vel/127,(cfg.bias||0)+S.set.pnoBright/100),ctx.sampleRate*.45);dst.connect(env);tune=pianoStretch(pitch)-pianoStretch(m.keys[ki]);}
+  if(m.fc){
+    // hammer hardness: a harder blow lifts the middle overtones (a shelf from about the third one up) and opens the top (a low-pass)
+    const bias=(cfg.bias||0)+S.set.pnoBright/100,lp=ctx.createBiquadFilter();lp.type='lowpass';lp.Q.value=-3;lp.frequency.value=Math.min(m.fc(pitch,vel/127,bias),ctx.sampleRate*.45);lp.connect(env);
+    dst=ctx.createBiquadFilter();dst.type='highshelf';dst.frequency.value=Math.min(3*fHz(pitch),ctx.sampleRate*.4);dst.gain.value=fClamp(24*(vel/127-.75)+10*bias,-14,10);dst.connect(lp);
+    tune=pianoStretch(pitch)-pianoStretch(m.keys[ki]);
+  }
   const srcs=[];
-  gains.forEach((gv,l)=>{if(gv<.02||!m.buf[l]||!m.buf[l][ki])return;for(const d of dets){const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=m.buf[l][ki];s.playbackRate.value=rate;s.detune.value=d+tune+(Math.random()-.5)*(m.fc?1:3);g.gain.value=gv*(.97+Math.random()*.06);s.connect(g);g.connect(dst);s.start(t);srcs.push(s);}});
+  gains.forEach((gv,l)=>{if(gv<.02||!m.buf[l]||!m.buf[l][ki])return;for(const d of dets){const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=m.buf[l][ki];s.playbackRate.value=rate;s.detune.value=d+tune+(m.fc?0:(Math.random()-.5)*3);g.gain.value=gv*(.97+Math.random()*.06);s.connect(g);g.connect(dst);s.start(t);srcs.push(s);}});
   if(!srcs.length){env.disconnect();return null;}
+  const kb=m.knock&&m.knock(ctx,m.buf[0][ki],pitch);
+  if(kb){const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=kb.buf;g.gain.value=kb.amp*(.9+Math.random()*.2);s.connect(g);g.connect(env);s.start(t);srcs.push(s);}
   return{last:srcs[0],
     release(tr_){tr_=Math.max(tr_,t+.01);env.gain.cancelScheduledValues(tr_);env.gain.setValueAtTime(level,tr_);env.gain.setTargetAtTime(0,tr_,rel/3);const stop=tr_+rel*3+.1;srcs.forEach(s=>{try{s.stop(stop);}catch(e){}});},
     kill(now){env.gain.cancelScheduledValues(now);env.gain.setTargetAtTime(0,now,.01);srcs.forEach(s=>{try{s.stop(now+.08);}catch(e){}});}};
@@ -2453,8 +2547,53 @@ function fancyVoice(ctx,out,tr,pitch,vel,t,A){
 const PIR={};
 function pianoIrJobs(ctx){
   const sr=ctx.sampleRate,o=PIR[sr]=PIR[sr]||{},st=r=>{const n=r.length>>1,b=ctx.createBuffer(2,n,sr);b.copyToChannel(r.subarray(0,n),0);b.copyToChannel(r.subarray(n),1);return b;};
-  return[['body','renderPianoBody',[sr]],['hi','renderPianoRes',[sr,90,1.5]],['ped','renderPianoRes',[sr,21,4]]].filter(j=>!o[j[0]]).map(([k,f,a])=>({f,a,put:r=>{o[k]=st(r);}}));
+  return[['body','renderPianoBody',[sr],st],['hi','renderPianoRes',[sr,90,1.5],st],['ped','renderPianoRes',[sr,21,4],st]].filter(j=>!o[j[0]]).map(([k,f,a,cv])=>({f,a,put:r=>{o[k]=cv(r);}}));
 }
+// Hammer knock: the blow itself reaches the soundboard as one short push, as long as the hammer touches the string,
+// and makes the wood sound whatever the note is. Low strings bury it; in the top octaves it is the familiar "tock".
+// It is played as a tiny pulse next to the note and gets its ring from the soundboard. Its strength follows measured
+// grands (the sound below the note's own pitch in the first 60 ms, against the tone): about 17 dB under the tone at
+// C5, 9 dB under at C8, at the default setting of 50.
+const PIANO_KNOCK=-17.5,PKN={pulse:new Map(),tone:new WeakMap()};
+function pianoKnock(ctx,buf,pitch){
+  const kn=fClamp((pitch-60)/12,0,1),set=S.set.pnoKnock;if(!kn||!set||!buf)return null;
+  const fs=buf.sampleRate,Lp=Math.max(8,Math.round(.0016*Math.pow(2,(60-pitch)/48)*fs)),id=fs+':'+Lp;
+  let pb=PKN.pulse.get(id);
+  if(!pb){pb=ctx.createBuffer(1,Lp,fs);const d=pb.getChannelData(0);for(let i=0;i<Lp;i++)d[i]=.5-.5*Math.cos(2*Math.PI*i/Lp);PKN.pulse.set(id,pb);}
+  let et=PKN.tone.get(buf);
+  if(et===undefined){const d=buf.getChannelData(0),n=Math.min(d.length,Math.floor(.06*fs));et=0;for(let i=0;i<n;i++)et+=d[i]*d[i];PKN.tone.set(buf,et);}
+  return{buf:pb,amp:kn*Math.sqrt(et*Math.pow(10,(PIANO_KNOCK+.22*(pitch-72)+(set-50)*.3)/10)/(.375*Lp))};
+}
+// Voicing: the soundboard favours some notes and swallows others, and each key has its own mix of overtones, as on a
+// real piano before a technician evens it out. This measures how loud the start of every finished sample comes out
+// through the soundboard (to the ear, so weighted for hearing) and returns the gain per key, bottom A first, that
+// brings each one back in line with its neighbours.
+function fFft(re,im){
+  const n=re.length;
+  for(let i=1,j=0;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){let t=re[i];re[i]=re[j];re[j]=t;t=im[i];im[i]=im[j];im[j]=t;}}
+  for(let len=2;len<=n;len<<=1){
+    const a=-2*Math.PI/len,wr=Math.cos(a),wi=Math.sin(a);
+    for(let i=0;i<n;i+=len){let cr=1,ci=0;for(let q=0;q<len/2;q++){const p=i+q+len/2,xr=re[p]*cr-im[p]*ci,xi=re[p]*ci+im[p]*cr;re[p]=re[i+q]-xr;im[p]=im[i+q]-xi;re[i+q]+=xr;im[i+q]+=xi;const t=cr*wr-ci*wi;ci=cr*wi+ci*wr;cr=t;}}
+  }
+}
+function pianoVoicing(ctx){
+  const o=PIR[ctx.sampleRate],bufs=FM.piano.buf&&FM.piano.buf[0];if(!o||!o.body||!bufs||bufs.length<88)return null;
+  const sr=ctx.sampleRate;let n=16384;while(n<.3*sr)n*=2; // about a third of a second
+  const W=new Float64Array(n/2),R=new Float32Array(88),out=new Float32Array(88);
+  // what the soundboard does at each pitch, both ears, times how sensitive hearing is there
+  const hl=[0,1].map(c=>{const re=new Float64Array(2*n),im=new Float64Array(2*n),d=o.body.getChannelData(c);for(let i=0;i<d.length&&i<2*n;i++)re[i]=d[i];fFft(re,im);return[re,im];});
+  for(let i=1;i<n/2;i++){const f=i*sr/n,q=f*f,aw=12194*12194*q*q/((q+424.4)*Math.sqrt((q+11599)*(q+544496))*(q+148693636));let s=0;for(const [re,im] of hl)s+=(1+re[2*i])*(1+re[2*i])+im[2*i]*im[2*i];W[i]=aw*aw*s/2;}
+  for(let k=0;k<88;k++){
+    const b=bufs[k],d=b.getChannelData(0),step=b.sampleRate/sr,re=new Float64Array(n),im=new Float64Array(n),fc=pianoFc(k+21,.7);
+    for(let i=0;i<n;i++){const j=Math.round(i*step);if(j>=d.length)break;re[i]=d[j];}
+    fFft(re,im);let s=0;for(let i=1;i<n/2;i++)s+=(re[i]*re[i]+im[i]*im[i])*W[i]/(1+Math.pow(i*sr/n/fc,4));
+    R[k]=10*Math.log10(s+1e-20);
+  }
+  for(let i=0;i<88;i++){let s=0,c=0;for(let j=Math.max(0,i-4);j<=Math.min(87,i+4);j++){s+=R[j];c++;}out[i]=Math.pow(10,fClamp(s/c-R[i],-6,6)/20);}
+  return out;
+}
+// the gain that evens out one key against its neighbours; worked out once per sample rate, when the samples are there
+const pianoVoice=(ctx,p)=>{const o=PIR[ctx.sampleRate];if(o&&o.voice===undefined&&o.body&&FM.piano.ready)o.voice=pianoVoicing(ctx);const v=o&&o.voice;return v&&p>=21&&p<=108?v[p-21]:1;};
 function pianoIr(ctx){for(const j of pianoIrJobs(ctx))j.put(window[j.f].apply(null,j.a));return PIR[ctx.sampleRate];}
 function pianoRes(A){
   if(A.resIn)return A.resIn;
@@ -2541,7 +2680,7 @@ async function prepareFancy(){
       }
     }
   }catch(err){ok=false;for(const k of need)FANCY.failed.add(k);toast('Fancy playback could not prepare these instruments: '+err.message);}
-  if(ok&&!FANCY.cancel)for(const k of need)FM[k].ready=true;
+  if(ok&&!FANCY.cancel)for(const k of need){FM[k].ready=true;if(FM[k].done)FM[k].done(ctx);}
   $('prep').hidden=true;FANCY.busy=false;
   if(ok&&!FANCY.cancel)for(const t of song.tracks)updateBus(t);
   return ok&&!FANCY.cancel;
@@ -2603,7 +2742,7 @@ function applySide(){
   document.body.classList.toggle('side-right',S.set.sideRight);
   $('bCollapse').innerHTML=svgI(ICON_P[S.set.sideRight?'chevR':'chevL'],14);
 }
-function loadSettings(){try{const o=JSON.parse(localStorage.getItem('keyroll.settings'));if(o)for(const k in DEF_SET)if(k in o&&typeof o[k]===typeof DEF_SET[k])S.set[k]=o[k];if(o&&o.stageFade===false&&!('fadeAmt' in o))S.set.fadeAmt=0;if(o&&!(o.ver>=2)){S.set.palette=DEF_SET.palette;S.set.satBase=DEF_SET.satBase;S.set.satAcc=DEF_SET.satAcc;S.set.ver=2;saveSettings();}}catch(e){}}
+function loadSettings(){try{const o=JSON.parse(localStorage.getItem('keyroll.settings'));if(o)for(const k in DEF_SET)if(k in o&&typeof o[k]===typeof DEF_SET[k])S.set[k]=o[k];if(o&&o.stageFade===false&&!('fadeAmt' in o))S.set.fadeAmt=0;if(o&&!(o.ver>=2)){S.set.palette=DEF_SET.palette;S.set.satBase=DEF_SET.satBase;S.set.satAcc=DEF_SET.satAcc;S.set.ver=2;saveSettings();}if(o&&!(o.ver>=3)){if(S.set.mode==='auto')S.set.mode='dark';S.set.ver=3;saveSettings();}if(o&&!(o.ver>=4)){if(S.set.pnoLow===40)S.set.pnoLow=50;if(S.set.pnoBass===35)S.set.pnoBass=50;S.set.ver=4;saveSettings();}}catch(e){}} // ver 3: dark became the default mode, saved settings still on Auto move to it once; ver 4: new piano defaults, values still at the old defaults move with them
 function saveSettings(){try{localStorage.setItem('keyroll.settings',JSON.stringify(S.set));}catch(e){}}
 const dlg=$('settings');
 $('sPalette').innerHTML=Object.entries(PALETTES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
@@ -2614,6 +2753,7 @@ const setHandleUI=bindSN($('sHandle'),$('sHandleN'),v=>{S.set.handle=v;saveSetti
 const setPnoBrightUI=bindSN($('sPnoBright'),$('sPnoBrightN'),v=>{S.set.pnoBright=v;saveSettings();});
 const setPnoLowUI=bindSN($('sPnoLow'),$('sPnoLowN'),v=>{S.set.pnoLow=v;saveSettings();});
 const setPnoLowCurveUI=bindSN($('sPnoLowCurve'),$('sPnoLowCurveN'),v=>{S.set.pnoLowCurve=v;saveSettings();});
+const setPnoKnockUI=bindSN($('sPnoKnock'),$('sPnoKnockN'),v=>{S.set.pnoKnock=v;saveSettings();});
 const setPnoBassUI=bindSN($('sPnoBass'),$('sPnoBassN'),v=>{S.set.pnoBass=v;saveSettings();applyPnoBass();});
 const setSatBaseUI=bindSN($('sSatBase'),$('sSatBaseN'),v=>{S.set.satBase=v;saveSettings();applyTheme();});
 const setSatAccUI=bindSN($('sSatAcc'),$('sSatAccN'),v=>{S.set.satAcc=v;saveSettings();applyTheme();});
@@ -2625,7 +2765,7 @@ function syncSettingsUI(){
   $('sFancy').checked=S.set.fancy;$('sNames').checked=S.set.names;$('sAud').checked=S.set.audition;$('sAuto').checked=S.set.autosave;
   $('sKeyLabels').value=S.set.keyLabels;$('sHover').checked=S.set.hover;$('sInvert').checked=S.set.invert;$('sConfirm').checked=S.set.confirmDel;$('sStopLoop').checked=S.set.stopLoop;
   setAntiUI(S.set.antiMs);setClickUI(S.set.clickVol);setBrightUI(S.set.bright);setHandleUI(S.set.handle);
-  setPnoBrightUI(S.set.pnoBright);setPnoLowUI(S.set.pnoLow);setPnoLowCurveUI(S.set.pnoLowCurve);setPnoBassUI(S.set.pnoBass);
+  setPnoBrightUI(S.set.pnoBright);setPnoLowUI(S.set.pnoLow);setPnoLowCurveUI(S.set.pnoLowCurve);setPnoBassUI(S.set.pnoBass);setPnoKnockUI(S.set.pnoKnock);
   setSatBaseUI(S.set.satBase);setSatAccUI(S.set.satAcc);setBlackUI(S.set.blackHit);setBarUI(S.set.barHit);$('sStageFx').checked=S.set.stageFx;setFadeAmtUI(S.set.fadeAmt);
 }
 $('sMode').onchange=e=>{S.set.mode=e.target.value;saveSettings();applyTheme();};
@@ -2713,18 +2853,34 @@ function vidSampleStrip(d,map,vw,out,off){
 
 /* ---- note detection (works on real frame times, so skipped frames do not matter) ---- */
 // Ends a note when its color starts to fade back toward the key color. dist = distance from the key color per frame.
-function vidFade(on,dist,F,thr,drop,cuts){
+// win = how many frames the light has to keep falling for (about a quarter of a second).
+function vidFade(on,dist,F,thr,drop,cuts,win=8){
   const sm=new Float32Array(F);
   for(let i=0;i<F;i++)sm[i]=((i>0?dist[i-1]:dist[i])+dist[i]+(i<F-1?dist[i+1]:dist[i]))/3;
+  // This key's frame-to-frame jitter while lit. A fade has to be clearly larger than it, and larger than a fixed
+  // minimum, so a dark note (which is only just above the threshold) is not ended by noise.
+  const df=[];for(let i=1;i<F;i++)if(on[i]&&on[i-1])df.push(Math.abs(dist[i]-dist[i-1]));df.sort((a,b)=>a-b);
+  const nz=df.length?df[df.length>>1]:0,minDrop=Math.max(4*nz,.1*thr+6);
   let f=0;
   while(f<F){
     if(!on[f]){f++;continue;}
     let e=f;while(e<F&&on[e])e++;
-    let plateau=0,cut=-1;
-    for(let i=f;i<e;i++){plateau=Math.max(plateau,sm[i]);if(i-f>=2&&sm[i]<plateau*(1-drop)){cut=i;break;}}
+    let plateau=0,cut=-1,ps=f;
+    for(let i=f;i<e;i++){
+      plateau=Math.max(plateau,sm[i]);
+      if(i-f<2||sm[i]>=plateau*(1-drop)||plateau-sm[i]<minDrop)continue;
+      // The light dropped. A fade keeps falling; a light that holds steady from here only settled at a lower level
+      // (a bright flash when the key is hit, a dimmer held color), so the note carries on from that level.
+      const j=Math.min(e,i+win),h=(j-i)>>1;
+      if(h>=2){
+        let a=0,c=0;for(let k=i;k<i+h;k++)a+=dist[k];for(let k=j-h;k<j;k++)c+=dist[k];
+        if((a-c)/h<Math.max(2*nz,.05*plateau)){plateau=0;for(let k=i;k<j;k++)plateau=Math.max(plateau,sm[k]);ps=i;i=j-1;continue;}
+      }
+      cut=i;break;
+    }
     if(cut<0){f=e;continue;}
-    let rawP=0;for(let i=f;i<=cut;i++)rawP=Math.max(rawP,dist[i]);
-    let b=cut;while(b>f+1&&dist[b-1]<rawP*(1-drop*.4))b--;
+    let rawP=0;for(let i=ps;i<=cut;i++)rawP=Math.max(rawP,dist[i]);
+    let b=cut;while(b>ps+1&&dist[b-1]<rawP*(1-drop*.4))b--;
     for(let k=b;k<e;k++)on[k]=0;
     let low=1e9,rp=-1;
     for(let k=cut;k<e;k++){low=Math.min(low,sm[k]);if(sm[k]>low*1.35+thr*.25&&sm[k]>=plateau*(1-drop)){rp=k;break;}}
@@ -2737,6 +2893,9 @@ function vidFade(on,dist,F,thr,drop,cuts){
 // also when the light never went fully dark in between.
 function vidRetrig(on,dist,F,drop,cuts){
   const fade=Math.max(.06,drop*.6);let f=0;
+  // the dip has to stand out from this key's own frame-to-frame jitter, or a noisy dark note is chopped into pieces
+  const df=[];for(let i=1;i<F;i++)if(on[i]&&on[i-1])df.push(Math.abs(dist[i]-dist[i-1]));df.sort((a,b)=>a-b);
+  const minFell=7*(df.length?df[df.length>>1]:0);
   while(f<F){
     if(!on[f]){f++;continue;}
     let e=f;while(e<F&&on[e])e++;
@@ -2745,7 +2904,7 @@ function vidRetrig(on,dist,F,drop,cuts){
       const d=dist[i];
       if(cuts[i]){pk=d;lo=d;last=i;continue;}
       const fell=pk-lo,rise=d-Math.min(dist[i-1],i-2>=f?dist[i-2]:dist[i-1]);
-      if(fell>0&&lo<=pk*(1-fade)&&d-lo>=fell*.5&&rise>=fell*.4&&i-last>=2){cuts[i]=1;pk=d;lo=d;last=i;continue;}
+      if(fell>minFell&&lo<=pk*(1-fade)&&d-lo>=fell*.5&&rise>=fell*.4&&i-last>=2){cuts[i]=1;pk=d;lo=d;last=i;continue;}
       if(d>=pk){pk=d;lo=d;}else if(d<lo)lo=d;
     }
     f=e;
@@ -2805,15 +2964,22 @@ function vidDetect(samples,times,F,map,o){
     const b=i*F;
     for(let f=0;f<F;f++){
       if(bad&&bad[f]&&f>0){dist[f]=dist[f-1];on[f]=on[f-1];}
-      else{const d=D[b+f];dist[f]=d;on[f]=d>=o.thr?1:0;}
+      // a lit key stays lit until it is clearly under the threshold, so a dark note hovering around it is not chopped up
+      else{const d=D[b+f];dist[f]=d;on[f]=d>=o.thr||(f>0&&on[f-1]&&d>=o.thr*.85)?1:0;}
     }
     const cuts=new Uint8Array(F);
-    if(o.fade)vidFade(on,dist,F,o.thr,o.drop,cuts);
+    if(o.fade)vidFade(on,dist,F,o.thr,o.drop,cuts,Math.max(4,Math.round(.27/step)));
     if(o.split)vidRetrig(on,dist,F,o.drop,cuts);
     const faded=o.split?vidFadedGaps(on,dist,F,o.drop):null;
     let f=0;
     while(f<F){if(on[f]){f++;continue;}let e=f;while(e<F&&!on[e])e++;
-      if(f>0&&e<F&&(times[e]-times[f])*1000<=o.gapMs){if(cuts[e]||(faded&&faded[f]))cuts[e]=1;else for(let k=f;k<e;k++)on[k]=1;}
+      if(f>0&&e<F&&(times[e]-times[f])*1000<=o.gapMs){
+        // A short gap is joined when the light only dipped under the threshold (a flicker). When it really went out
+        // in between, it is a new press. Dark notes sit close to the threshold, so this looks at how deep the gap is.
+        let deep=false;
+        if(o.split){let lvl=0,lo=1e9;for(let k=Math.max(0,f-3);k<f;k++)if(on[k])lvl=Math.max(lvl,dist[k]);for(let k=f;k<e;k++)lo=Math.min(lo,dist[k]);deep=lo<=.55*lvl;}
+        if(cuts[e]||deep||(faded&&faded[f]))cuts[e]=1;else for(let k=f;k<e;k++)on[k]=1;
+      }
       f=e;}
     f=0;
     while(f<F){
@@ -2858,8 +3024,9 @@ function vidEstimateBpm(notes){
   return best&&best.sc>Math.max(.5,3.4/Math.sqrt(starts.length))?Math.round(best.bpm*10)/10:null;
 }
 function vidToNotes(cl,o){
-  const k=o.bpm*PPQ/60,all=(o.shiftMs||0)/1000,blk=(o.blackMs||0)/1000;
-  const raw=cl.map(c=>c.notes.map(n=>{const sh=all+(isBlack(n.p)?blk:0);return{p:n.p,ts:n.t0+sh,te:n.t1+sh};}));
+  const k=o.bpm*PPQ/60,all=(o.shiftMs||0)/1000,blk=(o.blackMs||0)/1000,sw=(o.shortW||0)/1000,sb=(o.shortB||0)/1000;
+  // shortening takes time off the end of a note, but always leaves a little of it
+  const raw=cl.map(c=>c.notes.map(n=>{const bk=isBlack(n.p),sh=all+(bk?blk:0),len=n.t1-n.t0;return{p:n.p,ts:n.t0+sh,te:n.t0+sh+Math.max(Math.min(len,.03),len-(bk?sb:sw))};}));
   let origin=o.t0;
   if(o.trim){let m=1e9;for(const a of raw)for(const n of a)m=Math.min(m,n.ts);if(m<1e9)origin=m;}
   const sets=raw.map(a=>a.map(n=>({p:n.p,s:Math.max(0,Math.round((n.ts-origin)*k)),d:Math.max(1,Math.round((n.te-n.ts)*k)),v:o.vel})));
@@ -2957,10 +3124,13 @@ function vidSeek(t,v=VID.v){
 }
 
 /* ---- remembering marks and settings ---- */
-const VOPT_IDS=['vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB'];
-function vidSaveOpts(){const o={ver:2};for(const id of VOPT_IDS){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value;}try{localStorage.setItem('mc.vid.opts',JSON.stringify(o));}catch(e){}}
+const VOPT_IDS=['vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB'];
+function vidSaveOpts(){const o={ver:3};for(const id of VOPT_IDS){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value;}try{localStorage.setItem('mc.vid.opts',JSON.stringify(o));}catch(e){}}
 function vidLoadOpts(){
-  try{const o=JSON.parse(localStorage.getItem('mc.vid.opts'));if(o&&!(o.ver>=2)){o.vShow=true;if(o.vSpeed==='auto')o.vSpeed='direct';}if(o)for(const id of VOPT_IDS){const e=$(id);if(e&&id in o){if(e.type==='checkbox')e.checked=!!o[id];else e.value=o[id];}}}catch(e){}
+  try{const o=JSON.parse(localStorage.getItem('mc.vid.opts'));if(o&&!(o.ver>=2)){o.vShow=true;if(o.vSpeed==='auto')o.vSpeed='direct';}
+    // ver 3: flash ignoring and gap joining are off by default; saved values still at the old defaults move with them
+    if(o&&!(o.ver>=3)){if(+o.vMin===50)o.vMin=0;if(+o.vGap===40)o.vGap=0;}
+    if(o)for(const id of VOPT_IDS){const e=$(id);if(e&&id in o){if(e.type==='checkbox')e.checked=!!o[id];else e.value=o[id];}}}catch(e){}
 }
 let vidOptTimer=0;const vidOptsSoon=()=>{clearTimeout(vidOptTimer);vidOptTimer=setTimeout(vidSaveOpts,400);};
 const vidCalKey=()=>'mc.vid.cal.'+VID.name+'.'+VID.size;
@@ -3340,7 +3510,8 @@ function vidOpts(){
   return{thr:140-1.2*(+$('vSens').value),flashMs:Math.max(0,+$('vMin').value||0),gapMs:Math.max(0,+$('vGap').value||0),
     fade:$('vFade').checked,split:$('vSplit').checked,drop:.03+.5*(1-fs/100),tol:clamp(+$('vTol').value||28,5,90),
     t0:VID.t0,bpm:clamp(+$('vBpm').value||120,20,300),vel:clamp(Math.round(+$('vVel').value||90),1,127),snapT:+$('vSnap').value,trim:$('vTrim').checked,
-    common:$('vFlash').checked,maxKeys:Math.max(0,Math.round(+$('vMaxKeys').value||0)),minLenMs:Math.max(0,+$('vMinLen').value||0),blackMs:+$('vBlackMs').value||0,shiftMs:+$('vShiftMs').value||0};
+    common:$('vFlash').checked,maxKeys:Math.max(0,Math.round(+$('vMaxKeys').value||0)),minLenMs:Math.max(0,+$('vMinLen').value||0),blackMs:+$('vBlackMs').value||0,shiftMs:+$('vShiftMs').value||0,
+    shortW:Math.max(0,+$('vShortW').value||0),shortB:Math.max(0,+$('vShortB').value||0)};
 }
 function vidMinHint(){const bpm=clamp(+$('vBpm').value||120,20,300),ms=Math.max(0,+$('vMinLen').value||0);$('vMinLenHint').textContent=ms?'≈ '+(ms/1000*bpm/60).toFixed(2)+' beat at '+Math.round(bpm)+' BPM':'off';}
 // Detection runs in a background thread so the dialog stays smooth while a slider moves. If a worker cannot be
@@ -3382,9 +3553,18 @@ async function vidRedetect(){
   const notes=await vidDetectAsync(o);
   if(tok!==vidRedetTok||!VID.samples)return;
   VID.notes=notes;VID.clusters=vidCluster(VID.notes,o.tol);
+  // The groups are listed by note count, so their order can change between runs. The tick and a name you typed
+  // stay with their color, not with their place in the list.
+  const old=VID.layerUI,taken=new Set();
+  VID.layerUI=VID.clusters.map(c=>{
+    let best=-1,bd=1e9;
+    old.forEach((u,j)=>{if(taken.has(j)||u.neutral!==c.neutral)return;const d=c.neutral?0:hueDist(u.h,c.h);if(d<bd){bd=d;best=j;}});
+    if(best<0||bd>o.tol)return{on:true,name:c.name};
+    taken.add(best);const u=old[best];return{on:u.on,name:u.name.trim()&&u.name!==u.def?u.name:c.name};
+  });
   const box=$('vLayers');box.innerHTML='';
   VID.clusters.forEach((c,i)=>{
-    const prev=VID.layerUI[i]||{on:true,name:c.name},row=document.createElement('label');row.className='vlayer';
+    const prev=VID.layerUI[i],row=document.createElement('label');row.className='vlayer';
     row.innerHTML=`<input type="checkbox" ${prev.on?'checked':''} aria-label="Import this layer"><span class="sw" style="background:hsl(${Math.round(c.h)} ${c.neutral?0:70}% 50%)"></span><input type="text" value="${esc(prev.name)}" aria-label="Layer name"><small>${c.notes.length} notes</small>`;
     box.appendChild(row);
   });
@@ -3394,7 +3574,7 @@ async function vidRedetect(){
   $('vImport').disabled=!total;vidSyncRes();vidDrawResult();
   $('vHint').textContent=total?'Done. Review the result below, then import.':'No notes found.';
 }
-function vidReadLayerUI(){VID.layerUI=[...$('vLayers').children].map(r=>({on:r.querySelector('input[type=checkbox]').checked,name:r.querySelector('input[type=text]').value}));}
+function vidReadLayerUI(){VID.layerUI=[...$('vLayers').children].map((r,i)=>{const c=VID.clusters[i]||{};return{on:r.querySelector('input[type=checkbox]').checked,name:r.querySelector('input[type=text]').value,def:c.name,neutral:!!c.neutral,h:c.h||0};});}
 function vidDrawResult(){
   const c=$('vRes'),g=c.getContext('2d'),W=c.width,H=c.height;g.fillStyle=C.bg||'#222';g.fillRect(0,0,W,H);
   if(!VID.notes.length||!VID.map.length||!VID.times){
@@ -3408,7 +3588,7 @@ let vidTimer=0;const vidSoon=()=>{clearTimeout(vidTimer);vidTimer=setTimeout(vid
 vidLoadOpts();
 const setSensUI=bindSN($('vSens'),$('vSensN'),vidSoon),setFadeUI=bindSN($('vFadeS'),$('vFadeSN'),vidSoon);
 setSensUI($('vSens').value);setFadeUI($('vFadeS').value);setLRUI($('vLRm').value);setSpreadUI($('vSpread').value);vidMinHint();
-for(const id of ['vMin','vGap','vBpm','vVel','vMinLen','vBlackMs','vShiftMs','vTol'])$(id).addEventListener('input',vidSoon);
+for(const id of ['vMin','vGap','vBpm','vVel','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol'])$(id).addEventListener('input',vidSoon);
 for(const id of ['vSnap','vTrim','vFade','vFlash','vSplit'])$(id).addEventListener('change',vidSoon);
 $('vMaxKeys').addEventListener('input',vidSoon);
 for(const id of ['vSpeed','vFps','vShow','vHW','vHB'])$(id).addEventListener('change',vidOptsSoon);
@@ -3503,7 +3683,7 @@ async function saveBinary(base,ext,bytes,mime){
   else if(await saveBytes(base+'.'+ext,bytes,mime))toast('Saved '+base+'.'+ext);
 }
 async function renderSong(onProgress){
-  const sr=44100,dur=secAt(lastEnd())+4,off=new OfflineAudioContext(2,Math.ceil(dur*sr),sr);
+  const sr=Math.min(Audio_.ctx.sampleRate,48000),dur=secAt(lastEnd())+4,off=new OfflineAudioContext(2,Math.ceil(dur*sr),sr);
   const A={ctx:off,offline:true,maxVoices:1500,voices:0,buses:new Map(),noise:Audio_.noise};
   A.master=off.createGain();A.master.gain.value=(+$('mVolN').value||0)/100;
   const comp=off.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=5;comp.attack.value=.004;comp.release.value=.2;
@@ -3930,6 +4110,57 @@ $('tracks').addEventListener('contextmenu',e=>{
 
 
 /* ================= Boot ================= */
+/* ================= Reset buttons: one per setting, shown while it differs from its default ================= */
+const RST=[];
+const rstVal=el=>el.type==='checkbox'?el.checked:el.value;
+function rstDef(el){
+  if('def' in el.dataset)return el.type==='checkbox'?el.dataset.def==='1':el.dataset.def;
+  if(el.type==='checkbox')return el.defaultChecked;
+  if(el.tagName==='SELECT'){const o=[...el.options].find(o=>o.defaultSelected)||el.options[0];return o?o.value:'';}
+  return el.defaultValue;
+}
+const rstSame=(a,b)=>typeof a==='boolean'?a===b:a!==''&&b!==''&&!isNaN(a)&&!isNaN(b)?+a===+b:a===b;
+// els = the controls of one setting (a slider and its number box count as one), place = puts the button on the page
+function rstAdd(els,name,place){
+  els=els.filter(e=>e&&e.type!=='file');if(!els.length)return;
+  const rg=els.find(e=>e.type==='range');
+  for(const e of els)if(rg&&e.type==='number'&&e.defaultValue===''&&!('def' in e.dataset))e.dataset.def=rstDef(rg);
+  const b=document.createElement('button');b.type='button';b.className='mini ico rst';b.innerHTML=svgI(ICON_P.undo,12);
+  b.title='Reset to the default';b.setAttribute('aria-label','Reset '+(name||'this setting')+' to the default');
+  b.onclick=e=>{
+    e.preventDefault();e.stopPropagation();
+    for(const el of [...els].sort((x,y)=>(y.type==='range')-(x.type==='range'))){
+      const d=rstDef(el);if(el.type==='checkbox')el.checked=d;else el.value=d;
+      el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    rstSync();
+  };
+  place(b);RST.push({els,b});
+}
+function rstSync(){for(const r of RST){const ch=r.els.some(e=>!rstSame(rstVal(e),rstDef(e)));r.b.classList.toggle('show',ch);r.b.disabled=!ch;}}
+let rstT=0;const rstSoon=()=>{clearTimeout(rstT);rstT=setTimeout(rstSync,60);};
+(function(){
+  const lblText=l=>((l&&(l.childNodes[0]&&l.childNodes[0].nodeType===3?l.childNodes[0].textContent:(l.querySelector('span')||l).textContent))||'').replace(/\s+/g,' ').trim();
+  // Settings: the defaults are what the dialog shows for the built-in settings
+  const cur={...S.set};Object.assign(S.set,DEF_SET);syncSettingsUI();
+  for(const e of $('settings').querySelectorAll('.setRow input,.setRow select'))e.dataset.def=e.type==='checkbox'?(e.checked?'1':'0'):e.value;
+  Object.assign(S.set,cur);syncSettingsUI();
+  for(const row of $('settings').querySelectorAll('.setRow'))rstAdd([...row.querySelectorAll('input,select')],lblText(row.querySelector('label')),b=>row.insertBefore(b,row.children[1]));
+  // Video import, Note tools and the mixer under the layers: the defaults are the values written in the page
+  const seen=new Set();
+  const byLabel=(ids,inside)=>{for(const id of ids){
+    const el=$(id);if(!el)continue;const l=el.closest('label');
+    if(!l){rstAdd([el],el.getAttribute('aria-label'),b=>el.after(b));continue;}
+    if(seen.has(l))continue;seen.add(l);
+    rstAdd([...l.querySelectorAll('input,select')],lblText(l),b=>inside?l.appendChild(b):l.after(b));
+  }};
+  byLabel(VOPT_IDS.filter(id=>id!=='vBpm'));
+  byLabel(['tpSemi','tpSwing','tpSwingGrid','tpHumT','tpHumV','tpLegLonger','tpLegGap']);
+  byLabel(['mVol','mRev','mSpace','ghostSl'],true);
+  for(const ev of ['input','change','click'])document.addEventListener(ev,rstSoon,true);
+  rstSync();
+})();
+
 function boot(){
   try{const u=JSON.parse(localStorage.getItem('keyroll.ui'));if(u){UI.sideW=clamp(+u.sideW||276,190,560);UI.laneW=clamp(+u.laneW||170,120,420);UI.keyH=clamp((+u.keyH===96?124:+u.keyH)||124,50,280);}}catch(e){}
   applyUI();loadSettings();applySide();applyTheme();
