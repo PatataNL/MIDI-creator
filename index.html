@@ -36,11 +36,15 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.35 Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
 #app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%}
 #top{background:var(--panel);border-bottom:1px solid var(--line);min-width:0}
-.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:6px 10px}
-.bar2{display:grid;grid-template-columns:1fr auto 1fr;border-top:1px solid var(--line);padding-top:5px;padding-bottom:5px}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:4px 10px}
+.bar2{display:grid;grid-template-columns:1fr auto 1fr;border-top:1px solid var(--line);padding-top:3px;padding-bottom:3px}
 .bar2 .transport{justify-content:center}
+.bar2 .tabtog{justify-content:flex-end;margin-left:auto}#bTabs{min-width:30px;padding:4px 6px;color:var(--dim)}#bTabs:hover{color:var(--text)}
+body.tabs-closed .tabbar{display:none}
 /* below this width the three columns no longer fit side by side: the groups wrap onto centered rows instead of squeezing the save buttons into a narrow stack */
-@media (max-width:1240px){.bar2{display:flex;flex-wrap:wrap;justify-content:center}.bar2 .grp:empty{display:none}}
+@media (max-width:1240px){.bar2{display:flex;flex-wrap:wrap;justify-content:center}.bar2 .grp:empty{display:none}
+  /* the rows wrap and stay centered; the tab bar chevron keeps to the far right of the bottom row, with side padding so nothing runs under it */
+  .bar2{position:relative;padding-left:44px;padding-right:44px}.bar2 .tabtog{position:absolute;right:10px;bottom:6px;margin:0}}
 .brand{font-weight:700;font-size:15px;letter-spacing:.2px;margin-right:2px;white-space:nowrap}
 .grp{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .grp.right{margin-left:auto}
@@ -55,7 +59,7 @@ body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.35 
 select,input[type=number],input[type=text]{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 5px}
 input[type=number]{width:64px}
 label.f{display:flex;align-items:center;gap:4px;color:var(--dim)}
-.readout{font-variant-numeric:tabular-nums;width:11ch;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.15;box-sizing:content-box;padding:3px 8px;background:var(--roll-bg);border:1px solid var(--line);border-radius:6px;font-weight:600;white-space:nowrap}
+.readout{font-variant-numeric:tabular-nums;width:11ch;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:14px;box-sizing:content-box;padding:0 8px;background:var(--roll-bg);border:1px solid var(--line);border-radius:6px;font-weight:600;white-space:nowrap}
 .sep{width:1px;align-self:stretch;background:var(--line)}
 #main{display:grid;grid-template-columns:var(--sideW,276px) 6px minmax(0,1fr);min-height:0}
 #side{grid-column:1}#splitV{grid-column:2}#work{grid-column:3}
@@ -103,6 +107,7 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .sidefoot{border-top:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:6px}
 #work{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0}
 .opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+.opts .btn{line-height:16px} /* whole pixels, so everything below this bar (the roll, the Layers tab) sits on the pixel grid and its text stays sharp */
 #rollwrap{display:flex;min-height:120px;min-width:0}
 #rollcol{position:relative;flex:1;min-width:0;overflow:hidden}
 #lanepanel{width:var(--laneW,200px);display:flex;background:var(--roll-bg);min-width:0}
@@ -152,6 +157,7 @@ body.dragging #drop{display:flex}
   .bar,.opts{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;justify-content:flex-start}
   .bar::-webkit-scrollbar,.opts::-webkit-scrollbar{display:none}
   .bar .grp,.opts>*{flex:none;flex-wrap:nowrap}.grp.right{margin-left:0}
+  .bar2{padding-left:10px;padding-right:10px}.bar2 .tabtog{position:static;margin-left:auto}
 }
 input.num{width:50px;padding:2px 3px;text-align:right;font-variant-numeric:tabular-nums}
 /* Number boxes: the browser's own up/down buttons are hidden. A pair in the site's style shows over the right edge of
@@ -226,7 +232,7 @@ progress{width:100%;accent-color:var(--accent)}
 ::-webkit-scrollbar-thumb:hover{background:var(--accent);background-clip:padding-box}
 ::-webkit-scrollbar-corner{background:transparent}
 .tools{background:var(--roll-bg);border:1px solid var(--line);padding:3px;border-radius:11px;gap:3px}
-.btn.tool{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;font-weight:600}
+.btn.tool{display:inline-flex;align-items:center;gap:7px;padding:4px 12px;font-weight:600}
 .tools .btn.tool{border-color:transparent;background:transparent}
 .tools .btn.tool:hover{background:var(--panel2);border-color:var(--line)}
 .tools .btn.tool.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -235,7 +241,8 @@ progress{width:100%;accent-color:var(--accent)}
 .btn.rec{color:var(--danger)}.btn.rec.on{color:#fff}
 .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
 .mini.ico{padding:1px 4px}
-#bExpand{display:none;position:absolute;z-index:6;top:10px;left:52px;writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 5px;border-radius:7px 0 0 7px;font-weight:600;background:var(--panel);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+/* the tab that brings a folded-away layer panel back sits on the time ruler, at its outer edge, clear of the loop strip */
+#bExpand{display:none;position:absolute;z-index:6;top:6px;left:0;writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 6px;line-height:1.35;border-radius:7px 0 0 7px;font-weight:600;background:var(--panel)}
 body.side-closed #bExpand{display:block}
 body.stage #bExpand{display:none!important}
 @media (max-width:820px){#bExpand{display:block}body.side-open #bExpand{display:none}}
@@ -333,8 +340,52 @@ details.vsub>summary{text-transform:none;letter-spacing:0;font-size:12px}
 .vidRight .vdim{color:var(--dim)}
 @media (prefers-reduced-motion: reduce){details.vsec>summary::before{transition:none}}
 
-#progRow{display:flex;align-items:center;gap:6px;padding:3px 10px;background:var(--panel);border-top:1px solid var(--line);user-select:none;-webkit-user-select:none}
+#progRow{display:flex;align-items:stretch;background:var(--panel);border-top:1px solid var(--line);user-select:none;-webkit-user-select:none}
+#pgMain{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:3px 10px}
 #progRow .mini.ico{width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center}
+/* bookmarks sit under the side panel, so the progress bar spans exactly the notes above it (the width is set in the script) */
+#bmBar{flex:none;display:flex;align-items:center;gap:3px;padding:3px 5px;box-sizing:border-box;border-left:1px solid var(--line);min-width:0;overflow:hidden}
+#bmBar .mini{display:inline-flex;align-items:center;gap:4px;height:22px;box-sizing:border-box;padding:0 7px;white-space:nowrap;font-size:12px}
+#bmAdd{flex:none;width:28px;justify-content:center;padding:0}#bmOpen{flex:1;min-width:0;justify-content:center;overflow:hidden;padding:0 4px!important;gap:3px!important}#bmOpen[aria-expanded=true]{background:var(--line)}
+.bmI{display:inline-flex}.bmI svg{display:block}
+#bmCount{min-width:16px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#f2b84b;color:#2a1d00;font-size:10.5px;font-weight:700;line-height:15px;text-align:center}#bmCount:empty{display:none}
+.pgMark{position:absolute;top:5px;width:3px;height:14px;margin-left:-1.5px;border-radius:1.5px;background:#f2b84b;pointer-events:none}
+.bmPop{position:fixed;z-index:150;width:min(350px,calc(100vw - 12px));display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.28);overflow:hidden}
+.bmHead{display:flex;align-items:center;gap:8px;padding:8px 10px 6px;min-height:24px}.bmHead span{color:var(--dim);font-size:11.5px;margin-left:auto}.bmHead .mini.ico{margin:-2px -2px -2px -4px}
+.bmList{overflow-y:auto;padding:0 5px 4px;display:flex;flex-direction:column;gap:2px;min-height:0}
+.bmRow{display:flex;align-items:center;gap:3px;border-radius:7px;padding:2px}
+.bmRow.on{background:var(--accent-soft)}
+.bmPop .mini.ico{width:24px;height:22px;display:inline-flex;align-items:center;justify-content:center;flex:none;padding:0}
+.bmRow .mini.ico.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bmPop:not(.shift) .alt,.bmPop.shift .nrm{display:none}
+.bmPop.shift .bmRow:not([data-i="-1"]) .alt{border-color:var(--line)}
+.bmGo{flex:1;min-width:0;display:flex;align-items:center;gap:7px;height:24px;padding:0 7px;border:0;border-radius:6px;background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.bmGo:hover{background:var(--panel2)}
+.bmDot{flex:none;width:9px;height:9px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}.bmRow[data-i="-1"] .bmDot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--dim)}
+.bmN{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bmT{color:var(--dim);font-size:11.5px;font-variant-numeric:tabular-nums}
+.bmEmpty{padding:6px 8px 4px;color:var(--dim);font-size:12px}
+.bmFoot{display:flex;align-items:center;gap:4px;padding:6px 8px;border-top:1px solid var(--line)}.bmFoot .mini:not(.ico){display:inline-flex;align-items:center;gap:2px}.bmSp{flex:1}
+.bmHint{color:var(--dim);font-size:11px;white-space:nowrap;margin-right:2px}
+.bmBody{display:flex;flex-direction:column;gap:10px;padding:2px 12px 12px;overflow-y:auto}
+.bmFld{display:flex;flex-direction:column;gap:5px}.bmFld>span{display:flex;align-items:center;gap:4px;color:var(--dim);font-size:12px}.bmFld>span .rst{margin-left:auto}
+.bmFld input[type=text]{height:28px;box-sizing:border-box;padding:0 8px;font:inherit}
+.bmSw{display:flex;flex-wrap:wrap;gap:6px}
+.bmSwatch{position:relative;width:24px;height:24px;padding:0;border:0;border-radius:7px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.bmSwatch.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--text)}
+.bmSwatch:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.bmCustom{display:inline-flex;align-items:center;justify-content:center;background:conic-gradient(#f87171,#fbbf24,#86efac,#67e8f9,#a5b4fc,#f0abfc,#f87171);overflow:hidden}
+.bmCustom input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:0}
+.bmPrev{padding:10px;border-radius:8px;background:var(--roll-bg);border:1px solid var(--line)}
+.bmPill{display:inline-block;max-width:100%;box-sizing:border-box;padding:1px 8px;border-radius:5px;font-size:11px;font-weight:600;line-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bmMain{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.bmDanger{color:var(--danger)}.bmDanger:disabled{opacity:.5}
+.bmCtl{display:flex;align-items:center;gap:8px}.bmCtl input{flex:1;min-width:0}.bmVal{min-width:4ch;text-align:right;font-variant-numeric:tabular-nums;font-size:12px}
+.bmChk{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px;cursor:pointer}
+.bmSub{display:flex;align-items:center;gap:6px;padding-left:22px}.bmSub .rst{margin-left:auto}
+.bmNote{margin:0;color:var(--dim);font-size:11.5px;line-height:1.4}
+.bmPop .rst{width:20px;height:20px}.bmPop .rst:not(.show){visibility:hidden}
+@media (max-width:600px){#progRow{flex-wrap:wrap}#bmBar{width:100%!important;border-left:0;border-top:1px solid var(--line)}}
 .pgt{font-variant-numeric:tabular-nums;color:var(--dim);font-size:12px;min-width:7ch;text-align:center}
 #pgTrack{position:relative;flex:1;min-width:60px;height:24px;cursor:pointer;touch-action:none;margin:0 6px}
 #pgTrack::before{content:'';position:absolute;left:0;right:0;top:10px;height:4px;border-radius:2px;background:var(--line)}
@@ -430,7 +481,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         <label class="f">BPM <input type="number" id="bpm" min="20" max="300" step="1" value="120"></label>
         <select id="tsel" title="Time signature"></select>
       </div>
-      <div class="grp"></div>
+      <div class="grp tabtog"><button class="btn ico" id="bTabs" aria-expanded="true"></button></div>
     </div>
     <div class="tabbar"><div id="ftabs" role="tablist" aria-label="Open projects"></div><button class="mini" id="tabNew" title="New tab with an empty project" aria-label="New tab">+</button></div>
   </header>
@@ -489,13 +540,19 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         </div>
       </div>
       <div id="progRow">
+        <div id="pgMain">
         <button class="mini ico" id="pgHome" data-icon="home" title="Back to the start" aria-label="Back to the start"></button>
         <button class="mini ico" id="pgPlay" title="Play / pause (Space)" aria-label="Play"></button>
         <span class="pgt" id="pgCur">00:00.0</span>
         <div id="pgTrack" role="slider" tabindex="0" aria-label="Song position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" title="Drag to look through the song, let go to jump there. Arrow keys move 1 s, Page Up/Down 10 s.">
-          <div id="pgLoop"></div><div id="pgFill"></div><div id="pgGhost"></div><div id="pgThumb"></div><div id="pgTip"></div>
+          <div id="pgLoop"></div><div id="pgFill"></div><div id="pgMarks"></div><div id="pgGhost"></div><div id="pgThumb"></div><div id="pgTip"></div>
         </div>
         <span class="pgt" id="pgEnd">00:00.0</span>
+        </div>
+        <div id="bmBar" role="group" aria-label="Bookmarks">
+          <button class="mini" id="bmAdd" title="Add a bookmark at the playhead (B)" aria-label="Add bookmark"><span data-icon="bmAdd" class="bmI"></span></button>
+          <button class="mini" id="bmOpen" title="Show the bookmarks: jump to one, loop between them, rename or remove them" aria-haspopup="dialog" aria-expanded="false">Bookmarks<span id="bmCount"></span></button>
+        </div>
       </div>
       <div id="insp"></div>
       <div id="status"><span id="sInfo">Ready</span><span id="sRight"></span></div>
@@ -512,7 +569,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     <div class="setRow"><label for="sSatAcc">Accent color saturation<small>Lower it to tone down buttons and highlights.</small></label><div class="ctl"><input type="range" id="sSatAcc" min="0" max="100"><input type="number" class="num" id="sSatAccN" min="0" max="100" aria-label="Accent color saturation in percent"></div></div>
     <div class="setRow"><label for="sSide">Layer panel position</label><select id="sSide"><option value="left">Left</option><option value="right">Right</option></select></div>
     <div class="setRow"><label for="sNames">Show note names on notes</label><input type="checkbox" id="sNames"></div>
-    <div class="setRow"><label for="sKeyLabels">Key labels<small>Which keys show their name on the keyboard.</small></label><select id="sKeyLabels"><option value="c">Only C keys</option><option value="all">All white keys</option><option value="off">None</option></select></div>
+    <div class="setRow"><label for="sKeyLabels">Key labels<small>Which keys show their name on the keyboard.</small></label><select id="sKeyLabels"><option value="c">Only C keys</option><option value="all">All white keys</option><option value="black">Only black keys</option><option value="both">White and black keys</option><option value="off">None</option></select></div>
     <div class="setRow"><label for="sBright">Note area brightness<small>Lighten or darken the background behind the notes.</small></label><div class="ctl"><input type="range" id="sBright" min="-50" max="50" step="5"><input type="number" class="num" id="sBrightN" min="-50" max="50" aria-label="Note area brightness value"></div></div>
     <div class="setRow"><label for="sHover">Preview under the cursor<small>Show the note you would place, with its name, near the cursor.</small></label><input type="checkbox" id="sHover"></div>
     <h3>Sound</h3>
@@ -691,7 +748,7 @@ function parseMidi(buf){
   if(u.length<14||str(4)!=='MThd')throw new Error('This is not a MIDI file.');
   const hl=d.getUint32(p);p+=4;const ntr=d.getUint16(p+2);const div=d.getUint16(p+4);p+=hl;
   if(div&0x8000)throw new Error('SMPTE-timed MIDI files are not supported.');
-  const sc=PPQ/div,tempos=[],tsl=[],groups=new Map();let nid=1;
+  const sc=PPQ/div,tempos=[],tsl=[],marks=[],groups=new Map();let nid=1;
   const dec=new TextDecoder('utf-8');
   for(let ti=0;ti<ntr&&p<u.length;ti++){
     const tag=str(4),len=d.getUint32(p);p+=4;const end=Math.min(u.length,p+len);
@@ -707,6 +764,8 @@ function parseMidi(buf){
         const tt=Math.round(tick*sc);
         if(type===0x51&&l===3){const mpq=(u[dp]<<16)|(u[dp+1]<<8)|u[dp+2];if(mpq>0)tempos.push({tick:tt,bpm:60000000/mpq});}
         else if(type===0x58&&l>=2){tsl.push({tick:tt,n:u[dp],d:1<<u[dp+1]});}
+        else if(type===0x06){try{marks.push({tick:tt,name:dec.decode(u.subarray(dp,dp+l)).replace(/\0/g,'').trim()||'Marker'});}catch(e){}}
+        else if(type===0x7F&&l===8&&u[dp]===0x7D&&u[dp+1]===77&&u[dp+2]===67&&u[dp+3]===66&&u[dp+4]===77){const mk=marks[marks.length-1];if(mk&&mk.tick===tt)mk.color="#"+[u[dp+5],u[dp+6],u[dp+7]].map(v=>v.toString(16).padStart(2,"0")).join("");}
         else if(type===0x03&&!tname){try{tname=dec.decode(u.subarray(dp,dp+l)).replace(/\0/g,'').trim();}catch(e){}}
         else if(type===0x7F&&l>=7&&u[dp]===0x7D&&u[dp+1]===0x4D&&u[dp+2]===0x43){mcols[String.fromCharCode(u[dp+3])]='#'+[u[dp+4],u[dp+5],u[dp+6]].map(x=>x.toString(16).padStart(2,'0')).join('');}
       }else if(s===0xF0||s===0xF7){let l=0;do{b=u[p++];l=(l<<7)|(b&127);}while(b&128);p+=l;}
@@ -747,7 +806,7 @@ function parseMidi(buf){
     g.name=g.drum?(g.tname||'Drums'):(g.tname||GM[g.prog]||'Track');
     if(g.tname&&multi.get(g.ti)>1)g.name=g.tname+' (ch '+(g.ch+1)+')';
   }
-  return{tempos:tm,ts,groups:list};
+  return{tempos:tm,ts,groups:list,marks};
 }
 function writeMidi(sg){
   const enc=new TextEncoder(),chunks=[];
@@ -757,6 +816,9 @@ function writeMidi(sg){
   const cond=[];const nm=enc.encode(sg.name||'Untitled');cond.push(meta(0,0x03,[...nm]));
   cond.push(meta(0,0x58,[sg.ts.n,Math.round(Math.log2(sg.ts.d)),24,8]));
   for(const t of sg.tempos){const mpq=Math.round(60000000/t.bpm);cond.push(meta(t.tick,0x51,[(mpq>>16)&255,(mpq>>8)&255,mpq&255]));}
+  // bookmarks: a standard marker (FF 06) holding the name; the color follows at the same moment as a sequencer-specific event (FF 7F)
+  // tagged 7D (the ID for non-commercial use) + "MCBM", which other programs skip
+  for(const m of sg.marks||[]){cond.push(meta(m.tick,0x06,[...enc.encode(m.name)]));if(m.color){const n=parseInt(m.color.slice(1),16);cond.push(meta(m.tick,0x7F,[0x7D,77,67,66,77,(n>>16)&255,(n>>8)&255,n&255]));}}
   chunks.push(chunk('MTrk',body(cond)));
   let next=0;const chOf=t=>{if(t.drum)return 9;if(next===9)next++;if(next>15){next=0;}if(next===9)next++;return next++;};
   for(const tr of sg.tracks){
@@ -1030,9 +1092,12 @@ let KEYH=124;const RULERW=52,LANEPAD=10;
 const LANES={vel:'Velocity',pan:'Pan',rev:'Reverb',muf:'Muffle',pedal:'Sustain pedal'};
 
 let nextId=100000,nextTrackId=1;
-const song={name:'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},tracks:[]};
+const song={name:'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},tracks:[],marks:[]};
+const MARK_C='#f2b84b';
+// bookmarks: {tick,name}, kept sorted by time; anything read from a file or an old save goes through normMarks
+const normMarks=a=>(Array.isArray(a)?a:[]).filter(m=>m&&isFinite(m.tick)).map(m=>({tick:Math.max(0,Math.round(m.tick)),name:String(m.name==null?'Bookmark':m.name).slice(0,60),...(/^#[0-9a-f]{6}$/i.test(m.color)?{color:m.color.toLowerCase()}:{})})).sort((a,b)=>a.tick-b.tick);
 const S={tool:'draw',gridIdx:4,fineIdx:0,pxBeat:96,keyW:24,active:0,sel:new Set(),playhead:0,startTick:0,playing:false,rec:false,
-  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:0,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:4,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true}};
+  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:5,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:5,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true,tabsHidden:false,bmShow:'all',bmSat:100,bmOne:false,bmOneColor:'#f2b84b'}};
 const gridT=()=>GRIDS[S.gridIdx].t,fineT=()=>FINES[S.fineIdx].t;
 const pxTick=()=>S.pxBeat/PPQ;
 const barTicks=()=>PPQ*4*song.ts.n/song.ts.d;
@@ -1064,10 +1129,10 @@ function tickAtSec(s){let i=tmap.length-1;while(i>0&&tmap[i].sec>s)i--;const m=t
 /* ================= History ================= */
 const H={undo:[],redo:[],nextLabel:null,seq:0};
 const cloneTrack=t=>({...t,notes:t.notes.map(n=>({...n})),pedal:(t.pedal||[]).map(r=>({...r}))});
-const snapState=()=>({tracks:song.tracks.map(cloneTrack),tempos:song.tempos.map(t=>({...t})),ts:{...song.ts},name:song.name,active:S.active});
+const snapState=()=>({tracks:song.tracks.map(cloneTrack),tempos:song.tempos.map(t=>({...t})),ts:{...song.ts},name:song.name,marks:song.marks.map(m=>({...m})),active:S.active});
 function pushH(label){const l=label||H.nextLabel||'Edit';H.nextLabel=null;H.undo.push({s:snapState(),label:l,id:++H.seq,t:Date.now()});if(H.undo.length>60)H.undo.shift();H.redo.length=0;syncUndo();}
 function restoreState(s){
-  song.tracks=s.tracks.map(cloneTrack);song.tempos=s.tempos.map(t=>({...t}));song.ts={...s.ts};song.name=s.name;
+  song.tracks=s.tracks.map(cloneTrack);song.tempos=s.tempos.map(t=>({...t}));song.ts={...s.ts};song.name=s.name;song.marks=normMarks(s.marks);
   S.active=song.tracks.some(t=>t.id===s.active)?s.active:song.tracks[0].id;S.sel.clear();
   buildTempoMap();refreshAll();
 }
@@ -1335,6 +1400,8 @@ function pitchAtX(x,blackOk=true){
 }
 const pitchAtKey=(x,y)=>pitchAtX(x,y-areaH()<KEYH*.62);
 const snapRound=(t,fine)=>{const g=fine?fineT():gridT();return Math.round(t/g)*g;};
+// the playhead goes exactly where you click; hold Alt to snap it to the grid
+const playTickAt=(y,snap)=>snap?Math.max(0,snapRound(tickOfY(y))):Math.max(0,Math.round(tickOfY(y)));
 const snapDown=(t,fine)=>{const g=fine?fineT():gridT();return Math.floor(t/g+1e-9)*g;};
 function lastEnd(){let m=0;for(const tr of song.tracks)for(const n of tr.notes){const e=n.s+n.d;if(e>m)m=e;}return m;}
 function updateStage(){
@@ -1379,7 +1446,7 @@ const C={};
 function loadColors(){
   const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
   C.bg=g('--roll-bg');C.rowW=g('--row-w');C.rowB=g('--row-b');C.scale=g('--row-scale');C.gbar=g('--g-bar');C.gbeat=g('--g-beat');C.gsub=g('--g-sub');
-  C.keyW=g('--key-w');C.keyB=g('--key-b');C.keyLine=g('--key-line');C.ruler=g('--ruler');C.play=g('--playhead');C.sel=g('--sel');C.text=g('--text');C.dim=g('--dim');C.accent=g('--accent');C.accentSoft=g('--accent-soft');C.dark=g('--dark')==='1';
+  C.keyW=g('--key-w');C.keyB=g('--key-b');C.keyLine=g('--key-line');C.ruler=g('--ruler');C.play=g('--playhead');C.sel=g('--sel');C.text=g('--text');C.dim=g('--dim');C.accent=g('--accent');C.accentInk=g('--accent-ink');C.accentSoft=g('--accent-soft');C.dark=g('--dark')==='1';
   redraw();
 }
 const FONT='11px Figtree,system-ui,sans-serif';
@@ -1415,6 +1482,9 @@ function drawRoll(){
   g.strokeStyle=C.gbeat;g.beginPath();for(let p=0;p<128;p+=12){const x=Math.round(keyX0(p))+.5;if(x<RULERW||x>W)continue;g.moveTo(x,0);g.lineTo(x,AH);}g.stroke();
   drawTimeGridV(g,RULERW,W,0,AH);
   if(S.loop.b>S.loop.a){const yT=yOfTick(S.loop.b),yB=yOfTick(S.loop.a);g.fillStyle=S.loop.on?C.accentSoft:'rgba(128,128,150,.08)';g.fillRect(RULERW,yT,W-RULERW,yB-yT);}
+  // bookmarks: a dashed line under the notes here, their names on top of the notes further down
+  const marksIn=bmOnNotes()?song.marks.filter(m=>{const y=yOfTick(m.tick);return y>=-20&&y<=AH+1;}):[];
+  if(marksIn.length){g.setLineDash([6,4]);for(const m of marksIn){const y=Math.round(yOfTick(m.tick))+.5;g.strokeStyle=rgbaOf(bmHex(m),.65);g.beginPath();g.moveTo(RULERW,y);g.lineTo(W,y);g.stroke();}g.setLineDash([]);}
   const layers=S.ghost>0?song.tracks.filter(t=>!t.hide&&t!==act):[];if(!act.hide)layers.push(act);
   g.font='9px Figtree,system-ui,sans-serif';g.textBaseline='middle';g.textAlign='center';
   let ghost=null,ghostDone=false;
@@ -1474,6 +1544,11 @@ function drawRoll(){
     const tw=g.measureText(label).width+14,bx=clamp(hv.x+14,RULERW+4,Math.max(RULERW+4,W-tw-4)),by=clamp(hv.y-24,4,Math.max(4,AH-24));
     g.fillStyle='rgba(20,20,30,.88)';rr(g,bx,by,tw,20,6);g.fill();g.fillStyle='#fff';g.fillText(label,bx+7,by+10.5);
   }
+  BM.hits=[];
+  if(marksIn.length){
+    g.font='600 11px Figtree,system-ui,sans-serif';g.textBaseline='middle';g.textAlign='left';
+    for(const m of marksIn){const y=Math.round(yOfTick(m.tick)),tw=Math.min(g.measureText(m.name).width,220),c=bmHex(m);g.fillStyle=c;rr(g,RULERW+4,y-17,tw+12,16,5);g.fill();g.fillStyle=inkOn(c);g.fillText(m.name,RULERW+10,y-8.5,220);BM.hits.push({m,x0:RULERW+4,x1:RULERW+16+tw,y0:y-17,y1:y-1});}
+  }
   const py=yOfTick(tickNow);
   if(py>=0&&py<=AH+1){g.strokeStyle=C.play;g.lineWidth=1.5;g.beginPath();g.moveTo(RULERW,Math.round(py)+.5);g.lineTo(W,Math.round(py)+.5);g.stroke();}
   g.restore();
@@ -1495,6 +1570,7 @@ function drawRuler(g,AH,H_){
       g.font=FONT;g.textBaseline='bottom';
     }
   }
+  if(bmOnNotes())for(const m of song.marks){const y=Math.round(yOfTick(m.tick));if(y>=-2&&y<=AH+2){g.fillStyle=bmHex(m);g.fillRect(0,y-1,RULERW-14,2);}}
   if(S.loop.b>S.loop.a){const y1=yOfTick(S.loop.b),y0=yOfTick(S.loop.a);g.fillStyle=S.loop.on?C.accent:'rgba(128,128,150,.45)';g.fillRect(RULERW-12,y1,10,y0-y1);}
   else{g.fillStyle='rgba(128,128,150,.18)';g.fillRect(RULERW-12,0,10,AH);}
   const py=yOfTick(S.playhead);g.fillStyle=C.play;g.beginPath();g.moveTo(RULERW-28,py-6);g.lineTo(RULERW-28,py+6);g.lineTo(RULERW-15,py);g.fill();
@@ -1528,13 +1604,18 @@ function drawKeys(g,W,AH,H_){
     g.fillStyle=down.has(p)?C.accent:C.keyW;g.fillRect(x0,AH,x1-x0,KEYH);
     if(p===hp){g.globalAlpha=.6;g.fillStyle=C.accent;g.fillRect(x0,AH,x1-x0,KEYH);g.globalAlpha=1;}
     g.strokeStyle=C.keyLine;g.beginPath();g.moveTo(Math.round(x0)+.5,AH);g.lineTo(Math.round(x0)+.5,H_);g.stroke();
-    const kl=S.set.keyLabels;if(kl==='all'?((x1-x0)>=21||p%12===0):(kl==='c'&&p%12===0)){g.fillStyle=down.has(p)?'#fff':'#444';g.fillText(noteName(p),(x0+x1)/2,H_-12);}
+    const kl=S.set.keyLabels;if(kl==='all'||kl==='both'?((x1-x0)>=21||p%12===0):(kl==='c'&&p%12===0)){g.fillStyle=down.has(p)?'#fff':'#444';g.fillText(noteName(p),(x0+x1)/2,H_-12);}
   }
   const bh=KEYH*.62;
   for(let p=0;p<128;p++){
     if(!isBlack(p))continue;const x0=keyX0(p),x1=keyX1(p);if(x1<RULERW||x0>W)continue;
     g.fillStyle=C.keyB;g.fillRect(x0,AH,x1-x0,bh);if(down.has(p)){g.fillStyle=C.accent;g.fillRect(x0+1,AH,x1-x0-2,bh-2);}
     if(p===hp){g.globalAlpha=.6;g.fillStyle=C.accent;g.fillRect(x0,AH,x1-x0,bh);g.globalAlpha=1;}
+    // black keys are narrow: the octave number goes first when the name does not fit, and the label is left out when even the letter does not
+    if(S.set.keyLabels==='black'||S.set.keyLabels==='both'){
+      let t=noteName(p);if(g.measureText(t).width>x1-x0-2)t=NOTE_NAMES[p%12];
+      if(g.measureText(t).width<=x1-x0-1){g.fillStyle=down.has(p)?C.accentInk:'#ddd';g.fillText(t,(x0+x1)/2,AH+bh-9);}
+    }
   }
   g.fillStyle=C.play;g.fillRect(RULERW,AH,W-RULERW,2);
   g.restore();
@@ -1619,7 +1700,12 @@ function frame(){
 // Dragging it scrolls the notes smoothly to that moment; letting go moves the playhead there.
 const PG={drag:false,tick:0,target:null,id:null,last:''};
 const pgEndTick=()=>Math.max(lastEnd(),barTicks()*4);
-function pgTickAt(x){const r=$('pgTrack').getBoundingClientRect();return clamp((x-r.left)/Math.max(1,r.width),0,1)*pgEndTick();}
+function pgTickAt(x){
+  const r=$('pgTrack').getBoundingClientRect(),w=Math.max(1,r.width),end=pgEndTick();
+  // within a few pixels of a bookmark the bar snaps onto it, so a click lands exactly there
+  if(bmOnBar())for(const m of song.marks)if(Math.abs(r.left+m.tick/end*w-x)<=5)return m.tick;
+  return clamp((x-r.left)/w,0,1)*end;
+}
 function pgScrollTo(t){PG.target=lenPx-t*pxTick()-areaH();}
 function pgUpdate(){
   const end=pgEndTick(),t=PG.drag?PG.tick:S.playhead,f=clamp(t/end,0,1)*100,ph=clamp(S.playhead/end,0,1)*100,lp=S.loop;
@@ -1629,8 +1715,9 @@ function pgUpdate(){
   const L=$('pgLoop');if(lp.on&&lp.b>lp.a){L.style.display='block';L.style.left=clamp(lp.a/end,0,1)*100+'%';L.style.width=Math.max(0,clamp(lp.b/end,0,1)-clamp(lp.a/end,0,1))*100+'%';}else L.style.display='none';
   const ct=fmtT(secAt(t));$('pgCur').textContent=ct;$('pgEnd').textContent=fmtT(secAt(end));
   const tr=$('pgTrack');tr.setAttribute('aria-valuenow',Math.round(f));tr.setAttribute('aria-valuetext',ct+' of '+$('pgEnd').textContent);
+  bmSync();
 }
-function pgTip(x){const r=$('pgTrack').getBoundingClientRect(),tp=$('pgTip');tp.style.left=clamp(x-r.left,0,r.width)+'px';tp.textContent=fmtT(secAt(PG.drag?PG.tick:pgTickAt(x)));}
+function pgTip(x){const r=$('pgTrack').getBoundingClientRect(),tp=$('pgTip');tp.style.left=clamp(x-r.left,0,r.width)+'px';const t=PG.drag?PG.tick:pgTickAt(x),m=bmOnBar()&&song.marks.find(k=>k.tick===t);tp.textContent=(m?m.name+' · ':'')+fmtT(secAt(t));}
 function pgJump(t,smooth=true){t=clamp(t,0,pgEndTick());seek(t);if(smooth)pgScrollTo(t);else scrollToTick(t);PG.last='';redraw();}
 (function(){
   const tr=$('pgTrack');
@@ -1656,6 +1743,242 @@ function pgJump(t,smooth=true){t=clamp(t,0,pgEndTick());seek(t);if(smooth)pgScro
   });
   $('pgPlay').onclick=()=>togglePlay();
   $('pgHome').onclick=()=>pgJump(0);
+})();
+
+/* ================= Bookmarks: named, colored moments, listed in a pop-up from the bar next to the progress bar ================= */
+// The bookmark the playhead is in is the last one at or before it; the list highlights it and follows playback.
+// The pop-up has three views: the list, the editor (name and color, also used when adding one) and the settings.
+const BM_COLORS=[['#f2b84b','Amber'],['#ff8a65','Coral'],['#f472b6','Pink'],['#b794f6','Violet'],['#60a5fa','Blue'],['#38d6c4','Teal'],['#86d86a','Green'],['#b4b4c6','Grey']];
+const BM={sig:'',cur:null,lk:'',pop:null,loopFrom:null,view:'list',ed:null,shift:false,color:MARK_C,hits:[],cache:new Map()};
+const bmNow=()=>Math.round(PG.drag?PG.tick:S.playing?currentTick():S.playhead);
+function bmCur(){const t=bmNow()+1;let i=-1;song.marks.forEach((m,j)=>{if(m.tick<=t)i=j;});return i;}
+const bmTick=i=>i<0?0:song.marks[i].tick;
+const bmLabel=i=>i<0?'the start':'“'+song.marks[i].name+'”';
+const bmSongEnd=()=>{const b=barTicks();return Math.max(b,Math.ceil(lastEnd()/b)*b);};
+const bmOnNotes=()=>S.set.bmShow==='all'||S.set.bmShow==='notes';
+const bmOnBar=()=>S.set.bmShow==='all'||S.set.bmShow==='bar';
+// the color on the notes and the progress bar: the bookmark's own (or the shared one), with the color strength applied
+function bmHex(m){
+  const b=S.set.bmOne?S.set.bmOneColor:(m.color||MARK_C),s=clamp(+S.set.bmSat,0,100),k=b+'/'+s;let v=BM.cache.get(k);
+  if(!v){if(s>=100)v=b;else{const [h,sa,l]=hexToHsl(b);v=hslToHex(h,sa*s/100,l);}BM.cache.set(k,v);}
+  return v;
+}
+// dark text on light colors and white on dark ones, whichever reads better
+function inkOn(hx){
+  const n=parseInt(hx.slice(1),16),f=c=>{c/=255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);};
+  return .2126*f((n>>16)&255)+.7152*f((n>>8)&255)+.0722*f(n&255)>.18?'#1d1707':'#ffffff';
+}
+function bmRange(i,toEnd){const a=bmTick(i),nx=song.marks.find(m=>m.tick>a);return{a,b:toEnd||!nx?bmSongEnd():nx.tick,nx};}
+function bmSync(){
+  const end=pgEndTick(),cur=bmCur(),lk=S.loop.on?S.loop.a+'-'+S.loop.b+'-'+end:'';
+  const sig=song.marks.map(m=>m.tick+':'+m.name+':'+(m.color||'')).join('|')+'#'+end+'#'+secAt(end).toFixed(1)+'#'+S.set.bmShow+S.set.bmSat+S.set.bmOne+S.set.bmOneColor;
+  if(sig!==BM.sig){
+    BM.sig=sig;BM.cur=null;BM.lk=null;
+    $('pgMarks').innerHTML=bmOnBar()?song.marks.map(m=>`<div class="pgMark" style="left:${clamp(m.tick/end,0,1)*100}%;background:${bmHex(m)}"></div>`).join(''):'';
+    $('bmCount').textContent=song.marks.length||'';
+    if(BM.pop&&BM.view==='list')bmRender();
+  }
+  if(cur!==BM.cur){BM.cur=cur;if(BM.pop&&BM.view==='list')for(const r of BM.pop.querySelectorAll('.bmRow'))r.classList.toggle('on',+r.dataset.i===cur);}
+  if(lk!==BM.lk){BM.lk=lk;if(BM.pop&&BM.view==='list')bmLoopMarks();}
+}
+// the loop buttons of the stretch that is looping right now stay lit
+function bmLoopMarks(){
+  for(const b of BM.pop.querySelectorAll('[data-a="loopN"],[data-a="loopE"]')){
+    const r=bmRange(+b.closest('.bmRow').dataset.i,b.dataset.a==='loopE');b.classList.toggle('on',S.loop.on&&S.loop.a===r.a&&S.loop.b===r.b);
+  }
+}
+function bmName(t){
+  const b=barTicks(),bar=Math.floor(t/b)+1,beat=Math.floor((t%b)/beatTicks())+1;
+  const base='Bar '+bar+(beat>1?'.'+beat:'');let n=base,k=2;while(song.marks.some(m=>m.name===n))n=base+' ('+(k++)+')';return n;
+}
+function bmChanged(){BM.sig='';PG.last='';pgUpdate();redraw();}
+// B and the + button open the editor for a new bookmark at the playhead (or for the one that is already there)
+function bmAdd(){
+  const t=bmNow(),near=song.marks.findIndex(m=>Math.abs(m.tick-t)<=2);
+  if(near>=0){bmEdit(near,'name');toast('There is already a bookmark here');return;}
+  bmShow('edit',{m:null,tick:t,name:bmName(t),color:BM.color,focus:'name',close:!BM.pop});
+}
+function bmEdit(i,focus){if(i<0)return;const m=song.marks[i];bmShow('edit',{m,tick:m.tick,name:m.name,color:m.color||MARK_C,focus,close:!BM.pop});}
+function bmSave(){
+  const e=BM.ed;if(!e)return;const name=e.name.trim().slice(0,60)||bmName(e.tick);
+  if(e.m){const m=e.m;if(song.marks.includes(m)&&(m.name!==name||(m.color||MARK_C)!==e.color))act(()=>{m.name=name;m.color=e.color;},'Edit bookmark');}
+  else{act(()=>{song.marks.push({tick:e.tick,name,color:e.color});song.marks.sort((a,b)=>a.tick-b.tick);},'Add bookmark');toast('Added bookmark “'+name+'”');}
+  BM.color=e.color;bmChanged();
+  if(e.close)bmClose();else bmShow('list');
+}
+function bmJump(i,andPlay){pgJump(bmTick(i));if(andPlay&&!S.playing)play();}
+// pressing the lit loop button of the stretch that is already looping turns the loop off
+function bmLoop(i,toEnd){
+  const {a,b,nx}=bmRange(i,toEnd);
+  if(S.loop.on&&S.loop.a===a&&S.loop.b===b){S.loop.on=false;BM.loopFrom=null;syncHeader();redraw();toast('Stopped looping');return;}
+  if(b<=a){toast('There is nothing after this point to loop');return;}
+  S.loop.a=a;S.loop.b=b;S.loop.on=true;BM.loopFrom=i<0?null:song.marks[i];syncHeader();pgJump(a);
+  toast('Looping from '+bmLabel(i)+' to '+(toEnd||!nx?'the end':'“'+nx.name+'”'));
+}
+// removing the bookmark a loop starts from ends that loop and pauses playback
+function bmDropLoop(gone){
+  const m=BM.loopFrom;if(!m||!gone.includes(m))return false;BM.loopFrom=null;
+  if(!S.loop.on||S.loop.a!==m.tick)return false;
+  S.loop.on=false;pause();syncHeader();return true;
+}
+function bmStep(d){
+  const t=bmNow();let i;
+  if(d<0){i=-1;song.marks.forEach((m,j)=>{if(m.tick<t-PPQ/2)i=j;});}
+  else{i=song.marks.findIndex(m=>m.tick>t+1);if(i<0){toast('No later bookmark');return;}}
+  bmJump(i);
+}
+function bmRemove(i){
+  if(i<0)return;const m=song.marks[i];act(()=>{song.marks.splice(i,1);},'Remove bookmark');const stopped=bmDropLoop([m]);bmChanged();
+  toast('Removed “'+m.name+'”'+(stopped?' and stopped its loop':'')+'. Ctrl+Z brings it back.');
+}
+function bmMove(i){
+  if(i<0)return;const t=bmNow();if(song.marks.some((m,j)=>j!==i&&Math.abs(m.tick-t)<=2)){toast('There is already a bookmark here');return;}
+  act(()=>{song.marks[i].tick=t;song.marks.sort((a,b)=>a.tick-b.tick);},'Move bookmark');bmChanged();
+}
+function bmClear(){if(!song.marks.length)return;const all=[...song.marks];act(()=>{song.marks.length=0;},'Remove all bookmarks');bmDropLoop(all);bmChanged();toast('Removed all bookmarks. Ctrl+Z brings them back.');}
+
+/* the pop-up */
+const bmIc=k=>svgI(ICON_P[k],14);
+const bmBtn=(a,cls,ic,t,off)=>`<button type="button" class="mini ico ${cls}" data-a="${a}" title="${t}" aria-label="${t}"${off?' disabled':''}>${bmIc(ic)}</button>`;
+const bmBack=t=>`<div class="bmHead">${bmBtn('back','','chevL','Back to the list')}<strong>${t}</strong></div>`;
+const bmSwatches=(a,cur,custom)=>`<div class="bmSw" role="radiogroup" aria-label="Color">`+BM_COLORS.map(([c,n])=>`<button type="button" class="bmSwatch${c===cur?' on':''}" data-a="${a}" data-c="${c}" role="radio" aria-checked="${c===cur}" aria-label="${n}" title="${n}" style="background:${c}"></button>`).join('')+
+  (custom?`<label class="bmSwatch bmCustom${BM_COLORS.some(x=>x[0]===cur)?'':' on'}" title="Pick any color"><input type="color" data-a="${a}" value="${cur}" aria-label="Pick any color"></label>`:'')+'</div>';
+function bmListHtml(){
+  const cur=bmCur();
+  const row=(i,name,t,col)=>{const s=i<0;return `<div class="bmRow${i===cur?' on':''}" data-i="${i}" role="listitem">`+
+    `<button type="button" class="bmGo" data-a="go" title="Jump to ${s?'the start':'this bookmark'}"><span class="bmDot"${s?'':` style="background:${col}"`}></span><span class="bmN">${esc(name)}</span><span class="bmT">${fmtT(secAt(t))}</span></button>`+
+    bmBtn('play','nrm','play','Play from here')+bmBtn('loopN','nrm','loopNext','Loop from here to the next bookmark')+bmBtn('loopE','nrm','loopEnd','Loop from here to the end of the song')+
+    bmBtn('rename','alt','pencil','Rename',s)+bmBtn('recolor','alt','palette','Change the color',s)+bmBtn('remove','alt','trash','Remove',s)+
+    bmBtn('more','','dots','More: rename, color, move, remove',s)+'</div>';};
+  return '<div class="bmHead"><strong>Bookmarks</strong><span>Press B to add a bookmark at the playhead</span></div>'+
+    '<div class="bmList" role="list">'+row(-1,'Song start',0,'')+song.marks.map((m,i)=>row(i,m.name,m.tick,m.color||MARK_C)).join('')+
+    (song.marks.length?'':'<div class="bmEmpty">No bookmarks yet.</div>')+'</div>'+
+    `<div class="bmFoot"><button type="button" class="mini" data-a="prev" title="Jump to the previous bookmark (,)">${bmIc('chevL')}Previous</button><button type="button" class="mini" data-a="next" title="Jump to the next bookmark (.)">Next${bmIc('chevR')}</button><span class="bmSp"></span>`+
+    `<span class="bmHint">${song.marks.length?'Hold Shift to edit':''}</span>${bmBtn('settings','','gear','Bookmark settings')}</div>`;
+}
+function bmEditHtml(){
+  const e=BM.ed,bar=Math.floor(e.tick/barTicks())+1;
+  return bmBack(e.m?'Edit bookmark':'New bookmark').replace('</div>',`<span>${fmtT(secAt(e.tick))} · bar ${bar}</span></div>`)+
+    `<div class="bmBody"><label class="bmFld"><span>Name</span><input type="text" class="bmNameIn" maxlength="60" value="${esc(e.name)}" spellcheck="false"></label>`+
+    `<div class="bmFld"><span>Color</span>${bmSwatches('color',e.color,true)}</div>`+
+    `<div class="bmFld"><span>Looks like</span><div class="bmPrev"><span class="bmPill" style="background:${e.color};color:${inkOn(e.color)}">${esc(e.name.trim()||bmName(e.tick))}</span></div></div></div>`+
+    `<div class="bmFoot"><span class="bmSp"></span><button type="button" class="mini" data-a="cancel">Cancel</button><button type="button" class="mini bmMain" data-a="save">${e.m?'Save':'Add bookmark'}</button></div>`;
+}
+function bmSetHtml(){
+  const s=S.set,d=DEF_SET,rst=k=>`<button type="button" class="mini ico rst${s[k]!==d[k]?' show':''}" data-a="rst" data-k="${k}" title="Reset to the default" aria-label="Reset to the default"${s[k]!==d[k]?'':' disabled'}>${svgI(ICON_P.undo,12)}</button>`;
+  return bmBack('Bookmark settings')+'<div class="bmBody">'+
+    `<div class="bmFld"><span><label for="bmShowSel">Show bookmarks</label>${rst('bmShow')}</span><select id="bmShowSel" data-k="bmShow"><option value="all">On the notes and the progress bar</option><option value="notes">On the notes only</option><option value="bar">On the progress bar only</option><option value="none">Only in this list</option></select></div>`+
+    `<div class="bmFld"><span><label for="bmSatIn">Color strength</label>${rst('bmSat')}</span><div class="bmCtl"><input type="range" id="bmSatIn" data-k="bmSat" min="0" max="100" step="5" value="${s.bmSat}"><span class="bmVal">${s.bmSat}%</span></div></div>`+
+    `<div class="bmFld"><span><label class="bmChk"><input type="checkbox" data-k="bmOne"${s.bmOne?' checked':''}>One color for every bookmark</label>${rst('bmOne')}</span>`+
+    (s.bmOne?`<div class="bmSub">${bmSwatches('oneColor',s.bmOneColor,true)}${rst('bmOneColor')}</div>`:'')+'</div>'+
+    '<p class="bmNote">These change how bookmarks look on the notes and the progress bar. This list always shows each bookmark’s own color.</p></div>'+
+    `<div class="bmFoot"><button type="button" class="mini bmDanger" data-a="clear"${song.marks.length?'':' disabled'}>Remove all bookmarks</button></div>`;
+}
+function bmRender(){
+  const p=BM.pop;if(!p)return;
+  p.innerHTML=BM.view==='edit'?bmEditHtml():BM.view==='settings'?bmSetHtml():bmListHtml();
+  p.classList.toggle('shift',BM.shift);
+  if(BM.view==='list')bmLoopMarks();
+  if(BM.view==='settings')p.querySelector('#bmShowSel').value=S.set.bmShow;
+  bmPlace();
+}
+function bmPlace(){
+  const p=BM.pop;if(!p)return;const r=$('bmBar').getBoundingClientRect(),w=p.offsetWidth;
+  p.style.left=clamp(r.right-w-4,6,Math.max(6,innerWidth-w-6))+'px';p.style.bottom=(innerHeight-r.top+6)+'px';
+  p.style.maxHeight=Math.max(160,r.top-16)+'px';
+}
+function bmShow(view,ed){
+  if(!BM.pop)bmCreate();
+  BM.view=view;if(ed)BM.ed=ed;bmRender();
+  const p=BM.pop;let f;
+  if(view==='edit')f=BM.ed.focus==='color'?p.querySelector('.bmSwatch.on'):p.querySelector('.bmNameIn');
+  else if(view==='settings')f=p.querySelector('#bmShowSel');
+  else f=p.querySelector('.bmRow.on .bmGo')||p.querySelector('.bmGo');
+  if(f){f.focus({preventScroll:true});if(f.select)f.select();}
+}
+function bmOutside(e){
+  if(!BM.pop||BM.pop.contains(e.target)||$('bmBar').contains(e.target)||(e.target.closest&&e.target.closest('.ctxmenu')))return;bmClose();
+}
+function bmKeys(e){if(e.key==='Shift'||e.type==='blur'){const v=e.type==='keydown';if(v!==BM.shift&&BM.pop){BM.shift=v;BM.pop.classList.toggle('shift',v);}}}
+function bmClose(){
+  if(!BM.pop)return;BM.pop.remove();BM.pop=null;BM.ed=null;BM.shift=false;$('bmOpen').setAttribute('aria-expanded','false');
+  document.removeEventListener('pointerdown',bmOutside,true);window.removeEventListener('resize',bmPlace);
+  for(const ev of ['keydown','keyup','blur'])window.removeEventListener(ev,bmKeys,true);
+}
+function bmSetVal(k,v){S.set[k]=v;saveSettings();BM.cache.clear();bmChanged();}
+function bmCreate(){
+  const p=document.createElement('div');p.className='bmPop';p.setAttribute('role','dialog');p.setAttribute('aria-label','Bookmarks');
+  document.body.appendChild(p);BM.pop=p;$('bmOpen').setAttribute('aria-expanded','true');
+  p.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b||b.disabled)return;
+    const a=b.dataset.a,row=b.closest('.bmRow'),i=row?+row.dataset.i:null;
+    switch(a){
+      case'go':bmJump(i);break;
+      case'play':bmJump(i,true);break;
+      case'loopN':bmLoop(i,false);break;
+      case'loopE':bmLoop(i,true);break;
+      case'rename':bmEdit(i,'name');break;
+      case'recolor':bmEdit(i,'color');break;
+      case'remove':bmRemove(i);break;
+      case'prev':bmStep(-1);break;
+      case'next':bmStep(1);break;
+      case'settings':bmShow('settings');break;
+      case'back':bmShow('list');break;
+      case'cancel':if(BM.ed&&BM.ed.close)bmClose();else bmShow('list');break;
+      case'save':bmSave();break;
+      case'clear':bmClear();bmShow('list');break;
+      case'rst':bmSetVal(b.dataset.k,DEF_SET[b.dataset.k]);bmShow('settings');break;
+      case'color':BM.ed.color=b.dataset.c;bmEdUpdate();break;
+      case'oneColor':bmSetVal('bmOneColor',b.dataset.c);bmRender();break;
+      case'more':{
+        const r=b.getBoundingClientRect();
+        showMenu(r.left,r.bottom+2,[
+          {label:'Rename…',fn:()=>bmEdit(i,'name')},
+          {label:'Change the color…',fn:()=>bmEdit(i,'color')},
+          {label:'Move to the playhead',fn:()=>bmMove(i),disabled:Math.abs(bmTick(i)-bmNow())<=2},
+          {sep:1},
+          {label:'Remove',fn:()=>bmRemove(i)}
+        ]);
+        break;
+      }
+    }
+  });
+  p.addEventListener('input',e=>{
+    const t=e.target;
+    if(t.classList.contains('bmNameIn')){BM.ed.name=t.value;bmEdUpdate();return;}
+    if(t.type==='color'){if(t.dataset.a==='color'){BM.ed.color=t.value;bmEdUpdate();}else bmSetVal('bmOneColor',t.value);return;}
+    if(t.dataset.k==='bmSat'){bmSetVal('bmSat',+t.value);t.nextElementSibling.textContent=t.value+'%';bmRstSync();}
+  });
+  p.addEventListener('change',e=>{
+    const t=e.target,k=t.dataset.k;
+    if(k==='bmShow'){bmSetVal(k,t.value);bmRstSync();}
+    else if(k==='bmOne'){bmSetVal(k,t.checked);bmRender();const c=p.querySelector('[data-k="bmOne"]');if(c)c.focus();}
+    else if(t.type==='color'&&t.dataset.a==='oneColor')bmRender();
+  });
+  p.addEventListener('dblclick',e=>{const row=e.target.closest('.bmRow');if(row&&e.target.closest('.bmGo')&&+row.dataset.i>=0)bmEdit(+row.dataset.i,'name');});
+  p.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();if(BM.view==='list'||(BM.ed&&BM.ed.close&&BM.view==='edit')){bmClose();$('bmOpen').focus();}else bmShow('list');}
+    else if(e.key==='Enter'&&BM.view==='edit'&&!e.target.closest('button')){e.preventDefault();e.stopPropagation();bmSave();}
+  });
+  p.addEventListener('pointermove',e=>{if(e.shiftKey!==BM.shift){BM.shift=e.shiftKey;p.classList.toggle('shift',BM.shift);}});
+  setTimeout(()=>{document.addEventListener('pointerdown',bmOutside,true);window.addEventListener('resize',bmPlace);},0);
+  for(const ev of ['keydown','keyup','blur'])window.addEventListener(ev,bmKeys,true);
+}
+// the editor updates in place (the preview and the swatches), so typing keeps its focus
+function bmEdUpdate(){
+  const p=BM.pop,e=BM.ed;if(!p||!e)return;
+  for(const s of p.querySelectorAll('.bmSwatch[data-c]')){const on=s.dataset.c===e.color;s.classList.toggle('on',on);s.setAttribute('aria-checked',on);}
+  const cu=p.querySelector('.bmCustom');if(cu){cu.classList.toggle('on',!BM_COLORS.some(x=>x[0]===e.color));cu.querySelector('input').value=e.color;}
+  const pl=p.querySelector('.bmPill');pl.style.background=e.color;pl.style.color=inkOn(e.color);pl.textContent=e.name.trim()||bmName(e.tick);
+}
+function bmRstSync(){if(!BM.pop)return;for(const b of BM.pop.querySelectorAll('.rst[data-k]')){const ch=S.set[b.dataset.k]!==DEF_SET[b.dataset.k];b.classList.toggle('show',ch);b.disabled=!ch;}}
+(function(){
+  $('bmAdd').onclick=bmAdd;
+  $('bmOpen').onclick=()=>{if(BM.pop&&BM.view==='list')bmClose();else bmShow('list');};
+  // the progress bar spans the notes plus the side panel's tab strip; the bookmark buttons take the rest, under the panel.
+  // The bar's left border sits on the tab strip's right border, so the two lines meet.
+  const fit=()=>{const tabs=document.querySelector('#lanepanel .ptabs'),edge=tabs&&tabs.offsetWidth?tabs.getBoundingClientRect().right-1:$('rollcol').getBoundingClientRect().right;$('bmBar').style.width=Math.max(0,$('rollwrap').getBoundingClientRect().right-edge)+'px';};
+  const ro=new ResizeObserver(fit);ro.observe($('rollcol'));ro.observe($('lanepanel'));fit();
 })();
 
 /* ================= Pointer interaction: roll ================= */
@@ -1701,10 +2024,12 @@ cv.addEventListener('pointerdown',e=>{
   }
   if(x<RULERW){
     if(x>=RULERW-14){P.mode='loop';P.a=snapDown(Math.max(0,tickOfY(y)),e.altKey);}
-    else{P.mode='ruler';seek(snapRound(tickOfY(y),e.altKey));}
+    else{P.mode='ruler';seek(playTickAt(y,e.altKey));}
     return;
   }
-  if(y<AH&&e.button===0&&Math.abs(y-yOfTick(S.playhead))<=4){P.mode='ruler';seek(snapRound(tickOfY(y),e.altKey));return;}
+  // a bookmark's name tag on the notes: click jumps there, Shift+click or a double-click edits it
+  if(e.button===0){const h=BM.hits.find(h=>x>=h.x0&&x<=h.x1&&y>=h.y0&&y<=h.y1);if(h){const i=song.marks.indexOf(h.m);if(i>=0){if(e.shiftKey||e.detail>1)bmEdit(i,'name');else bmJump(i);}return;}}
+  if(y<AH&&e.button===0&&Math.abs(y-yOfTick(S.playhead))<=4){P.mode='ruler';seek(playTickAt(y,e.altKey));return;}
   if(S.tool==='hand'){P.mode='pan';P.sl=roll.scrollLeft;P.st=roll.scrollTop;return;}
   const h=hitNote(x,y);
   if(e.button===2||S.tool==='erase'){P.mode='erase';if(h)delNote(h.tr,h.n);return;}
@@ -1750,7 +2075,7 @@ function dragMove(e){
   const {x,y}=P,ppt=pxTick(),fine=e.altKey,tr=activeTrack(),AH=areaH();
   switch(P.mode){
     case'keyh':setKeyH(roll.clientHeight-y);break;
-    case'ruler':seek(snapRound(tickOfY(y),fine));break;
+    case'ruler':seek(playTickAt(y,fine));break;
     case'loop':{if(Math.abs(y-P.y0)>3)P.moved=true;if(!P.moved)break;let a=P.a,b=snapRound(Math.max(0,tickOfY(y)),fine);if(b<a)[a,b]=[b,a];if(b-a<gridT())b=a+gridT();S.loop.a=a;S.loop.b=b;S.loop.on=true;syncHeader();redraw();break;}
     case'key':{const p=pitchAtX(x,y-AH<KEYH*.62);if(p!==P.key){liveOff('mouse',P.key);P.key=p;liveOn('mouse',p,S.drawVel);}break;}
     case'pan':roll.scrollLeft=P.sl-(x-P.x0);roll.scrollTop=P.st-(y-P.y0);break;
@@ -1869,7 +2194,7 @@ function setAttr(n,key,v){if(key==='vel')n.v=clamp(Math.round(v),1,127);else n[k
 lane.addEventListener('pointerdown',e=>{
   ensureAudio();if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();
   lane.setPointerCapture(e.pointerId);const {x,y}=canvasPos(lane,e);
-  if(y<areaH()&&Math.abs(y-yOfTick(S.playhead))<=4){PL={mode:'seek',x,y};seek(snapRound(tickOfY(y),e.altKey));return;}
+  if(y<areaH()&&Math.abs(y-yOfTick(S.playhead))<=4){PL={mode:'seek',x,y};seek(playTickAt(y,e.altKey));return;}
   if(y>areaH()||!canEdit())return;
   if(e.button===2&&S.lane!=='pedal')return;
   if(S.lane==='pedal'){pedalDown(x,y,e);return;}
@@ -1937,7 +2262,7 @@ function laneApply(x){
 lane.addEventListener('pointermove',e=>{
   const {x,y}=canvasPos(lane,e);
   if(!PL.mode){lane.style.cursor=laneCursor(y);return;}
-  if(PL.mode==='seek'){seek(snapRound(tickOfY(y),e.altKey));return;}
+  if(PL.mode==='seek'){seek(playTickAt(y,e.altKey));return;}
   if(PL.mode==='pedal'){pedalDrag(y,e);return;}
   PL.ly=PL.y;PL.x=x;PL.y=y;laneApply(x);redraw();
 });
@@ -2061,16 +2386,25 @@ ICON_P.full='<path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" '+
 ICON_P.fullExit='<path d="M6 2.5V6H2.5M13.5 6H10V2.5M10 13.5V10h3.5M2.5 10H6v3.5" '+stk+' stroke-width="1.7"/>';
 ICON_P.chevD='<path d="M3 6l5 5 5-5" '+stk+' stroke-width="1.8"/>';
 ICON_P.chevU='<path d="M3 10l5-5 5 5" '+stk+' stroke-width="1.8"/>';
+// bookmarks: a ribbon with a plus, a loop, and a loop that runs up to an end bar
+ICON_P.bmAdd='<path d="M2.5 2.5h6v11l-3-2.4-3 2.4z" '+stk+' stroke-width="1.5"/><path d="M12.5 2v5.5M9.75 4.75h5.5" '+stk+' stroke-width="1.6"/>';
+ICON_P.loopNext='<path d="M12.6 6.4A4.8 4.8 0 004.2 4.6M3.4 9.6A4.8 4.8 0 0011.8 11.4" '+stk+' stroke-width="1.6"/><path d="M4.3 1.8v3h3M11.7 14.2v-3h-3" '+stk+' stroke-width="1.6"/>';
+ICON_P.loopEnd='<path d="M10.3 6.6A3.9 3.9 0 003.4 5M2.7 9.4A3.9 3.9 0 009.6 11" '+stk+' stroke-width="1.6"/><path d="M3.5 2.4V5h2.6M9.5 13.6V11H6.9" '+stk+' stroke-width="1.6"/><path d="M14 2.5v11" '+stk+' stroke-width="1.8"/>';
+ICON_P.pencil='<path d="M2.5 13.5l.7-3.2L11 2.5a1.6 1.6 0 012.3 2.3L5.5 12.6z" '+stk+' stroke-width="1.5"/>';
+ICON_P.palette='<path d="M8 1.8a6.2 6.2 0 100 12.4c1 0 1.4-.6 1.4-1.2 0-.9-.8-1.2-.8-2 0-.7.6-1.2 1.3-1.2h1.6a2.8 2.8 0 002.7-2.8C14.2 4.2 11.5 1.8 8 1.8z" '+stk+' stroke-width="1.4"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="7.6" cy="4.6" r="1" fill="currentColor"/><circle cx="10.6" cy="5.4" r="1" fill="currentColor"/>';
+ICON_P.dots='<circle cx="3.5" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="12.5" cy="8" r="1.4" fill="currentColor"/>';
 function applyIcons(){
-  document.querySelectorAll('[data-icon]').forEach(el=>{const k=el.dataset.icon,z=el.classList.contains('big')?19:el.classList.contains('ti')?17:el.classList.contains('mini')?14:17;el.innerHTML=svgI(ICON_P[k],z);});
+  document.querySelectorAll('[data-icon]').forEach(el=>{const k=el.dataset.icon,z=el.classList.contains('big')?19:el.classList.contains('bmI')?13:el.classList.contains('ti')?17:el.classList.contains('mini')?14:17;el.innerHTML=svgI(ICON_P[k],z);});
 }
 function syncThemeBtn(){const d=isDarkNow();$('themeIco').innerHTML=svgI(ICON_P[d?'moon':'sun'],16);$('themeLbl').textContent=d?'Dark mode':'Light mode';$('bTheme').title='Currently in '+(d?'dark':'light')+' mode. Click to switch to '+(d?'light':'dark')+' mode.';}
 const fmtSl=(k,v)=>k==='pan'?panLabel(v):String(v);
 function darkHdr(tr){return headerHex(trHex(tr));}
+// "More settings" stays closed until you open it, and then stays open for that layer while the list is redrawn
+const advOpen=new Set();
 function colorBlock(tr){
   const hex=trHex(tr),w=tr.colorWhite||hex,b=tr.colorBlack||hex;
   const row=(key,label,val,reset)=>`<div class="colrow"><label>${label} <input type="color" class="cp" data-c="${key}" value="${val}" aria-label="${label} color"><input type="text" class="hx" data-c="${key}" value="${val}" maxlength="7" spellcheck="false" aria-label="${label} color as hex"></label>${reset?`<button class="mini" data-resetc="${key}" ${tr[key]?'':'disabled'} title="Use the layer color for ${label.toLowerCase()} again">Reset</button>`:''}</div>`;
-  return row('color','Layer color',hex,false)+`<details class="advcol"${(tr.colorWhite||tr.colorBlack)?' open':''}><summary>More settings</summary>${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</details>`;
+  return row('color','Layer color',hex,false)+`<details class="advcol"${advOpen.has(tr.id)?' open':''}><summary>More settings</summary>${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</details>`;
 }
 // "Only this" stays on as a mode: it follows the selected layer, also when you pick or add another one.
 function syncLayerMode(){
@@ -2113,6 +2447,7 @@ function deleteLayer(tr){
   renderTracks();
 }
 const LAYER_LABELS={hide:'Show or hide layer',lock:'Lock or unlock layer',mute:'Mute layer',solo:'Solo layer'};
+$('tracks').addEventListener('toggle',e=>{const d=e.target,c=d.closest&&d.closest('.trk');if(!c||!d.classList.contains('advcol'))return;if(d.open)advOpen.add(+c.dataset.id);else advOpen.delete(+c.dataset.id);},true);
 $('tracks').addEventListener('click',e=>{
   if(e.target.closest('.pastetrk')){pasteLayer(null);return;}
   if(e.target.closest('.addtrk')){addLayer();return;}
@@ -2177,7 +2512,7 @@ function addLayer(){H.nextLabel='Add layer';act(()=>{const t=newTrack();song.tra
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600);}
 function applyParsed(r,name){
   pushH('Open MIDI file');
-  song.name=name.replace(/\.(mid|midi)$/i,'')||'Untitled';song.tempos=r.tempos;song.ts=r.ts;song.tracks=[];
+  song.name=name.replace(/\.(mid|midi)$/i,'')||'Untitled';song.tempos=r.tempos;song.ts=r.ts;song.tracks=[];song.marks=normMarks(r.marks);
   r.groups.forEach((g,i)=>{
     const t=newTrack({name:g.name,program:g.drum?0:g.prog,drum:g.drum,vol:g.def.vol,pan:g.def.pan,rev:g.def.rev,muf:g.def.muf,notes:g.notes.map(n=>({...n,id:nextId++})),pedal:(g.pedal||[]).map(r=>({...r})),hue:(i*53+205)%360});
     applyLayerColors(t,g);
@@ -2205,12 +2540,12 @@ async function openFile(f){
 }
 function loadProject(o){
   if(!o||!Array.isArray(o.tracks))throw new Error('Not a MIDI-Creator project');
-  pushH('Open project');song.name=o.name||'Untitled';song.tempos=o.tempos&&o.tempos.length?o.tempos:[{tick:0,bpm:120}];song.ts=o.ts||{n:4,d:4};
+  pushH('Open project');song.name=o.name||'Untitled';song.tempos=o.tempos&&o.tempos.length?o.tempos:[{tick:0,bpm:120}];song.ts=o.ts||{n:4,d:4};song.marks=normMarks(o.marks);
   song.tracks=o.tracks.map((t,i)=>newTrack({...t,id:nextTrackId++,notes:(t.notes||[]).map(n=>({...n,id:nextId++}))}));
   if(!song.tracks.length)song.tracks.push(newTrack());
   finishLoad();
 }
-const projectJSON=()=>JSON.stringify({app:'midi-creator',name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks.map(t=>({...t,id:undefined,notes:t.notes.map(n=>({...n,id:undefined}))}))});
+const projectJSON=()=>JSON.stringify({app:'midi-creator',name:song.name,tempos:song.tempos,ts:song.ts,marks:song.marks,tracks:song.tracks.map(t=>({...t,id:undefined,notes:t.notes.map(n=>({...n,id:undefined}))}))});
 async function saveBytes(filename,data,mime){
   try{
     const dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;
@@ -2227,7 +2562,13 @@ async function saveMidi(){
 function keysLink(bytes,title){
   let bin='';for(let i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
   const data=btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return'https://mike-dta.github.io/piano-keys-web-version/#midi='+data+'&title='+encodeURIComponent(title);
+  return'https://mike-dta.github.io/piano-keys-web-version/#midi='+data+'&title='+encodeURIComponent(title)+keysMarks();
+}
+// bookmarks ride along as &bm=<URI-encoded JSON>: [{"t":seconds,"n":"name","c":"#rrggbb"}], sorted by time.
+// They are also inside the MIDI data itself (markers, see writeMidi); this copy is in seconds so Keys needs no tempo maths.
+function keysMarks(){
+  if(!song.marks.length)return'';
+  return'&bm='+encodeURIComponent(JSON.stringify(song.marks.map(m=>({t:+secAt(m.tick).toFixed(3),n:m.name,c:m.color||MARK_C}))));
 }
 function openInKeys(bytes,title){return window.open(keysLink(bytes,title),'keys');}
 function sendToKeys(){
@@ -2305,6 +2646,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Home'){seek(0);scrollToTick(0);return;}
   if(e.key==='Escape'){if(STAGE.on){setStage(false);return;}S.sel.clear();updateInspector();redraw();return;}
   if(e.code==='Digit5'){setStage(!STAGE.on);return;}
+  if(e.code==='KeyB'&&!e.shiftKey){bmAdd();return;}
+  if(e.code==='Comma'){bmStep(-1);return;}if(e.code==='Period'){bmStep(1);return;}
   if(e.key==='ArrowLeft'||e.key==='ArrowRight'){if(S.sel.size){e.preventDefault();nudge((e.key==='ArrowLeft'?-1:1)*(e.shiftKey?gridT():fineT()),0);}return;}
   if(e.key==='ArrowUp'||e.key==='ArrowDown'){if(S.sel.size){e.preventDefault();nudge(0,(e.key==='ArrowUp'?1:-1)*(e.shiftKey?12:1));}return;}
   const tools={Digit1:'draw',Digit2:'select',Digit3:'erase',Digit4:'hand'};
@@ -2757,7 +3100,13 @@ function applySide(){
   document.body.classList.toggle('side-right',S.set.sideRight);
   $('bCollapse').innerHTML=svgI(ICON_P[S.set.sideRight?'chevR':'chevL'],14);
 }
-function loadSettings(){try{const o=JSON.parse(localStorage.getItem('keyroll.settings'));if(o)for(const k in DEF_SET)if(k in o&&typeof o[k]===typeof DEF_SET[k])S.set[k]=o[k];if(o&&o.stageFade===false&&!('fadeAmt' in o))S.set.fadeAmt=0;if(o&&!(o.ver>=2)){S.set.palette=DEF_SET.palette;S.set.satBase=DEF_SET.satBase;S.set.satAcc=DEF_SET.satAcc;S.set.ver=2;saveSettings();}if(o&&!(o.ver>=3)){if(S.set.mode==='auto')S.set.mode='dark';S.set.ver=3;saveSettings();}if(o&&!(o.ver>=4)){if(S.set.pnoLow===40)S.set.pnoLow=50;if(S.set.pnoBass===35)S.set.pnoBass=50;S.set.ver=4;saveSettings();}}catch(e){}} // ver 3: dark became the default mode, saved settings still on Auto move to it once; ver 4: new piano defaults, values still at the old defaults move with them
+// the project tab bar folds away with the chevron at the end of the second bar, and stays that way next time
+function applyTabsBar(){
+  const h=S.set.tabsHidden,b=$('bTabs');document.body.classList.toggle('tabs-closed',h);
+  b.innerHTML=svgI(ICON_P[h?'chevU':'chevD'],14);b.title=h?'Show the project tabs':'Hide the project tabs';b.setAttribute('aria-label',b.title);b.setAttribute('aria-expanded',String(!h));
+}
+$('bTabs').onclick=()=>{S.set.tabsHidden=!S.set.tabsHidden;saveSettings();applyTabsBar();setTimeout(sizeCanvases,30);};
+function loadSettings(){try{const o=JSON.parse(localStorage.getItem('keyroll.settings'));if(o)for(const k in DEF_SET)if(k in o&&typeof o[k]===typeof DEF_SET[k])S.set[k]=o[k];if(o&&o.stageFade===false&&!('fadeAmt' in o))S.set.fadeAmt=0;if(o&&!(o.ver>=2)){S.set.palette=DEF_SET.palette;S.set.satBase=DEF_SET.satBase;S.set.satAcc=DEF_SET.satAcc;S.set.ver=2;saveSettings();}if(o&&!(o.ver>=3)){if(S.set.mode==='auto')S.set.mode='dark';S.set.ver=3;saveSettings();}if(o&&!(o.ver>=4)){if(S.set.pnoLow===40)S.set.pnoLow=50;if(S.set.pnoBass===35)S.set.pnoBass=50;S.set.ver=4;saveSettings();}if(o&&!(o.ver>=5)){if(S.set.pnoBright===0)S.set.pnoBright=5;S.set.ver=5;saveSettings();}}catch(e){}} // ver 3: dark became the default mode, saved settings still on Auto move to it once; ver 4 and 5: new piano defaults, values still at the old defaults move with them
 function saveSettings(){try{localStorage.setItem('keyroll.settings',JSON.stringify(S.set));}catch(e){}}
 const dlg=$('settings');
 $('sPalette').innerHTML=Object.entries(PALETTES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
@@ -2799,7 +3148,7 @@ $('sAud').onchange=e=>{S.set.audition=e.target.checked;saveSettings();};
 $('sAuto').onchange=e=>{S.set.autosave=e.target.checked;saveSettings();if(e.target.checked)autosave();else{try{localStorage.removeItem('keyroll.autosave');localStorage.removeItem('mc.tabs');}catch(err){}}};
 $('bSettings').onclick=()=>{syncSettingsUI();if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');};
 $('setClose').onclick=$('setDone').onclick=()=>dlg.close();
-$('setReset').onclick=()=>{Object.assign(S.set,DEF_SET);saveSettings();applyPnoBass();applyTheme();applySide();syncSettingsUI();syncHeader();redraw();toast('Settings reset to defaults');};
+$('setReset').onclick=()=>{Object.assign(S.set,DEF_SET);saveSettings();applyPnoBass();applyTheme();applySide();applyTabsBar();syncSettingsUI();syncHeader();redraw();toast('Settings reset to defaults');};
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
 
 /* ================= Video import (falling-notes videos) ================= */
@@ -3621,7 +3970,7 @@ $('vImport').onclick=()=>{
   const asNew=$('vDest').value==='replace';
   if(asNew&&!tabPristine())addTab(blankProject(),true);
   stopQuiet();if(!asNew)pushH('Import from video');
-  if(asNew){song.name=VID.name||'Untitled';song.tracks=[];}
+  if(asNew){song.name=VID.name||'Untitled';song.tracks=[];song.marks=[];}
   song.tempos=[{tick:0,bpm:o.bpm}];
   const made=[];
   for(const p of picks){const t=newTrack({name:p.name,hue:Math.round(p.c.neutral?215:p.c.h),notes:p.notes.map(n=>({...n,id:nextId++}))});const cm=clusterMeans(p.c);if(cm.all)t.color=okFloor(cm.all);if(cm.white&&cm.black){t.colorWhite=okFloor(cm.white);t.colorBlack=okFloor(cm.black);}song.tracks.push(t);made.push(t);}
@@ -3846,13 +4195,13 @@ function applyTabSettings(set){
   document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x.dataset.lane===S.lane));
   setGhostUI(Math.round(S.ghost*100));$('bFollow').classList.toggle('on',S.follow);octInfo();
 }
-function blankProject(name){return{name:name||'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},tracks:[newTrack({name:'Track 1',hue:205})]};}
+function blankProject(name){return{name:name||'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},marks:[],tracks:[newTrack({name:'Track 1',hue:205})]};}
 function mkTab(data){return{id:++tabSeq,data,H:{undo:[],redo:[],seq:0},view:null,dirty:false};}
 const tabName=t=>(t===curTab?song.name:t.data.name)||'Untitled';
 function tabView(){return{set:Object.fromEntries(TAB_KEYS.map(k=>[k,S[k]])),active:S.active,playhead:S.playhead,startTick:S.startTick,loop:{...S.loop},pxBeat:S.pxBeat,keyW:S.keyW,fit:S.fit&&typeof S.fit==='object'?{...S.fit}:S.fit,sl:roll.scrollLeft,st:roll.scrollTop};}
-function tabStash(t){t.data={name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks};t.H={undo:H.undo,redo:H.redo,seq:H.seq};t.view=tabView();}
+function tabStash(t){t.data={name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks,marks:song.marks};t.H={undo:H.undo,redo:H.redo,seq:H.seq};t.view=tabView();}
 function tabLoad(t){
-  const d=t.data;song.name=d.name;song.tempos=d.tempos;song.ts=d.ts;song.tracks=d.tracks.length?d.tracks:[newTrack({name:'Track 1',hue:205})];
+  const d=t.data;song.name=d.name;song.tempos=d.tempos;song.ts=d.ts;song.marks=normMarks(d.marks);song.tracks=d.tracks.length?d.tracks:[newTrack({name:'Track 1',hue:205})];
   H.undo=t.H.undo;H.redo=t.H.redo;H.seq=t.H.seq;H.nextLabel=null;S.editing=false;S.sel.clear();
   const v=t.view;applyTabSettings(v&&v.set);
   if(v){S.active=song.tracks.some(x=>x.id===v.active)?v.active:song.tracks[0].id;S.playhead=v.playhead||0;S.startTick=v.startTick||0;S.loop={...v.loop};S.pxBeat=v.pxBeat||S.pxBeat;S.keyW=v.keyW||S.keyW;S.fit=v.fit;}
@@ -3898,9 +4247,9 @@ async function closeTabs(list,ev){
   else{renderTabs();autosaveSoon();}
 }
 function reopenTab(){const t=CLOSED.pop();if(!t){toast('No closed tabs to reopen.');return;}TABS.splice(TABS.indexOf(curTab)+1,0,t);switchTab(t);}
-function cloneProject(d,name){return{name,tempos:d.tempos.map(x=>({...x})),ts:{...d.ts},tracks:d.tracks.map(tr=>({...cloneTrack(tr),id:nextTrackId++,notes:tr.notes.map(n=>({...n,id:nextId++}))}))};}
+function cloneProject(d,name){return{name,tempos:d.tempos.map(x=>({...x})),ts:{...d.ts},marks:normMarks(d.marks),tracks:d.tracks.map(tr=>({...cloneTrack(tr),id:nextTrackId++,notes:tr.notes.map(n=>({...n,id:nextId++}))}))};}
 function dupTab(t){
-  const live=t===curTab,d=live?{name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks}:t.data;
+  const live=t===curTab,d=live?{name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks,marks:song.marks}:t.data;
   const n=addTab(cloneProject(d,tabName(t)+' (copy)'),false,t);n.view=live?tabView():t.view&&{...t.view};
   if(n.view){const ai=d.tracks.findIndex(x=>x.id===n.view.active);n.view.active=n.data.tracks[Math.max(0,ai)].id;}
   n.dirty=true;switchTab(n);
@@ -3987,12 +4336,12 @@ function tabMenu(t,x,y){
 })();
 
 /* ---- auto-save of every open tab ---- */
-const serProject=d=>({app:'midi-creator',name:d.name,tempos:d.tempos,ts:d.ts,tracks:d.tracks.map(t=>({...t,id:undefined,notes:t.notes.map(n=>({...n,id:undefined}))}))});
+const serProject=d=>({app:'midi-creator',name:d.name,tempos:d.tempos,ts:d.ts,marks:d.marks||[],tracks:d.tracks.map(t=>({...t,id:undefined,notes:t.notes.map(n=>({...n,id:undefined}))}))});
 function autosaveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(autosave,900);}
 function autosave(){
   if(!S.set.autosave||!curTab)return;
   const all={ver:1,cur:TABS.indexOf(curTab),tabs:TABS.map(t=>{
-    const live=t===curTab,d=live?{name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks}:t.data,v=live?tabView():t.view;
+    const live=t===curTab,d=live?{name:song.name,tempos:song.tempos,ts:song.ts,tracks:song.tracks,marks:song.marks}:t.data,v=live?tabView():t.view;
     return{p:serProject(d),v:v?{...v,activeIdx:d.tracks.findIndex(x=>x.id===v.active),active:undefined}:null,dirty:t.dirty};
   })};
   try{localStorage.setItem('mc.tabs',JSON.stringify(all));localStorage.removeItem('keyroll.autosave');autosave.warned=false;}
@@ -4005,7 +4354,7 @@ function autosave(){
 function projFrom(o){
   const tracks=(o.tracks||[]).map((t,i)=>newTrack({...t,id:nextTrackId++,notes:(t.notes||[]).map(n=>({...n,id:nextId++})),pedal:(t.pedal||[]).map(r=>({...r}))}));
   if(!tracks.length)tracks.push(newTrack({name:'Track 1',hue:205}));
-  return{name:o.name||'Untitled',tempos:o.tempos&&o.tempos.length?o.tempos:[{tick:0,bpm:120}],ts:o.ts||{n:4,d:4},tracks};
+  return{name:o.name||'Untitled',tempos:o.tempos&&o.tempos.length?o.tempos:[{tick:0,bpm:120}],ts:o.ts||{n:4,d:4},marks:normMarks(o.marks),tracks};
 }
 function tabsRestore(){
   let cur=0;
@@ -4019,7 +4368,7 @@ function tabsRestore(){
   }
   const n=TABS.filter(t=>t.data.tracks.some(x=>x.notes.length)).length;
   if(!TABS.length)TABS.push(mkTab(blankProject()));
-  curTab=TABS[cur];const d=curTab.data;song.name=d.name;song.tempos=d.tempos;song.ts=d.ts;song.tracks=d.tracks;
+  curTab=TABS[cur];const d=curTab.data;song.name=d.name;song.tempos=d.tempos;song.ts=d.ts;song.marks=normMarks(d.marks);song.tracks=d.tracks;
   return n;
 }
 
@@ -4249,7 +4598,7 @@ let rstT=0;const rstSoon=()=>{clearTimeout(rstT);rstT=setTimeout(rstSync,60);};
 
 function boot(){
   try{const u=JSON.parse(localStorage.getItem('keyroll.ui'));if(u){UI.sideW=clamp(+u.sideW||276,190,560);UI.laneW=clamp(+u.laneW||170,120,420);UI.keyH=clamp((+u.keyH===96?124:+u.keyH)||124,50,280);}}catch(e){}
-  applyUI();loadSettings();applySide();applyTheme();
+  applyUI();loadSettings();applySide();applyTabsBar();applyTheme();
   applyIcons();
   syncSettingsUI();
   let restored=false;
