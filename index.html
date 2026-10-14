@@ -439,9 +439,9 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
       <div class="grp"><button class="btn big ico" id="bUndo" title="Undo (Ctrl+Z)" aria-label="Undo" data-icon="undo"></button><button class="btn big ico" id="bRedo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" data-icon="redo"></button></div>
       <div class="grp">
         <button class="btn" id="bNew" title="Open a new tab with an empty project">New</button>
-        <button class="btn" id="bOpen" title="Open a .mid or project .json file in a new tab, or drop one onto the window">Open…</button>
+        <button class="btn" id="bOpen" title="Open a MIDI file, sheet music (MusicXML: .musicxml or .mxl) or a project .json file in a new tab, or drop one onto the window">Open…</button>
         <button class="btn" id="bVideo" title="Build notes from a falling-notes video file on your computer">From video…</button>
-        <input type="file" id="file" accept=".mid,.midi,.json" hidden>
+        <input type="file" id="file" accept=".mid,.midi,.json,.musicxml,.mxl,.xml" hidden>
       </div>
       <div class="grp tools" role="group" aria-label="Tools">
         <button class="btn tool on" id="tDraw" title="Draw (1): click for a note, drag to stretch it"><span class="ti" data-icon="draw"></span><span>Draw</span></button>
@@ -583,6 +583,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     </details>
     <h3>Editing</h3>
     <div class="setRow"><label for="sAnti">Anti-resize delay<small>After you place a note, dragging won't stretch it until this many milliseconds have passed.</small></label><div class="ctl"><input type="range" id="sAnti" min="0" max="600" step="10"><input type="number" class="num" id="sAntiN" min="0" max="600" aria-label="Anti-resize delay in milliseconds"></div></div>
+    <div class="setRow"><label for="sLaneAnti">Values lane grab delay<small>After you grab a bar in the Values lane, dragging won't change it until this many milliseconds have passed. At 0 the bar follows the pointer straight away.</small></label><div class="ctl"><input type="range" id="sLaneAnti" min="0" max="600" step="10"><input type="number" class="num" id="sLaneAntiN" min="0" max="600" aria-label="Values lane grab delay in milliseconds"></div></div>
     <div class="setRow"><label for="sHandle">Stretch handle size<small>How close to a note's top or bottom edge you can grab it to stretch it (pixels). Small notes stay easy to move.</small></label><div class="ctl"><input type="range" id="sHandle" min="6" max="24"><input type="number" class="num" id="sHandleN" min="6" max="24" aria-label="Stretch handle size in pixels"></div></div>
     <div class="setRow"><label for="sBarHit">Value bar hitbox<small>How far above or below a bar in the Values lane you can click to grab it, in pixels. The drawn bars do not change.</small></label><div class="ctl"><input type="range" id="sBarHit" min="4" max="24"><input type="number" class="num" id="sBarHitN" min="4" max="24" aria-label="Value bar hitbox in pixels"></div></div>
     <div class="setRow"><label for="sInvert">Invert stretch direction<small>Dragging down instead of up makes a note longer.</small></label><input type="checkbox" id="sInvert"></div>
@@ -722,7 +723,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
 </dialog>
 <div id="prep" hidden role="status" aria-live="polite"><span id="prepTxt"></span><progress id="prepBar" max="100" value="0"></progress><button class="btn" id="prepCancel">Cancel</button></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="drop">Drop a MIDI file to open it</div>
+<div id="drop">Drop a MIDI, MusicXML or project file to open it</div>
 <script>
 /* round 10 */
 //#region midi-io
@@ -807,6 +808,173 @@ function parseMidi(buf){
     if(g.tname&&multi.get(g.ti)>1)g.name=g.tname+' (ch '+(g.ch+1)+')';
   }
   return{tempos:tm,ts,groups:list,marks};
+}
+/* ================= MusicXML import (.musicxml, .xml, .mxl) =================
+   Gives the same shape as parseMidi: one layer per part, and a part with several staves (piano) gets one layer per staff
+   (right hand, left hand). Tempo, time signature, dynamics, staccato, ties and the sustain pedal come along, rehearsal
+   marks become bookmarks, and repeats with 1st/2nd endings are played out. D.C. / D.S. / Coda jumps are not followed. */
+async function readMusicXML(buf){
+  const u=new Uint8Array(buf);
+  if(u[0]===0x50&&u[1]===0x4B)return parseMusicXML(await unzipMxl(buf));
+  const enc=u[0]===0xFF&&u[1]===0xFE?'utf-16le':u[0]===0xFE&&u[1]===0xFF?'utf-16be':'utf-8';
+  return parseMusicXML(new TextDecoder(enc).decode(u));
+}
+// .mxl is a zip; META-INF/container.xml names the score inside
+async function unzipMxl(buf){
+  const v=new DataView(buf),u=new Uint8Array(buf),dec=new TextDecoder(),files={};
+  let e=buf.byteLength-22;while(e>=0&&v.getUint32(e,true)!==0x06054b50)e--;
+  if(e<0)throw new Error('Not a valid .mxl file');
+  for(let i=0,p=v.getUint32(e+16,true),n=v.getUint16(e+10,true);i<n;i++){
+    const nl=v.getUint16(p+28,true);
+    files[dec.decode(u.subarray(p+46,p+46+nl))]={method:v.getUint16(p+10,true),size:v.getUint32(p+20,true),off:v.getUint32(p+42,true)};
+    p+=46+nl+v.getUint16(p+30,true)+v.getUint16(p+32,true);
+  }
+  const bytes=async name=>{
+    const f=files[name];if(!f)throw new Error('The .mxl file is missing '+name);
+    const at=f.off+30+v.getUint16(f.off+26,true)+v.getUint16(f.off+28,true),data=u.subarray(at,at+f.size);
+    if(f.method===0)return data;
+    if(f.method!==8)throw new Error('The .mxl file uses an unsupported compression');
+    return new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+  };
+  let main=Object.keys(files).find(k=>!k.startsWith('META-INF')&&/\.(musicxml|xml)$/i.test(k));
+  if(files['META-INF/container.xml']){const rf=new DOMParser().parseFromString(dec.decode(await bytes('META-INF/container.xml')),'application/xml').querySelector('rootfile');if(rf&&rf.getAttribute('full-path'))main=rf.getAttribute('full-path');}
+  if(!main)throw new Error('No score found in the .mxl file');
+  const b=await bytes(main);
+  return new TextDecoder(b[0]===0xFF&&b[1]===0xFE?'utf-16le':b[0]===0xFE&&b[1]===0xFF?'utf-16be':'utf-8').decode(b);
+}
+function parseMusicXML(text){
+  const x=new DOMParser().parseFromString(text,'application/xml'),root=x.documentElement;
+  if(x.getElementsByTagName('parsererror').length||!/^score-/.test(root.nodeName))throw new Error('Not a MusicXML file');
+  if(root.nodeName!=='score-partwise')throw new Error('Only the usual “partwise” MusicXML is supported');
+  const kids=(el,n)=>{const o=[];for(const c of el.children)if(c.nodeName===n)o.push(c);return o;};
+  const kid=(el,n)=>{for(const c of el.children)if(c.nodeName===n)return c;return null;};
+  const num=(el,n,d=0)=>{const c=el&&kid(el,n);return c&&c.textContent.trim()!==''?+c.textContent:d;};
+  const PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  // dynamic marks as standard MIDI velocities (the ones MuseScore uses), before the lift below
+  const DYN={pppp:8,ppp:16,pp:33,p:49,mp:64,mf:80,f:96,ff:112,fff:126,ffff:127,sf:112,sfz:112,sffz:124,fz:112,fp:96,rf:104,rfz:112};
+  // Scores mean mf as velocity 80, but a note you draw here is 100 and the instruments are tuned around that, so imported
+  // notes sounded weak. Lift them so mf lands on 100 and the steps between markings stay even: p 74, f 114, ff 127, pp 60.
+  const lift=v=>clamp(Math.round(32+v*.85),1,127);
+
+  // names and MIDI settings of each part
+  const info={};
+  for(const sp of x.querySelectorAll('part-list > score-part')){
+    const mi=sp.querySelector('midi-instrument'),unp={};
+    for(const m of sp.querySelectorAll('midi-instrument')){const n=num(m,'midi-unpitched',0);if(n)unp[m.getAttribute('id')]=n-1;}
+    const pn=sp.querySelector('part-name');
+    info[sp.id]={name:pn?pn.textContent.trim():'',prog:mi?clamp(num(mi,'midi-program',1)-1,0,127):0,drum:!!mi&&num(mi,'midi-channel',1)===10,
+      pan:mi&&kid(mi,'pan')?clamp(Math.round(64+num(mi,'pan')/90*63),0,127):64,vol:mi&&kid(mi,'volume')?clamp(Math.round(num(mi,'volume')*1.27),0,127):100,unp};
+  }
+  const parts=kids(root,'part');if(!parts.length)throw new Error('This score has no parts');
+
+  // read every measure of every part into events relative to the start of the measure (in quarter notes)
+  const read=part=>{
+    let div=1,trans=0,staves=1;
+    return kids(part,'measure').map(m=>{
+      const ev={notes:[],tempos:[],dyn:[],ped:[],marks:[],len:0};let t=0,last=0;
+      const pos=()=>{if(t>ev.len)ev.len=t;};
+      for(const el of m.children){
+        const nn=el.nodeName;
+        if(nn==='attributes'){
+          if(kid(el,'divisions'))div=Math.max(1,num(el,'divisions',1));
+          if(kid(el,'staves'))staves=Math.max(1,num(el,'staves',1));
+          const tr=kid(el,'transpose');if(tr)trans=num(tr,'chromatic',0)+12*num(tr,'octave-change',0);
+          const tm=kid(el,'time');if(tm&&kid(tm,'beats')&&!ev.time)ev.time={n:parseInt(kid(tm,'beats').textContent)||4,d:num(tm,'beat-type',4)};
+        }else if(nn==='backup'){t-=num(el,'duration')/div;if(t<0)t=0;}
+        else if(nn==='forward'){t+=num(el,'duration')/div;pos();}
+        else if(nn==='direction'||nn==='sound'){
+          const at=t+(nn==='direction'?num(el,'offset',0)/div:0);
+          const snd=nn==='sound'?el:kid(el,'sound');
+          if(snd&&snd.getAttribute('tempo')&&+snd.getAttribute('tempo')>0)ev.tempos.push({q:at,bpm:+snd.getAttribute('tempo')});
+          if(snd&&snd.getAttribute('dynamics'))ev.dyn.push({q:at,v:clamp(Math.round(+snd.getAttribute('dynamics')*.9),1,127)});
+          if(nn==='direction')for(const dt of kids(el,'direction-type')){
+            const mt=kid(dt,'metronome');
+            if(mt&&kid(mt,'per-minute')&&!(snd&&snd.getAttribute('tempo'))){const U={whole:4,half:2,quarter:1,eighth:.5,'16th':.25},bu=kid(mt,'beat-unit');ev.tempos.push({q:at,bpm:parseFloat(kid(mt,'per-minute').textContent)*(U[bu?bu.textContent.trim():'quarter']||1)*(kid(mt,'beat-unit-dot')?1.5:1)});}
+            const dy=kid(dt,'dynamics');if(dy&&!(snd&&snd.getAttribute('dynamics'))&&dy.firstElementChild&&DYN[dy.firstElementChild.nodeName])ev.dyn.push({q:at,v:DYN[dy.firstElementChild.nodeName]});
+            const pd=kid(dt,'pedal');if(pd)ev.ped.push({q:at,type:pd.getAttribute('type')});
+            const rh=kid(dt,'rehearsal');if(rh&&rh.textContent.trim())ev.marks.push({q:at,name:rh.textContent.trim()});
+          }
+        }else if(nn==='note'){
+          if(kid(el,'grace')||kid(el,'cue'))continue;
+          const d=num(el,'duration')/div,chord=!!kid(el,'chord'),s=chord?last:t;
+          if(!chord){last=t;t+=d;pos();}
+          let p=null;const pt=kid(el,'pitch'),up=kid(el,'unpitched');
+          if(pt)p=(num(pt,'octave',4)+1)*12+PC[(kid(pt,'step')||{textContent:''}).textContent.trim()]+Math.round(num(pt,'alter'))+trans;
+          else if(up){const ins=kid(el,'instrument'),pi=info[part.id];p=ins&&pi&&pi.unp[ins.getAttribute('id')]!=null?pi.unp[ins.getAttribute('id')]:(num(up,'display-octave',4)+1)*12+PC[(kid(up,'display-step')||{textContent:'C'}).textContent.trim()];}
+          if(p==null||!isFinite(p)||d<=0)continue;
+          const ties=kids(el,'tie').map(c=>c.getAttribute('type')),art=el.querySelector('notations articulations');
+          ev.notes.push({staff:Math.min(staves,Math.max(1,num(el,'staff',1))),p:clamp(p,0,127),s,d,tieS:ties.includes('start'),tieE:ties.includes('stop'),
+            stac:art?(kid(art,'staccatissimo')?.35:kid(art,'staccato')||kid(art,'spiccato')?.5:1):1,v:el.getAttribute('dynamics')?clamp(Math.round(+el.getAttribute('dynamics')*.9),1,127):0});
+        }
+      }
+      ev.staves=staves;return ev;
+    });
+  };
+  const all=parts.map(read);
+
+  // the order the measures are played in: repeats and 1st/2nd endings written out. All parts share bar lines, so the first part decides.
+  const ms=kids(parts[0],'measure'),order=[];
+  {
+    let i=0,start=0,pass=1,ending=null,guard=0;
+    while(i<ms.length&&guard++<20000){
+      const bars=kids(ms[i],'barline'),rep=dir=>bars.map(b=>kid(b,'repeat')).find(r=>r&&r.getAttribute('direction')===dir);
+      for(const b of bars){const en=kid(b,'ending');if(en&&en.getAttribute('type')==='start')ending=(en.getAttribute('number')||'1').split(/[\s,]+/).map(Number).filter(Boolean);}
+      if(rep('forward')&&i!==start){start=i;pass=1;}
+      const skip=!!ending&&!ending.includes(pass);
+      if(!skip)order.push(i);
+      const back=skip?null:rep('backward'),closes=bars.some(b=>{const en=kid(b,'ending');return en&&/stop|discontinue/.test(en.getAttribute('type'));});
+      if(back&&pass<(+back.getAttribute('times')||2)){pass++;i=start;ending=null;continue;}
+      if(back){start=i+1;pass=1;}
+      if(closes){if(!skip&&!back){start=i+1;pass=1;}ending=null;}
+      i++;
+    }
+  }
+  // each measure lasts as long as its longest part
+  const len=ms.map((_,i)=>Math.max(...all.map(pm=>pm[i]?pm[i].len:0)));
+  const at=[];let q=0;for(const i of order){at.push(q);q+=len[i];}
+  const T=qq=>Math.round(qq*PPQ);
+
+  const tempos=[],marks=[],groups=[],seen=new Map();let ts=null;
+  all.forEach((pm,pi)=>{
+    const pid=parts[pi].id,inf=info[pid]||{name:'',prog:0,drum:false,pan:64,vol:100};
+    const staves=Math.max(...pm.map(e=>e.staves),1),byStaff=Array.from({length:staves},()=>[]),open=new Map(),dyn=[],ped=[];
+    order.forEach((mi,k)=>{
+      const ev=pm[mi];if(!ev)return;const o=at[k];
+      if(!ts&&ev.time)ts=ev.time;
+      for(const tp of ev.tempos)tempos.push({tick:T(o+tp.q),bpm:tp.bpm});
+      for(const d of ev.dyn)dyn.push({tick:T(o+d.q),v:d.v});
+      for(const pd of ev.ped)ped.push({tick:T(o+pd.q),type:pd.type});
+      if(pi===0)for(const mk of ev.marks){const c=(seen.get(mk.name)||0)+1;seen.set(mk.name,c);marks.push({tick:T(o+mk.q),name:c>1?mk.name+' ('+c+')':mk.name});}
+      for(const n of [...ev.notes].sort((a,b)=>a.s-b.s)){
+        const s=T(o+n.s),e=T(o+n.s+n.d),key=n.staff*128+n.p,prev=open.get(key);
+        if(n.tieE&&prev&&Math.abs(prev.end-s)<=PPQ/8){prev.note.d=e-prev.note.s;prev.end=e;if(!n.tieS)open.delete(key);continue;}
+        const note={s,d:Math.max(1,e-s),p:n.p,v:n.v};byStaff[n.staff-1].push(note);
+        if(n.tieS)open.set(key,{note,end:e});else note.d=Math.max(1,Math.round(note.d*n.stac));
+      }
+    });
+    // dynamics: each note takes the last marking at or before it
+    dyn.sort((a,b)=>a.tick-b.tick);
+    for(const L of byStaff)for(const n of L){let v=n.v;if(!v){v=80;for(const d of dyn){if(d.tick>n.s)break;v=d.v;}}n.v=lift(v);}
+    // sustain pedal regions, shared by all of this part's layers
+    ped.sort((a,b)=>a.tick-b.tick);const regions=[];let down=-1;
+    for(const pd of ped){
+      if(pd.type==='start'||(pd.type==='change'&&down<0)){if(down<0)down=pd.tick;}
+      else if((pd.type==='stop'||pd.type==='change')&&down>=0){regions.push({s:down,d:Math.max(1,pd.tick-down)});down=pd.type==='change'?pd.tick:-1;}
+    }
+    if(down>=0)regions.push({s:down,d:Math.max(1,T(q)-down)});
+    const base=inf.name||('Part '+(pi+1)),hands=staves===2;
+    byStaff.forEach((notes,si)=>{
+      if(!notes.length)return;notes.sort((a,b)=>a.s-b.s||a.p-b.p);
+      const name=staves===1?base:base+' – '+(hands?(si===0?'right hand':'left hand'):'staff '+(si+1));
+      groups.push({name,prog:inf.prog,drum:inf.drum,def:{vol:inf.vol,pan:inf.pan,rev:0,muf:0},notes,pedal:regions.map(r=>({...r})),ti:pi});
+    });
+  });
+  if(!groups.length)throw new Error('No notes found in this score');
+  tempos.sort((a,b)=>a.tick-b.tick);
+  const tm=[];for(const t of tempos){if(tm.length&&tm[tm.length-1].tick===t.tick)tm[tm.length-1]=t;else tm.push(t);}
+  if(!tm.length)tm.push({tick:0,bpm:120});else if(tm[0].tick>0)tm.unshift({tick:0,bpm:tm[0].bpm});
+  const txt=sel=>{const e=x.querySelector(sel);return e?e.textContent.trim():'';};
+  return{tempos:tm,ts:ts&&[1,2,4,8,16,32].includes(ts.d)?ts:{n:4,d:4},groups,marks,title:txt('work > work-title')||txt('movement-title'),repeated:order.length>ms.length};
 }
 function writeMidi(sg){
   const enc=new TextEncoder(),chunks=[];
@@ -1097,7 +1265,7 @@ const MARK_C='#f2b84b';
 // bookmarks: {tick,name}, kept sorted by time; anything read from a file or an old save goes through normMarks
 const normMarks=a=>(Array.isArray(a)?a:[]).filter(m=>m&&isFinite(m.tick)).map(m=>({tick:Math.max(0,Math.round(m.tick)),name:String(m.name==null?'Bookmark':m.name).slice(0,60),...(/^#[0-9a-f]{6}$/i.test(m.color)?{color:m.color.toLowerCase()}:{})})).sort((a,b)=>a.tick-b.tick);
 const S={tool:'draw',gridIdx:4,fineIdx:0,pxBeat:96,keyW:24,active:0,sel:new Set(),playhead:0,startTick:0,playing:false,rec:false,
-  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:5,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:5,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true,tabsHidden:false,bmShow:'all',bmSat:100,bmOne:false,bmOneColor:'#f2b84b'}};
+  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:5,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:5,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,laneAntiMs:80,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true,tabsHidden:false,bmShow:'all',bmSat:100,bmOne:false,bmOneColor:'#f2b84b'}};
 const gridT=()=>GRIDS[S.gridIdx].t,fineT=()=>FINES[S.fineIdx].t;
 const pxTick=()=>S.pxBeat/PPQ;
 const barTicks=()=>PPQ*4*song.ts.n/song.ts.d;
@@ -1640,7 +1808,7 @@ function drawLane(){
   const base=key==='pan'?laneX(64,LW):laneX(0,LW);
   if(!tr.hide&&key!=='pedal')for(const n of tr.notes){
     const y=yOfTick(n.s);if(y<-8||y>AH+8)continue;
-    const v=effVal(n,tr,key),x=laneX(v,LW),sel=S.sel.has(n),own=key==='vel'||n[key]!==undefined;
+    const v=PL.disp&&PL.disp.has(n)?PL.disp.get(n):effVal(n,tr,key),x=laneX(v,LW),sel=S.sel.has(n),own=key==='vel'||n[key]!==undefined;
     g.fillStyle=noteFill(tr,60,own?1:.4);g.fillRect(Math.min(x,base),Math.round(y)-2,Math.abs(x-base)||1,4);
     g.beginPath();g.arc(x,y,sel?6.5:5,0,6.283);g.fill();
     if(sel){g.strokeStyle=C.sel;g.lineWidth=2;g.stroke();}
@@ -1684,6 +1852,7 @@ function frame(){
   }
   pgUpdate();
   if(live.held.size)needDraw=true;
+  if(PL.disp&&PL.goal){let moving=false;for(const [n,gv] of PL.goal){const d=PL.disp.get(n),nd=d+(gv-d)*.35;if(Math.abs(gv-nd)<.05)PL.disp.set(n,gv);else{PL.disp.set(n,nd);moving=true;}}if(moving)needDraw=true;}
   if(STAGE.on){
     const pr=$('stageProg').firstElementChild;if(pr)pr.style.width=Math.min(100,S.playhead/Math.max(1,lastEnd())*100)+'%';
     if(S.playing&&S.set.stageFx)fxCheck();else FX.last=null;
@@ -2205,7 +2374,11 @@ lane.addEventListener('pointerdown',e=>{
     const prim=hit.n;PL.mode='val';PL.prim=prim;PL.start=effVal(prim,tr,key);
     PL.targets=hit.targets.map(n=>({n,v:effVal(n,tr,key)}));
     if(!S.sel.has(prim)){S.sel.clear();S.sel.add(prim);updateInspector();}
-    laneApply(x);
+    // grabbing a bar changes nothing until the Values lane grab delay has passed; then the bar moves to the pointer even if it hasn't moved
+    PL.t0=performance.now();PL.live=false;
+    if(!S.set.laneAntiMs)laneApply(x);
+    else{const me=PL;PL.timer=setTimeout(()=>{if(PL===me&&!PL.live){PL.live=true;laneApply(PL.x);redraw();}},S.set.laneAntiMs);}
+    redraw();
   }else{PL.mode='paint';laneApply(x);}
 });
 /* ---- typing values into the Values lane ---- */
@@ -2250,7 +2423,13 @@ function openLaneEdit(x,y){
 lane.addEventListener('dblclick',e=>{const {x,y}=canvasPos(lane,e);if(S.lane!=='pedal'&&y<areaH()&&canEdit())openLaneEdit(x,y);});
 function laneApply(x){
   const key=S.lane,v=laneValue(x),tr=activeTrack();let list=[];
-  if(PL.mode==='val'){const delta=v-PL.start;list=PL.targets.map(t=>({n:t.n,nv:PL.targets.length>1?t.v+delta:v}));}
+  if(PL.mode==='val'){
+    if(!PL.live){if(performance.now()-PL.t0<S.set.laneAntiMs)return;PL.live=true;}
+    // the bars glide to the pointer without the value step (see frame), and snap to the step when let go
+    const raw=clamp((x-LANEPAD)/($('lanecol').clientWidth-LANEPAD*2)*127,key==='vel'?1:0,127),multi=PL.targets.length>1;
+    if(!PL.disp)PL.disp=new Map(PL.targets.map(t=>[t.n,effVal(t.n,tr,key)]));
+    PL.goal=new Map(PL.targets.map(t=>[t.n,clamp(multi?t.v+raw-PL.start:raw,key==='vel'?1:0,127)]));
+    const delta=v-PL.start;list=PL.targets.map(t=>({n:t.n,nv:PL.targets.length>1?t.v+delta:v}));}
   else if(PL.mode==='paint'){const tolP=Math.max(3,S.set.barHit/2),a=Math.min(PL.ly,PL.y)-tolP,b=Math.max(PL.ly,PL.y)+tolP;for(const n of tr.notes){const Y=yOfTick(n.s);if(Y>=a&&Y<=b)list.push({n,nv:v});}}
   if(!list.length){PL.val=null;return;}
   PL.val=v;
@@ -2266,7 +2445,7 @@ lane.addEventListener('pointermove',e=>{
   if(PL.mode==='pedal'){pedalDrag(y,e);return;}
   PL.ly=PL.y;PL.x=x;PL.y=y;laneApply(x);redraw();
 });
-function endLane(){const m=PL.mode;if(m==='pedal'&&PL.touched)normalizePedal(activeTrack());PL={mode:null};if(m&&m!=='seek'&&m!=='pedal'){const tr=activeTrack();if(S.sel.size===1&&S.lane==='vel'){const n=[...S.sel][0];audition(tr,n.p,n.v,.2);}}endEdit();redraw();}
+function endLane(){clearTimeout(PL.timer);const m=PL.mode;if(m==='pedal'&&PL.touched)normalizePedal(activeTrack());PL={mode:null};if(m&&m!=='seek'&&m!=='pedal'){const tr=activeTrack();if(S.sel.size===1&&S.lane==='vel'){const n=[...S.sel][0];audition(tr,n.p,n.v,.2);}}endEdit();redraw();}
 lane.addEventListener('pointerup',endLane);lane.addEventListener('pointercancel',endLane);
 lane.addEventListener('wheel',e=>{
   e.preventDefault();
@@ -2510,8 +2689,8 @@ function addLayer(){H.nextLabel='Add layer';act(()=>{const t=newTrack();song.tra
 
 /* ================= File I/O ================= */
 function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2600);}
-function applyParsed(r,name){
-  pushH('Open MIDI file');
+function applyParsed(r,name,label){
+  pushH(label||'Open MIDI file');
   song.name=name.replace(/\.(mid|midi)$/i,'')||'Untitled';song.tempos=r.tempos;song.ts=r.ts;song.tracks=[];song.marks=normMarks(r.marks);
   r.groups.forEach((g,i)=>{
     const t=newTrack({name:g.name,program:g.drum?0:g.prog,drum:g.drum,vol:g.def.vol,pan:g.def.pan,rev:g.def.rev,muf:g.def.muf,notes:g.notes.map(n=>({...n,id:nextId++})),pedal:(g.pedal||[]).map(r=>({...r})),hue:(i*53+205)%360});
@@ -2534,7 +2713,14 @@ async function openFile(f){
   try{
     const name=f.name;
     if(/\.json$/i.test(name)){const o=JSON.parse(await f.text());if(!o||!Array.isArray(o.tracks))throw new Error('Not a MIDI-Creator project');openInTab(()=>loadProject(o));toast('Opened project '+name);return;}
-    const r=parseMidi(await f.arrayBuffer());openInTab(()=>applyParsed(r,name));
+    const buf=await f.arrayBuffer(),u=new Uint8Array(buf,0,Math.min(4,buf.byteLength));
+    // sheet music: .musicxml / .xml, or .mxl (zipped); anything not starting like a MIDI file is tried as MusicXML
+    if(/\.(musicxml|mxl|xml)$/i.test(name)||!(u[0]===0x4D&&u[1]===0x54&&u[2]===0x68&&u[3]===0x64)){
+      const r=await readMusicXML(buf);openInTab(()=>applyParsed(r,r.title||name.replace(/\.(musicxml|mxl|xml)$/i,''),'Open sheet music'));
+      const nn=song.tracks.reduce((a,t)=>a+t.notes.length,0);
+      toast(`Opened ${name}: ${song.tracks.length} layer${song.tracks.length>1?'s':''}, ${nn} note${nn===1?'':'s'}`+(r.repeated?', repeats played out':''));return;
+    }
+    const r=parseMidi(buf);openInTab(()=>applyParsed(r,name));
     const nn=song.tracks.reduce((a,t)=>a+t.notes.length,0);toast(`Opened ${name}: ${song.tracks.length} track${song.tracks.length>1?'s':''}, ${nn} notes`);
   }catch(err){toast('Could not open file: '+err.message);}
 }
@@ -3111,6 +3297,7 @@ function saveSettings(){try{localStorage.setItem('keyroll.settings',JSON.stringi
 const dlg=$('settings');
 $('sPalette').innerHTML=Object.entries(PALETTES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
 const setAntiUI=bindSN($('sAnti'),$('sAntiN'),v=>{S.set.antiMs=v;saveSettings();});
+const setLaneAntiUI=bindSN($('sLaneAnti'),$('sLaneAntiN'),v=>{S.set.laneAntiMs=v;saveSettings();});
 const setClickUI=bindSN($('sClick'),$('sClickN'),v=>{S.set.clickVol=v;saveSettings();});
 const setBrightUI=bindSN($('sBright'),$('sBrightN'),v=>{S.set.bright=v;saveSettings();redraw();});
 const setHandleUI=bindSN($('sHandle'),$('sHandleN'),v=>{S.set.handle=v;saveSettings();});
@@ -3128,7 +3315,7 @@ function syncSettingsUI(){
   $('sMode').value=S.set.mode;$('sPalette').value=S.set.palette;$('sSide').value=S.set.sideRight?'right':'left';
   $('sFancy').checked=S.set.fancy;$('sNames').checked=S.set.names;$('sAud').checked=S.set.audition;$('sAuto').checked=S.set.autosave;
   $('sKeyLabels').value=S.set.keyLabels;$('sHover').checked=S.set.hover;$('sInvert').checked=S.set.invert;$('sConfirm').checked=S.set.confirmDel;$('sStopLoop').checked=S.set.stopLoop;
-  setAntiUI(S.set.antiMs);setClickUI(S.set.clickVol);setBrightUI(S.set.bright);setHandleUI(S.set.handle);
+  setAntiUI(S.set.antiMs);setLaneAntiUI(S.set.laneAntiMs);setClickUI(S.set.clickVol);setBrightUI(S.set.bright);setHandleUI(S.set.handle);
   setPnoBrightUI(S.set.pnoBright);setPnoLowUI(S.set.pnoLow);setPnoLowCurveUI(S.set.pnoLowCurve);setPnoBassUI(S.set.pnoBass);setPnoKnockUI(S.set.pnoKnock);
   setSatBaseUI(S.set.satBase);setSatAccUI(S.set.satAcc);setBlackUI(S.set.blackHit);setBarUI(S.set.barHit);$('sStageFx').checked=S.set.stageFx;setFadeAmtUI(S.set.fadeAmt);
 }
