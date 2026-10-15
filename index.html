@@ -53,6 +53,8 @@ body.tabs-closed .tabbar{display:none}
 .btn.on,.mini.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.rec.on{background:var(--danger);border-color:var(--danger);color:#fff}
 .btn:disabled{opacity:.4;cursor:default}
+/* Chrome draws a disabled dropdown at 70% opacity, and see-through text loses its sharp smoothing on Windows; dim the colour instead */
+select:disabled{opacity:1;color:var(--dim)}
 .btn:focus-visible,.mini:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .btn.big{min-width:38px;font-size:15px;padding:3px 10px}
 .mini{padding:1px 6px;font-size:11px;border-radius:4px}
@@ -63,6 +65,8 @@ label.f{display:flex;align-items:center;gap:4px;color:var(--dim)}
 .sep{width:1px;align-self:stretch;background:var(--line)}
 #main{display:grid;grid-template-columns:var(--sideW,276px) 6px minmax(0,1fr);min-height:0}
 #side{grid-column:1}#splitV{grid-column:2}#work{grid-column:3}
+/* all on the first row: with the panel on the right the columns run backwards, and without this the grid would start a new row for each */
+#side,#splitV,#work{grid-row:1}
 body.side-closed #main{grid-template-columns:0 0 minmax(0,1fr)}
 body.side-closed #side,body.side-closed #splitV{display:none}
 .split{background:var(--line);position:relative;touch-action:none;z-index:2}
@@ -105,12 +109,15 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .sl input[type=range]{flex:1 1 90px;width:auto;min-width:36px;margin:0;accent-color:var(--accent)}
 .sl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
 .sidefoot{border-top:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:6px}
-#work{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0}
+/* the work area: the notes column (toolbar, notes, playback bar, note info, status line), the splitter, and the Values sidebar
+   running the full height beside them. The sidebar shares the rows (subgrid), so its lane lines up with the notes in time. */
+#work{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0}
+.opts{grid-column:1;grid-row:1}#rollwrap{grid-column:1;grid-row:2}#progRow{grid-column:1;grid-row:3}#insp{grid-column:1;grid-row:4}#status{grid-column:1;grid-row:5}#splitL{grid-column:2;grid-row:1/-1}
 .opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .opts .btn{line-height:16px} /* whole pixels, so everything below this bar (the roll, the Layers tab) sits on the pixel grid and its text stays sharp */
 #rollwrap{display:flex;min-height:120px;min-width:0}
 #rollcol{position:relative;flex:1;min-width:0;overflow:hidden}
-#lanepanel{width:var(--laneW,200px);display:flex;background:var(--roll-bg);min-width:0}
+#lanepanel{width:var(--laneW,200px);background:var(--roll-bg);min-width:0;grid-column:3;grid-row:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:subgrid}
 #lanecol{flex:1;min-height:0;position:relative;overflow:hidden}
 #lane{position:absolute;left:0;top:0;display:block;touch-action:none}
 .lanebottom{flex:none;height:calc(var(--keyH,124px) + var(--sb,0px));box-sizing:border-box;padding:5px 6px;background:var(--panel);border-top:1px solid var(--line);overflow:hidden}
@@ -147,7 +154,8 @@ body.dragging #drop{display:flex}
   body.side-right #main,body.side-right.side-closed #main{grid-template-columns:minmax(0,1fr)}
   body.side-right #work{grid-column:1}
   body.side-right.side-open #side{left:auto;right:0;grid-column:auto}
-  body.side-open #side{display:flex;position:fixed;z-index:30;left:0;top:0;bottom:0;width:min(92vw,330px);padding-top:env(safe-area-inset-top,0px)}
+  /* the drawer opens below the toolbars (their height is measured in the script), so they stay usable */
+  body.side-open #side{display:flex;position:fixed;z-index:30;left:0;top:var(--topH,0px);bottom:0;width:min(92vw,330px);border-top:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.35)}
   body.side-closed #main{grid-template-columns:minmax(0,1fr)}
   .readout{min-width:0}
   #lanepanel{max-width:40vw}
@@ -165,7 +173,7 @@ input.num{width:50px;padding:2px 3px;text-align:right;font-variant-numeric:tabul
 input[type=number]{-moz-appearance:textfield;appearance:textfield}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{display:none}
 input[type=number],input.num[type=number]{padding-right:15px}#insp label.f input[type=number]{padding-right:14px}
-#stepper{position:fixed;z-index:1001;display:none;flex-direction:column;width:13px;border-left:1px solid var(--line);border-radius:0 5px 5px 0;overflow:hidden}
+#stepper{position:fixed;z-index:1004;display:none;flex-direction:column;width:13px;border-left:1px solid var(--line);border-radius:0 5px 5px 0;overflow:hidden}
 #stepper.show{display:flex}
 #stepper button{flex:1;min-height:0;padding:0;border:0;background:var(--panel2);color:var(--dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
 #stepper button:hover{background:var(--line);color:var(--text)}
@@ -201,7 +209,18 @@ dialog#settings::backdrop,dialog#vidDlg::backdrop,dialog#confirmDlg::backdrop{ba
 .setRow input[type=range]{width:150px;accent-color:var(--accent)}
 /* narrow dialogs: a slider goes on its own line under its description instead of squeezing the text into a thin column */
 @media (max-width:520px){.setRow:has(.ctl){grid-template-columns:minmax(0,1fr) auto;gap:6px 8px}.setRow:has(.ctl)>label{grid-column:1/-1}.setRow .ctl{order:1;min-width:0}.setRow:has(.ctl)>.rst{order:2;margin-right:0}.setRow .ctl input[type=range]{flex:1;width:auto;min-width:0}}
-.setMore{border-bottom:1px solid var(--line)}.setMore summary{cursor:pointer;padding:8px 0 8px 14px;list-style:none;position:relative}.setMore summary::-webkit-details-marker{display:none}.setMore summary::before{content:"";position:absolute;left:1px;top:13px;width:5px;height:5px;border:solid currentColor;border-width:1.5px 1.5px 0 0;transform:rotate(45deg);transition:transform .12s}.setMore[open] summary::before{transform:rotate(135deg);top:12px}.setMore summary small{display:block;color:var(--dim);margin:1px 0 0 1px}.setMore[open] summary{border-bottom:1px solid var(--line)}.setMore .setRow{padding-left:14px}.setMore .setRow:last-child{border-bottom:0}
+.setMore{border-bottom:1px solid var(--line)}.setMore summary{cursor:pointer;padding:8px 0 8px 14px;list-style:none;position:relative}.setMore summary::-webkit-details-marker{display:none}.setMore summary::before{content:"";position:absolute;left:1px;top:13px;width:5px;height:5px;border:solid currentColor;border-width:1.5px 1.5px 0 0;transform:rotate(45deg);transition:transform .12s}.setMore[open] summary::before{transform:translateY(-2.3px) rotate(135deg)}.setMore summary small{display:block;color:var(--dim);margin:1px 0 0 1px}.setMore[open] summary{border-bottom:1px solid var(--line)}.setMore .setRow{padding-left:14px}.setMore .setRow:last-child{border-bottom:0}
+.setCat>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;margin:12px 0 2px;padding:3px 0;border-radius:6px}.setCat>summary::-webkit-details-marker{display:none}
+.setCat>summary::before{content:"";flex:none;width:5px;height:5px;margin:0 1px 0 2px;border:solid var(--dim);border-width:1.5px 1.5px 0 0;transform:rotate(45deg);transition:transform .12s}.setCat[open]>summary::before{transform:translateY(-2.3px) rotate(135deg)}
+/* a border chevron turned to point down has its tip 4.6px below its middle, so it is lifted by half that to sit level with the text */
+.setCat>summary h3{margin:0}.setCat>summary:hover h3,.setCat>summary:hover::before{color:var(--text);border-color:var(--text)}.setCat:not([open])>summary{margin-bottom:0}
+.setCat:first-child>summary{margin-top:8px}
+#setSearch{flex:1;min-width:0;max-width:260px;margin:0 12px;height:28px;box-sizing:border-box;padding:0 9px;font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:7px}#setSearch:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.setBody [hidden]{display:none!important}.setNone{color:var(--dim);margin:16px 0 8px}
+.setRow mark{background:var(--accent-soft);color:inherit;border-radius:3px;box-shadow:0 0 0 1px var(--accent-soft)}
+.setRow .unit{flex:none;width:20px;margin-left:-5px;color:var(--dim);font-size:12px}
+.setRow>input[type=checkbox]{margin-right:0}
+@media (prefers-reduced-motion: reduce){.setCat>summary::before{transition:none}}
 .setFoot{display:flex;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--panel)}
 dialog#vidDlg{width:min(1120px,96vw)}
 .vidBody{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:16px;padding:8px 16px 16px}
@@ -213,6 +232,10 @@ dialog#vidDlg{width:min(1120px,96vw)}
 .vidRight h3{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin:14px 0 4px}
 .vidRight h3:first-child{margin-top:0}
 .vrow{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:3px 0}
+/* the video picker: a button, then the file name with the rest of the row; details on the next row */
+.vfile{flex-wrap:nowrap;border:1px dashed transparent;border-radius:8px;margin:0 -6px;padding:3px 6px}.vfile.over{border-color:var(--accent);background:var(--accent-soft)}
+#vPick{flex:none}.vname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim)}.vname.set{color:var(--text);font-weight:600}
+#vInfoRow{padding-top:0}
 .vrow label{display:flex;align-items:center;gap:6px;color:var(--dim);flex-wrap:wrap;max-width:100%;min-width:0}
 .vsteps{display:flex;flex-direction:column;gap:4px;margin:6px 0}
 .vsteps .btn{text-align:left}.vsteps .btn.done::after{content:' \2713'}
@@ -241,24 +264,45 @@ progress{width:100%;accent-color:var(--accent)}
 .btn.rec{color:var(--danger)}.btn.rec.on{color:#fff}
 .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
 .mini.ico{padding:1px 4px}
-/* the tab that brings a folded-away layer panel back sits on the time ruler, at its outer edge, clear of the loop strip */
-#bExpand{display:none;position:absolute;z-index:6;top:6px;left:0;writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 6px;line-height:1.35;border-radius:7px 0 0 7px;font-weight:600;background:var(--panel)}
-body.side-closed #bExpand{display:block}
-body.stage #bExpand{display:none!important}
+/* The tabs that bring a folded-away panel back sit on the edge of the notes that faces that panel: on the time ruler
+   (left, turned to read upwards) or on the right edge (reading downwards). Layers and Values always face opposite ways. */
+#bExpand,#bLaneExpand{display:none;position:absolute;z-index:6;top:6px;writing-mode:vertical-rl;padding:12px 6px;line-height:18px;border-radius:7px 0 0 7px;font-weight:600;background:var(--panel)}
+#bExpand,body.side-right #bLaneExpand{left:0;right:auto;transform:rotate(180deg)}
+body.side-right #bExpand,#bLaneExpand{left:auto;right:0;transform:none}
+body.side-closed #bExpand,body.lane-closed #bLaneExpand{display:block}
+body.stage #bExpand,body.stage #bLaneExpand{display:none!important}
+body.lane-closed #lanepanel,body.lane-closed #splitL{display:none}
+.ptabs .ptabFold{width:100%;height:24px;margin-bottom:3px;flex:none;color:var(--dim);background:transparent;border-color:transparent}.ptabs .ptabFold:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
 @media (max-width:820px){#bExpand{display:block}body.side-open #bExpand{display:none}}
-#lanepanel{flex-direction:row}
+.ptabs{grid-column:1;grid-row:1/-1}
 .ptabs{display:flex;flex-direction:column;gap:3px;padding:5px 3px;background:var(--panel);border-right:1px solid var(--line);flex:none}
-.ptab{writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dim);font:inherit;font-weight:600;cursor:pointer}
+/* with the layer panel on the right, the Values sidebar (bookmark buttons included) mirrors to the left of the notes, tabs facing the notes */
+body.side-right #work{grid-template-columns:auto auto minmax(0,1fr)}
+body.side-right .opts,body.side-right #rollwrap,body.side-right #progRow,body.side-right #insp,body.side-right #status{grid-column:3}
+body.side-right #splitL{grid-column:2}body.side-right #lanepanel{grid-column:1;grid-template-columns:minmax(0,1fr) auto}
+body.side-right .ptabs{grid-column:2}body.side-right .ppanes{grid-column:1}
+body.side-right .ptabs{border-right:0;border-left:1px solid var(--line)}
+.ptab{writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dim);font:inherit;font-weight:600;cursor:pointer;line-height:18px}
 .ptab:hover{color:var(--text);background:var(--panel2)}
 .ptab[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 .ptab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.ppanes{flex:1;min-width:0;display:flex;flex-direction:column}
-.pane{flex:1;min-height:0;display:flex;flex-direction:column}.pane[hidden]{display:none}
+.ppanes{grid-column:2;grid-row:1/-1;min-width:0;display:grid;grid-template-rows:subgrid}
+.pane{grid-row:2;min-height:0;display:flex;flex-direction:column}.pane[hidden]{display:none}
+.phead{grid-row:1;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 6px 4px 5px;min-width:0;background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;white-space:nowrap;overflow:hidden}
+.pht{display:flex;flex-direction:column;justify-content:center;min-width:0;line-height:1.25}.pht small{color:var(--dim);font-size:11px;overflow:hidden;text-overflow:ellipsis}
+#bmBar{grid-row:3}#progRow>#bmBar{border-top:0;border-left:1px solid var(--line)}
+/* the bookmarks, listed under their buttons: compact rows that scroll in the space beside the note info and status line */
+/* (the list is placed absolutely inside, so however many bookmarks there are, the rows beside it keep their height) */
+.pfill{grid-row:4/-1;position:relative;min-height:0;background:var(--panel);border-top:1px solid var(--line)}
+#bmList{position:absolute;inset:0;overflow-y:auto;padding:2px 3px;scrollbar-width:thin}
+.bmMini{display:flex;align-items:center;gap:2px;border-radius:5px;min-height:22px}.bmMini.on{background:var(--accent-soft)}
+.bmMini .bmGo{height:22px;padding:0 4px;gap:5px;font-size:12px}.bmMini .bmT{font-size:10.5px}.bmMini .bmDot{width:7px;height:7px;border-radius:2px}
+.bmMini .mini.ico{width:20px;height:20px;padding:0;display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--dim);background:transparent;border-color:transparent}.bmMini .mini.ico:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
+.bmMiniNone{color:var(--dim);font-size:11px;padding:3px 4px}
 .vstep{display:flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;min-height:0;border:1px solid var(--line);border-radius:7px;background:var(--panel2)}
 .vstep select{padding:0 2px;height:22px}
 .lanetabs .vstep{padding:0 4px;gap:3px;font-size:11px}.lanetabs .vstep select{flex:1;min-width:30px;font-size:11px}
 .lanebottom{container-type:inline-size}@container (max-width:150px){.lanetabs .vstep{font-size:0;padding:0 2px}}
-.histHead{display:flex;justify-content:space-between;align-items:center;padding:7px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
 #histList{list-style:none;margin:0;padding:4px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:2px}
 #histList button{width:100%;text-align:left;font:inherit;color:var(--text);background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px;cursor:pointer;display:flex;gap:8px}
 #histList button:hover{background:var(--panel2)}
@@ -271,12 +315,42 @@ body.stage #bExpand{display:none!important}
 .hdet ul{margin:0;padding-left:16px}.hdet li{margin:2px 0}
 #histList .cur button .n{color:inherit}
 #histList .fut button{color:var(--dim);font-style:italic}
-.nmrow{margin:-6px -7px 0 -7px;padding:5px 7px;background:var(--lh,#444);border-radius:6px 6px 0 0}
-.trow .nm{color:#fff;font-weight:700}
-.trow .nm:hover,.trow .nm:focus{border-color:rgba(255,255,255,.55);background:rgba(0,0,0,.18)}
+/* the header reaches 2px in under the colored left border and paints those 2px in the border color, so the two meet with no
+   gap at the rounded corner (a child cannot be drawn beneath its parent's border, so this is how it looks layered below it) */
+.nmrow{margin:-6px -7px 0 -9px;padding:5px 7px 5px 9px;background:linear-gradient(to right,var(--lc) 2px,var(--lh,#444) 2px);border-radius:4px 6px 0 0}
+.trow .nm{color:var(--lt,#fff);font-weight:700}
+.trow .nm:hover,.trow .nm:focus{border-color:color-mix(in srgb,var(--lt,#fff) 50%,transparent);background:rgba(0,0,0,.14)}
 .colrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);font-size:12px}
 .colrow label{display:flex;align-items:center;gap:5px}
 input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer}
+input[type=color]::-webkit-color-swatch-wrapper{padding:2px}input[type=color]::-webkit-color-swatch{border:0;border-radius:3px}input[type=color]::-moz-color-swatch{border:0;border-radius:3px}
+input[type=color]:hover{border-color:var(--dim)}input[type=color]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* the color picker pop-up (see "Color picker" in the script) */
+.cpick{position:fixed;z-index:1003;display:none;flex-direction:column;gap:9px;width:250px;box-sizing:border-box;padding:8px 10px 10px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.cpick.show{display:flex}
+.cpHead{display:flex;align-items:center;gap:6px}.cpHead strong{flex:1;font-size:12px;line-height:16px}
+.cpMode{height:24px;padding:0 4px;font-size:12px}
+.cpick .mini.ico{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;padding:0;flex:none}
+body.cpPicking,body.cpPicking *{cursor:crosshair!important}
+#cpLoupe{position:fixed;z-index:1005;display:none;flex-direction:column;align-items:center;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:none}
+#cpLoupe.show{display:flex}#cpLoupe canvas{display:block;border-radius:6px}
+#cpLoupe span{font-size:12px;line-height:16px;font-variant-numeric:tabular-nums;color:var(--text)}
+.cpX{color:var(--dim);background:transparent;border-color:transparent}.cpX:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
+.cpSV{position:relative;height:140px;border-radius:7px;cursor:crosshair;touch-action:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.cpSVdot,.cpHueDot{position:absolute;box-sizing:border-box;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.5),0 1px 3px rgba(0,0,0,.3);pointer-events:none}
+.cpSVdot{width:14px;height:14px;margin:-7px 0 0 -7px}
+.cpHue{position:relative;height:12px;border-radius:6px;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);cursor:pointer;touch-action:none}
+.cpHueDot{top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;background:transparent}
+.cpSV:focus-visible,.cpHue:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.cpRow{display:flex;align-items:flex-end;gap:6px}
+.cpNow{flex:none;display:flex;width:34px;height:26px;border-radius:6px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}.cpNow>*{flex:1}
+.cpOld{padding:0;border:0;cursor:pointer}
+.cpFields{flex:1;min-width:0;display:flex;gap:4px}
+.cpF{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:10.5px;color:var(--dim)}.cpF span{line-height:14px}
+.cpick .cpF input{width:100%;min-width:0;height:26px;box-sizing:border-box;padding:0 15px 0 5px;font-size:12px;font-variant-numeric:tabular-nums}.cpick .cpF .cpHex{padding:0 7px}
+.cpSw{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.cpRecent{display:flex;align-items:center;gap:6px}.cpRecent:empty{display:none}.cpRecent>span{font-size:10.5px;color:var(--dim);margin-right:2px}.cpRecent .cpS{width:22px;flex:none}
+.cpS{height:20px;padding:0;border:0;border-radius:5px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}.cpS.on{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--text)}.cpS:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input.hx{width:72px;font-family:inherit}
 .advcol{font-size:12px;color:var(--dim)}.advcol summary{cursor:pointer;margin:2px 0}
 .advcol .colrow{margin:4px 0 0 2px}
@@ -297,7 +371,7 @@ body.stage #top{position:fixed;left:0;right:0;top:0;z-index:40;transition:transf
 body.stage.hide-bar #top{transform:translateY(-105%);pointer-events:none}
 body.stage #side,body.stage #splitV,body.stage #splitL,body.stage #lanepanel,body.stage #insp,body.stage #status,body.stage #progRow{display:none}
 body.stage #main{grid-template-columns:minmax(0,1fr)}
-body.stage #work{grid-column:1;grid-template-rows:minmax(0,1fr)}
+body.stage #work{grid-column:1;grid-template-columns:minmax(0,1fr)}
 body.stage .opts{position:fixed;left:0;right:0;bottom:0;z-index:39;border-bottom:0;border-top:1px solid var(--line);transition:transform .16s ease}
 body.stage.hide-bar .opts{transform:translateY(105%);pointer-events:none}
 #stageProg{display:none}
@@ -344,7 +418,7 @@ details.vsub>summary{text-transform:none;letter-spacing:0;font-size:12px}
 #pgMain{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:3px 10px}
 #progRow .mini.ico{width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center}
 /* bookmarks sit under the side panel, so the progress bar spans exactly the notes above it (the width is set in the script) */
-#bmBar{flex:none;display:flex;align-items:center;gap:3px;padding:3px 5px;box-sizing:border-box;border-left:1px solid var(--line);min-width:0;overflow:hidden}
+#bmBar{flex:none;display:flex;align-items:center;gap:3px;padding:3px 5px;box-sizing:border-box;border-top:1px solid var(--line);min-width:0;overflow:hidden}
 #bmBar .mini{display:inline-flex;align-items:center;gap:4px;height:22px;box-sizing:border-box;padding:0 7px;white-space:nowrap;font-size:12px}
 #bmAdd{flex:none;width:28px;justify-content:center;padding:0}#bmOpen{flex:1;min-width:0;justify-content:center;overflow:hidden;padding:0 4px!important;gap:3px!important}#bmOpen[aria-expanded=true]{background:var(--line)}
 .bmI{display:inline-flex}.bmI svg{display:block}
@@ -384,8 +458,10 @@ details.vsub>summary{text-transform:none;letter-spacing:0;font-size:12px}
 .bmChk{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px;cursor:pointer}
 .bmSub{display:flex;align-items:center;gap:6px;padding-left:22px}.bmSub .rst{margin-left:auto}
 .bmNote{margin:0;color:var(--dim);font-size:11.5px;line-height:1.4}
+.bmHead .bmX{margin:-2px -4px -2px auto;color:var(--dim);background:transparent;border-color:transparent}.bmHead span+.bmX{margin-left:2px}.bmHead .bmX:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
+.bmMini[data-i="-1"] .bmDot{background:transparent;box-shadow:inset 0 0 0 1.5px var(--dim)}
 .bmPop .rst{width:20px;height:20px}.bmPop .rst:not(.show){visibility:hidden}
-@media (max-width:600px){#progRow{flex-wrap:wrap}#bmBar{width:100%!important;border-left:0;border-top:1px solid var(--line)}}
+@media (max-width:600px){#progRow{flex-wrap:wrap}}
 .pgt{font-variant-numeric:tabular-nums;color:var(--dim);font-size:12px;min-width:7ch;text-align:center}
 #pgTrack{position:relative;flex:1;min-width:60px;height:24px;cursor:pointer;touch-action:none;margin:0 6px}
 #pgTrack::before{content:'';position:absolute;left:0;right:0;top:10px;height:4px;border-radius:2px;background:var(--line)}
@@ -514,30 +590,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         <span class="f" id="octInfo" title="Z / X change the octave of the computer-keyboard piano"></span>
       </div>
       <div id="rollwrap">
-        <div id="rollcol"><button class="btn" id="bExpand" title="Show the layer panel" aria-label="Show the layer panel">Layers</button><div id="roll"><div id="stage"><canvas id="cv"></canvas></div></div></div>
-        <div id="splitL" class="split v" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize the sidebar (double-click resets)"></div>
-        <div id="lanepanel">
-          <div class="ptabs" role="tablist" aria-label="Sidebar" aria-orientation="vertical">
-            <button class="ptab" role="tab" id="tabVals" aria-selected="true" aria-controls="valsPane">Values</button>
-            <button class="ptab" role="tab" id="tabHist" aria-selected="false" aria-controls="histPane" tabindex="-1">Undo history</button>
-          </div>
-          <div class="ppanes">
-            <div class="pane" id="valsPane" role="tabpanel" aria-labelledby="tabVals" title="Value lane: drag a bar sideways to set it. Drag up or down over empty space to paint values across several notes.">
-              <div id="lanecol"><canvas id="lane"></canvas></div>
-              <div class="lanebottom"><div class="lanetabs">
-                <button class="btn on" data-lane="vel">Velocity</button>
-                <button class="btn" data-lane="pan">Pan</button>
-                <button class="btn" data-lane="rev">Reverb</button>
-                <button class="btn" data-lane="muf">Muffle</button>
-                <div class="lastrow"><button class="btn" data-lane="pedal" title="Sustain pedal regions">Pedal</button><label class="f vstep" title="Value bars snap to multiples of this step">Step <select id="stepSel" aria-label="Value step"><option>1</option><option selected>2</option><option>4</option><option>8</option><option>16</option></select></label></div>
-              </div></div>
-            </div>
-            <div class="pane" id="histPane" role="tabpanel" aria-labelledby="tabHist" hidden>
-              <div class="histHead"><strong>Undo history</strong><button class="mini" id="histClear" title="Forget all undo steps">Clear</button></div>
-              <ol id="histList" aria-label="Undo history. Choose a step to go back or forward to it."></ol>
-            </div>
-          </div>
-        </div>
+        <div id="rollcol"><button class="btn" id="bExpand" title="Show the layer panel" aria-label="Show the layer panel">Layers</button><button class="btn" id="bLaneExpand" title="Show the Values sidebar" aria-label="Show the Values sidebar">Values</button><div id="roll"><div id="stage"><canvas id="cv"></canvas></div></div></div>
       </div>
       <div id="progRow">
         <div id="pgMain">
@@ -549,13 +602,39 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         </div>
         <span class="pgt" id="pgEnd">00:00.0</span>
         </div>
-        <div id="bmBar" role="group" aria-label="Bookmarks">
-          <button class="mini" id="bmAdd" title="Add a bookmark at the playhead (B)" aria-label="Add bookmark"><span data-icon="bmAdd" class="bmI"></span></button>
-          <button class="mini" id="bmOpen" title="Show the bookmarks: jump to one, loop between them, rename or remove them" aria-haspopup="dialog" aria-expanded="false">Bookmarks<span id="bmCount"></span></button>
-        </div>
       </div>
       <div id="insp"></div>
       <div id="status"><span id="sInfo">Ready</span><span id="sRight"></span></div>
+      <!-- the Values sidebar runs the full height, like the layer panel; its rows line up with the bars beside it -->
+      <div id="splitL" class="split v" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize the sidebar (double-click resets)"></div>
+      <div id="lanepanel">
+        <div class="ptabs" role="tablist" aria-label="Sidebar" aria-orientation="vertical">
+          <button class="mini ico ptabFold" id="bLaneFold" title="Fold the Values sidebar away" aria-label="Fold the Values sidebar away"></button>
+          <button class="ptab" role="tab" id="tabVals" aria-selected="true" aria-controls="valsPane">Values</button>
+          <button class="ptab" role="tab" id="tabHist" aria-selected="false" aria-controls="histPane" tabindex="-1">Undo history</button>
+        </div>
+        <div class="ppanes">
+          <div class="phead"><div class="pht"><strong id="pHeadT">Values</strong><small id="pHeadS"></small></div><button class="mini" id="histClear" title="Forget all undo steps" hidden>Clear</button></div>
+          <div class="pane" id="valsPane" role="tabpanel" aria-labelledby="tabVals" title="Value lane: drag a bar sideways to set it. Drag up or down over empty space to paint values across several notes.">
+            <div id="lanecol"><canvas id="lane"></canvas></div>
+            <div class="lanebottom"><div class="lanetabs">
+              <button class="btn on" data-lane="vel">Velocity</button>
+              <button class="btn" data-lane="pan">Pan</button>
+              <button class="btn" data-lane="rev">Reverb</button>
+              <button class="btn" data-lane="muf">Muffle</button>
+              <div class="lastrow"><button class="btn" data-lane="pedal" title="Sustain pedal regions">Pedal</button><label class="f vstep" title="Value bars snap to multiples of this step">Step <select id="stepSel" aria-label="Value step"><option>1</option><option selected>2</option><option>4</option><option>8</option><option>16</option></select></label></div>
+            </div></div>
+          </div>
+          <div class="pane" id="histPane" role="tabpanel" aria-labelledby="tabHist" hidden>
+            <ol id="histList" aria-label="Undo history. Choose a step to go back or forward to it."></ol>
+          </div>
+          <div id="bmBar" role="group" aria-label="Bookmarks">
+            <button class="mini" id="bmAdd" title="Add a bookmark at the playhead (B)" aria-label="Add bookmark"><span data-icon="bmAdd" class="bmI"></span></button>
+            <button class="mini" id="bmOpen" title="Show the bookmarks: jump to one, loop between them, rename or remove them" aria-haspopup="dialog" aria-expanded="false">Bookmarks<span id="bmCount"></span></button>
+          </div>
+          <div class="pfill"><div id="bmList" role="list" aria-label="Bookmarks"></div></div>
+        </div>
+      </div>
     </section>
   </div>
 </div>
@@ -586,7 +665,6 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     <div class="setRow"><label for="sLaneAnti">Values lane grab delay<small>After you grab a bar in the Values lane, dragging won't change it until this many milliseconds have passed. At 0 the bar follows the pointer straight away.</small></label><div class="ctl"><input type="range" id="sLaneAnti" min="0" max="600" step="10"><input type="number" class="num" id="sLaneAntiN" min="0" max="600" aria-label="Values lane grab delay in milliseconds"></div></div>
     <div class="setRow"><label for="sHandle">Stretch handle size<small>How close to a note's top or bottom edge you can grab it to stretch it (pixels). Small notes stay easy to move.</small></label><div class="ctl"><input type="range" id="sHandle" min="6" max="24"><input type="number" class="num" id="sHandleN" min="6" max="24" aria-label="Stretch handle size in pixels"></div></div>
     <div class="setRow"><label for="sBarHit">Value bar hitbox<small>How far above or below a bar in the Values lane you can click to grab it, in pixels. The drawn bars do not change.</small></label><div class="ctl"><input type="range" id="sBarHit" min="4" max="24"><input type="number" class="num" id="sBarHitN" min="4" max="24" aria-label="Value bar hitbox in pixels"></div></div>
-    <div class="setRow"><label for="sInvert">Invert stretch direction<small>Dragging down instead of up makes a note longer.</small></label><input type="checkbox" id="sInvert"></div>
     <div class="setRow"><label for="sBlackHit">Black key hitbox width<small>How wide the clickable area of a black key is, as a percent of a white key. The drawn keys do not change.</small></label><div class="ctl"><input type="range" id="sBlackHit" min="30" max="100"><input type="number" class="num" id="sBlackHitN" min="30" max="100" aria-label="Black key hitbox width in percent"></div></div>
     <div class="setRow"><label for="sAud">Play notes while editing<small>Short preview when you place or move a note.</small></label><input type="checkbox" id="sAud"></div>
     <div class="setRow"><label for="sConfirm">Confirm before deleting a layer</label><input type="checkbox" id="sConfirm"></div>
@@ -629,7 +707,8 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
       <div class="vpanes">
       <div id="vpPre" class="vpane" role="tabpanel" aria-labelledby="vtPre">
         <section class="vstepbox" id="vs1"><h3><span class="vnum">1</span>Select</h3>
-          <div class="vrow"><input type="file" id="vFile" accept="video/*" aria-label="Video file"><span id="vInfo"></span></div>
+          <div class="vrow vfile" id="vDrop"><button type="button" class="btn" id="vPick">Choose video…</button><input type="file" id="vFile" accept="video/*" aria-label="Video file" tabindex="-1" hidden><span id="vName" class="vname">No video chosen. Pick one, or drop it here.</span></div>
+          <div class="vrow" id="vInfoRow" hidden><small id="vInfo" class="vdim"></small></div>
           <div class="vrow"><small class="vdim">Works best with falling-notes videos that light up the keys when they are played. Everything stays on your computer. Your marks and settings are remembered for next time.</small></div>
           <div class="vrow"><label>Keyboard size <select id="vPreset"><option value="88">88 keys</option><option value="76">76 keys</option><option value="61">61 keys</option><option value="49">49 keys</option><option value="37">37 keys</option><option value="25">25 keys</option><option value="custom">Custom</option></select></label></div>
           <div class="vrow"><label>Lowest key <input type="number" class="num" id="vLo" min="0" max="126" value="21"><span id="vLoN"></span></label><label>Highest key <input type="number" class="num" id="vHi" min="1" max="127" value="108"><span id="vHiN"></span></label></div>
@@ -1265,13 +1344,15 @@ const MARK_C='#f2b84b';
 // bookmarks: {tick,name}, kept sorted by time; anything read from a file or an old save goes through normMarks
 const normMarks=a=>(Array.isArray(a)?a:[]).filter(m=>m&&isFinite(m.tick)).map(m=>({tick:Math.max(0,Math.round(m.tick)),name:String(m.name==null?'Bookmark':m.name).slice(0,60),...(/^#[0-9a-f]{6}$/i.test(m.color)?{color:m.color.toLowerCase()}:{})})).sort((a,b)=>a.tick-b.tick);
 const S={tool:'draw',gridIdx:4,fineIdx:0,pxBeat:96,keyW:24,active:0,sel:new Set(),playhead:0,startTick:0,playing:false,rec:false,
-  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:5,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:5,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,invert:false,confirmDel:true,stopLoop:true,antiMs:160,laneAntiMs:80,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true,tabsHidden:false,bmShow:'all',bmSat:100,bmOne:false,bmOneColor:'#f2b84b'}};
+  loop:{on:false,a:0,b:PPQ*8},metro:false,follow:true,lane:'vel',valStep:2,drawVel:100,scaleRoot:0,scaleType:'off',octave:4,editing:false,clip:null,ghost:.3,layerMode:'all',fit:'keys',hv:null,set:{fancy:false,pnoBright:5,pnoLow:50,pnoLowCurve:0,pnoBass:50,pnoKnock:50,satBase:0,satAcc:80,ver:5,barHit:12,blackHit:60,stageFx:true,fadeAmt:35,bright:0,hover:true,keyLabels:'c',handle:12,confirmDel:true,stopLoop:true,antiMs:160,laneAntiMs:80,audition:true,names:true,mode:'dark',palette:'forest',sideRight:false,clickVol:50,autosave:true,tabsHidden:false,bmShow:'all',bmSat:100,bmOne:false,bmOneColor:'#f2b84b'}};
 const gridT=()=>GRIDS[S.gridIdx].t,fineT=()=>FINES[S.fineIdx].t;
 const pxTick=()=>S.pxBeat/PPQ;
 const barTicks=()=>PPQ*4*song.ts.n/song.ts.d;
 const beatTicks=()=>PPQ*4/song.ts.d;
 let needDraw=true,flatDirty=true,flat=[],dpr=1;
 const roll=$('roll'),cv=$('cv'),lane=$('lane');
+// both canvases paint their whole background, so they can be opaque; that also lets the browser use its sharper text smoothing on them
+cv.getContext('2d',{alpha:false});lane.getContext('2d',{alpha:false});
 function redraw(){needDraw=true;}
 
 function newTrack(o={}){
@@ -1298,14 +1379,16 @@ function tickAtSec(s){let i=tmap.length-1;while(i>0&&tmap[i].sec>s)i--;const m=t
 const H={undo:[],redo:[],nextLabel:null,seq:0};
 const cloneTrack=t=>({...t,notes:t.notes.map(n=>({...n})),pedal:(t.pedal||[]).map(r=>({...r}))});
 const snapState=()=>({tracks:song.tracks.map(cloneTrack),tempos:song.tempos.map(t=>({...t})),ts:{...song.ts},name:song.name,marks:song.marks.map(m=>({...m})),active:S.active});
+// an undo step from a state saved earlier (when a change is only kept at the end, like a color picked in the pop-up)
+function pushHFrom(s,label){H.undo.push({s,label,id:++H.seq,t:Date.now()});if(H.undo.length>60)H.undo.shift();H.redo.length=0;syncUndo();}
 function pushH(label){const l=label||H.nextLabel||'Edit';H.nextLabel=null;H.undo.push({s:snapState(),label:l,id:++H.seq,t:Date.now()});if(H.undo.length>60)H.undo.shift();H.redo.length=0;syncUndo();}
 function restoreState(s){
   song.tracks=s.tracks.map(cloneTrack);song.tempos=s.tempos.map(t=>({...t}));song.ts={...s.ts};song.name=s.name;song.marks=normMarks(s.marks);
   S.active=song.tracks.some(t=>t.id===s.active)?s.active:song.tracks[0].id;S.sel.clear();
   buildTempoMap();refreshAll();
 }
-function undo(){if(!H.undo.length)return toast('Nothing to undo');const e=H.undo.pop();H.redo.push({s:snapState(),label:e.label,id:e.id,t:e.t});restoreState(e.s);}
-function redo(){if(!H.redo.length)return toast('Nothing to redo');const e=H.redo.pop();H.undo.push({s:snapState(),label:e.label,id:e.id,t:e.t});restoreState(e.s);}
+function undo(){if(!H.undo.length)return toast('Nothing to undo');const e=H.undo.pop();H.redo.push({s:snapState(),label:e.label,id:e.id,t:e.t});restoreState(e.s);syncUndo();}
+function redo(){if(!H.redo.length)return toast('Nothing to redo');const e=H.redo.pop();H.undo.push({s:snapState(),label:e.label,id:e.id,t:e.t});restoreState(e.s);syncUndo();}
 function jumpHistory(t){
   const n=H.undo.length,R=H.redo.length;if(t<0||t>n+R||t===n)return;
   let cur=snapState();
@@ -1578,12 +1661,23 @@ function updateStage(){
   if(lenPx&&newLen!==lenPx)roll.scrollTop+=newLen-lenPx;
   lenPx=newLen;
 }
+// A canvas is only sharp when each of its pixels lands on exactly one screen pixel. Otherwise the browser resamples the
+// already smoothed drawing and everything on it (note names, key labels) blurs a second time. So the backing store is a
+// whole number of screen pixels, the CSS size is that divided by the zoom, and a tiny shift puts the top-left corner on a
+// screen pixel (the layout around it often lands between pixels, especially with Windows display scaling above 100%).
+function fitCanvas(c,w,h){
+  const bw=Math.max(1,Math.round(w*dpr)),bh=Math.max(1,Math.round(h*dpr));
+  if(c.width!==bw)c.width=bw;if(c.height!==bh)c.height=bh;
+  c.style.width=bw/dpr+'px';c.style.height=bh/dpr+'px';c.style.transform='';
+  const r=c.getBoundingClientRect(),dx=Math.round(r.left*dpr)/dpr-r.left,dy=Math.round(r.top*dpr)/dpr-r.top;
+  if(Math.abs(dx)>.001||Math.abs(dy)>.001)c.style.transform=`translate(${dx}px,${dy}px)`;
+}
 function sizeCanvases(){
   dpr=Math.max(1,window.devicePixelRatio||1);
   document.documentElement.style.setProperty('--sb',(((roll.offsetHeight-roll.clientHeight)||0))+'px');
   document.documentElement.style.setProperty('--sbw',(((roll.offsetWidth-roll.clientWidth)||0))+'px');
-  const w=roll.clientWidth,h=roll.clientHeight;cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';
-  const lc=$('lanecol'),lw=lc.clientWidth,lh=lc.clientHeight;lane.width=Math.round(lw*dpr);lane.height=Math.round(lh*dpr);lane.style.width=lw+'px';lane.style.height=lh+'px';
+  fitCanvas(cv,roll.clientWidth,roll.clientHeight);
+  const lc=$('lanecol');fitCanvas(lane,lc.clientWidth,lc.clientHeight);
   if(S.fit)refit();
   redraw();
 }
@@ -1630,7 +1724,27 @@ function hslToHex(h,s,l){h=((h%360)+360)%360;s=clamp(s,0,1);l=clamp(l,0,1);const
 function hexToHsl(hx){const n=parseInt(hx.replace('#',''),16),r=((n>>16)&255)/255,g=((n>>8)&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn;let h=0,s=0;if(d){s=d/(1-Math.abs(2*l-1));if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}return[h,s,l];}
 const rgbaOf=(hx,a)=>{const n=parseInt(hx.replace('#',''),16);return`rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;};
 const trHex=tr=>tr.color||hslToHex(tr.hue,.66,C.dark?.58:.46);
-const headerHex=hx=>{const [h,s,l]=hexToHsl(hx);return hslToHex(h,Math.max(s,.3),Math.min(l,.34));};
+// Layer header: the layer color made a touch deeper as the eye judges it (OKLab: lightness down a little, hue and
+// colorfulness kept, pulled back into what a screen can show if needed). Its name is white while white reads well enough
+// on it, otherwise near-black (headerInk).
+const srgbLin=c=>(c/=255)<=.04045?c/12.92:((c+.055)/1.055)**2.4;
+const linSrgb=c=>255*(c<=.0031308?12.92*c:1.055*c**(1/2.4)-.055);
+const toOklab=hx=>{const n=parseInt(hx.slice(1),16),r=srgbLin(n>>16&255),g=srgbLin(n>>8&255),b=srgbLin(n&255);
+  const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+  return[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s];};
+const oklabLin=(L,a,b)=>{const l=(L+.3963377774*a+.2158037573*b)**3,m=(L-.1055613458*a-.0638541728*b)**3,s=(L-.0894841775*a-1.291485548*b)**3;
+  return[4.0767416621*l-3.3077115913*m+.2309699292*s,-1.2684380046*l+2.6097574011*m-.3413193965*s,-.0041960863*l-.7034186147*m+1.707614701*s];};
+const lumOf=hx=>{const n=parseInt(hx.slice(1),16);return .2126*srgbLin(n>>16&255)+.7152*srgbLin(n>>8&255)+.0722*srgbLin(n&255);};
+const HDR_DARKEN=.045;
+const headerHex=hx=>{
+  const [L,a,b]=toOklab(hx),L2=Math.max(0,L-HDR_DARKEN);
+  const out=v=>v.some(c=>c<-1e-6||c>1+1e-6);
+  let lin=oklabLin(L2,a,b);
+  if(out(lin)){let lo=0,hi=1;for(let i=0;i<16;i++){const k=(lo+hi)/2;if(out(oklabLin(L2,a*k,b*k)))hi=k;else lo=k;}lin=oklabLin(L2,a*lo,b*lo);}
+  return'#'+lin.map(c=>Math.round(linSrgb(clamp(c,0,1))).toString(16).padStart(2,'0')).join('');
+};
+const headerInk=hx=>{const y=lumOf(hx);return 1.05/(y+.05)>=3.2?'#fff':'#16161c';};   // WCAG contrast: white unless it falls below 3.2:1
+function setHeaderColor(el,hx){const h=headerHex(hx);el.style.setProperty('--lh',h);el.style.setProperty('--lt',headerInk(h));}
 function noteFill(tr,p,a){return rgbaOf(isBlack(p)?(tr.colorBlack||trHex(tr)):(tr.colorWhite||trHex(tr)),a);}
 function rr(g,x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
 function drawRoll(){
@@ -1938,6 +2052,33 @@ function inkOn(hx){
   return .2126*f((n>>16)&255)+.7152*f((n>>8)&255)+.0722*f(n&255)>.18?'#1d1707':'#ffffff';
 }
 function bmRange(i,toEnd){const a=bmTick(i),nx=song.marks.find(m=>m.tick>a);return{a,b:toEnd||!nx?bmSongEnd():nx.tick,nx};}
+// the bookmark list in the sidebar, under the buttons: the same rows as the pop-up, compact, with only "play from here";
+// everything else is in the row's ⋯ menu
+function bmMiniRender(){
+  const box=$('bmList');if(!box)return;const cur=bmCur();
+  const row=(i,name,t,col)=>`<div class="bmMini${i===cur?' on':''}" data-i="${i}" role="listitem">`+
+    `<button type="button" class="bmGo" data-a="go" title="Jump to ${i<0?'the start':'this bookmark'}"><span class="bmDot"${i<0?'':` style="background:${col}"`}></span><span class="bmN">${esc(name)}</span><span class="bmT">${fmtT(secAt(t))}</span></button>`+
+    bmBtn('play','','play','Play from here')+bmBtn('more','','dots','More: loop, rename, color, move, remove')+'</div>';
+  box.innerHTML=row(-1,'Song start',0,'')+song.marks.map((m,i)=>row(i,m.name,m.tick,m.color||MARK_C)).join('')+(song.marks.length?'':'<div class="bmMiniNone">No bookmarks yet. Press B to add one.</div>');
+}
+function bmMiniMenu(i,b){
+  const r=b.getBoundingClientRect(),has=i>=0;
+  showMenu(r.left,r.bottom+2,[
+    {label:'Loop to the next bookmark',fn:()=>bmLoop(i,false)},
+    {label:'Loop to the end',fn:()=>bmLoop(i,true)},
+    ...(has?[{sep:1},
+      {label:'Rename…',fn:()=>bmEdit(i,'name')},
+      {label:'Change the color…',fn:()=>bmEdit(i,'color')},
+      {label:'Move to the playhead',fn:()=>bmMove(i),disabled:Math.abs(bmTick(i)-bmNow())<=2},
+      {sep:1},
+      {label:'Remove',fn:()=>bmRemove(i)}]:[])
+  ]);
+}
+$('bmList').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const i=+b.closest('.bmMini').dataset.i;
+  if(b.dataset.a==='go')bmJump(i);else if(b.dataset.a==='play')bmJump(i,true);else if(b.dataset.a==='more')bmMiniMenu(i,b);
+});
+$('bmList').addEventListener('dblclick',e=>{const r=e.target.closest('.bmMini');if(r&&e.target.closest('.bmGo')&&+r.dataset.i>=0)bmEdit(+r.dataset.i,'name');});
 function bmSync(){
   const end=pgEndTick(),cur=bmCur(),lk=S.loop.on?S.loop.a+'-'+S.loop.b+'-'+end:'';
   const sig=song.marks.map(m=>m.tick+':'+m.name+':'+(m.color||'')).join('|')+'#'+end+'#'+secAt(end).toFixed(1)+'#'+S.set.bmShow+S.set.bmSat+S.set.bmOne+S.set.bmOneColor;
@@ -1946,8 +2087,10 @@ function bmSync(){
     $('pgMarks').innerHTML=bmOnBar()?song.marks.map(m=>`<div class="pgMark" style="left:${clamp(m.tick/end,0,1)*100}%;background:${bmHex(m)}"></div>`).join(''):'';
     $('bmCount').textContent=song.marks.length||'';
     if(BM.pop&&BM.view==='list')bmRender();
+    bmMiniRender();
   }
-  if(cur!==BM.cur){BM.cur=cur;if(BM.pop&&BM.view==='list')for(const r of BM.pop.querySelectorAll('.bmRow'))r.classList.toggle('on',+r.dataset.i===cur);}
+  if(cur!==BM.cur){BM.cur=cur;if(BM.pop&&BM.view==='list')for(const r of BM.pop.querySelectorAll('.bmRow'))r.classList.toggle('on',+r.dataset.i===cur);
+    for(const r of $('bmList').querySelectorAll('.bmMini')){const on=+r.dataset.i===cur;r.classList.toggle('on',on);if(on)r.scrollIntoView({block:'nearest'});}}
   if(lk!==BM.lk){BM.lk=lk;if(BM.pop&&BM.view==='list')bmLoopMarks();}
 }
 // the loop buttons of the stretch that is looping right now stay lit
@@ -2009,7 +2152,8 @@ function bmClear(){if(!song.marks.length)return;const all=[...song.marks];act(()
 /* the pop-up */
 const bmIc=k=>svgI(ICON_P[k],14);
 const bmBtn=(a,cls,ic,t,off)=>`<button type="button" class="mini ico ${cls}" data-a="${a}" title="${t}" aria-label="${t}"${off?' disabled':''}>${bmIc(ic)}</button>`;
-const bmBack=t=>`<div class="bmHead">${bmBtn('back','','chevL','Back to the list')}<strong>${t}</strong></div>`;
+const bmX=()=>bmBtn('close','bmX','x','Close');
+const bmBack=(t,extra='')=>`<div class="bmHead">${bmBtn('back','','chevL','Back to the list')}<strong>${t}</strong>${extra}${bmX()}</div>`;
 const bmSwatches=(a,cur,custom)=>`<div class="bmSw" role="radiogroup" aria-label="Color">`+BM_COLORS.map(([c,n])=>`<button type="button" class="bmSwatch${c===cur?' on':''}" data-a="${a}" data-c="${c}" role="radio" aria-checked="${c===cur}" aria-label="${n}" title="${n}" style="background:${c}"></button>`).join('')+
   (custom?`<label class="bmSwatch bmCustom${BM_COLORS.some(x=>x[0]===cur)?'':' on'}" title="Pick any color"><input type="color" data-a="${a}" value="${cur}" aria-label="Pick any color"></label>`:'')+'</div>';
 function bmListHtml(){
@@ -2019,7 +2163,7 @@ function bmListHtml(){
     bmBtn('play','nrm','play','Play from here')+bmBtn('loopN','nrm','loopNext','Loop from here to the next bookmark')+bmBtn('loopE','nrm','loopEnd','Loop from here to the end of the song')+
     bmBtn('rename','alt','pencil','Rename',s)+bmBtn('recolor','alt','palette','Change the color',s)+bmBtn('remove','alt','trash','Remove',s)+
     bmBtn('more','','dots','More: rename, color, move, remove',s)+'</div>';};
-  return '<div class="bmHead"><strong>Bookmarks</strong><span>Press B to add a bookmark at the playhead</span></div>'+
+  return '<div class="bmHead"><strong>Bookmarks</strong><span>Press B to add a bookmark at the playhead</span>'+bmX()+'</div>'+
     '<div class="bmList" role="list">'+row(-1,'Song start',0,'')+song.marks.map((m,i)=>row(i,m.name,m.tick,m.color||MARK_C)).join('')+
     (song.marks.length?'':'<div class="bmEmpty">No bookmarks yet.</div>')+'</div>'+
     `<div class="bmFoot"><button type="button" class="mini" data-a="prev" title="Jump to the previous bookmark (,)">${bmIc('chevL')}Previous</button><button type="button" class="mini" data-a="next" title="Jump to the next bookmark (.)">Next${bmIc('chevR')}</button><span class="bmSp"></span>`+
@@ -2027,7 +2171,7 @@ function bmListHtml(){
 }
 function bmEditHtml(){
   const e=BM.ed,bar=Math.floor(e.tick/barTicks())+1;
-  return bmBack(e.m?'Edit bookmark':'New bookmark').replace('</div>',`<span>${fmtT(secAt(e.tick))} · bar ${bar}</span></div>`)+
+  return bmBack(e.m?'Edit bookmark':'New bookmark',`<span>${fmtT(secAt(e.tick))} · bar ${bar}</span>`)+
     `<div class="bmBody"><label class="bmFld"><span>Name</span><input type="text" class="bmNameIn" maxlength="60" value="${esc(e.name)}" spellcheck="false"></label>`+
     `<div class="bmFld"><span>Color</span>${bmSwatches('color',e.color,true)}</div>`+
     `<div class="bmFld"><span>Looks like</span><div class="bmPrev"><span class="bmPill" style="background:${e.color};color:${inkOn(e.color)}">${esc(e.name.trim()||bmName(e.tick))}</span></div></div></div>`+
@@ -2053,7 +2197,7 @@ function bmRender(){
 }
 function bmPlace(){
   const p=BM.pop;if(!p)return;const r=$('bmBar').getBoundingClientRect(),w=p.offsetWidth;
-  p.style.left=clamp(r.right-w-4,6,Math.max(6,innerWidth-w-6))+'px';p.style.bottom=(innerHeight-r.top+6)+'px';
+  p.style.left=clamp(S.set.sideRight?r.left+4:r.right-w-4,6,Math.max(6,innerWidth-w-6))+'px';p.style.bottom=(innerHeight-r.top+6)+'px';
   p.style.maxHeight=Math.max(160,r.top-16)+'px';
 }
 function bmShow(view,ed){
@@ -2066,7 +2210,7 @@ function bmShow(view,ed){
   if(f){f.focus({preventScroll:true});if(f.select)f.select();}
 }
 function bmOutside(e){
-  if(!BM.pop||BM.pop.contains(e.target)||$('bmBar').contains(e.target)||(e.target.closest&&e.target.closest('.ctxmenu')))return;bmClose();
+  if(!BM.pop||BM.pop.contains(e.target)||$('bmBar').contains(e.target)||(e.target.closest&&e.target.closest('.ctxmenu,.cpick')))return;bmClose();
 }
 function bmKeys(e){if(e.key==='Shift'||e.type==='blur'){const v=e.type==='keydown';if(v!==BM.shift&&BM.pop){BM.shift=v;BM.pop.classList.toggle('shift',v);}}}
 function bmClose(){
@@ -2093,6 +2237,7 @@ function bmCreate(){
       case'next':bmStep(1);break;
       case'settings':bmShow('settings');break;
       case'back':bmShow('list');break;
+      case'close':bmClose();$('bmOpen').focus();break;
       case'cancel':if(BM.ed&&BM.ed.close)bmClose();else bmShow('list');break;
       case'save':bmSave();break;
       case'clear':bmClear();bmShow('list');break;
@@ -2144,10 +2289,6 @@ function bmRstSync(){if(!BM.pop)return;for(const b of BM.pop.querySelectorAll('.
 (function(){
   $('bmAdd').onclick=bmAdd;
   $('bmOpen').onclick=()=>{if(BM.pop&&BM.view==='list')bmClose();else bmShow('list');};
-  // the progress bar spans the notes plus the side panel's tab strip; the bookmark buttons take the rest, under the panel.
-  // The bar's left border sits on the tab strip's right border, so the two lines meet.
-  const fit=()=>{const tabs=document.querySelector('#lanepanel .ptabs'),edge=tabs&&tabs.offsetWidth?tabs.getBoundingClientRect().right-1:$('rollcol').getBoundingClientRect().right;$('bmBar').style.width=Math.max(0,$('rollwrap').getBoundingClientRect().right-edge)+'px';};
-  const ro=new ResizeObserver(fit);ro.observe($('rollcol'));ro.observe($('lanepanel'));fit();
 })();
 
 /* ================= Pointer interaction: roll ================= */
@@ -2256,8 +2397,11 @@ function dragMove(e){
       updateInspector();redraw();break;
     }
     case'new':{
-      const n=P.n;if(!P.moved){if(performance.now()-P.t0<S.set.antiMs||Math.abs(y-P.y0)<4)break;P.moved=true;}
-      const g=fineT(),raw=tickOfY(y)-n.s,end=Math.round((S.set.invert?-raw:raw)/g);n.d=Math.max(g,end*g);markEdited();break;
+      const n=P.n;if(!P.moved){if(performance.now()-P.t0<S.set.antiMs||Math.abs(y-P.y0)<4)break;P.moved=true;P.anchor=n.s;}
+      // the start stays where you clicked; dragging below it flips the note so it ends there instead
+      const g=fineT(),to=P.anchor+Math.round((tickOfY(y)-P.anchor)/g)*g;
+      if(to>=P.anchor+g){n.s=P.anchor;n.d=to-P.anchor;}else if(to<=P.anchor-g){n.s=Math.max(0,to);n.d=P.anchor-n.s;}else{n.s=P.anchor;n.d=g;}
+      markEdited();break;
     }
     case'move':{
       if(!P.moved){if(Math.abs(x-P.x0)<3&&Math.abs(y-P.y0)<3)break;P.moved=true;}
@@ -2271,16 +2415,18 @@ function dragMove(e){
       if(P.prim.p+dP!==P.lastP){P.lastP=P.prim.p+dP;audition(tr,P.lastP,P.n.v,.15);}
       break;
     }
-    case'rsz':{
-      const ge=e.altKey?gridT():fineT(),delta=Math.round((S.set.invert?-1:1)*(tickOfY(y)-tickOfY(P.y0))/ge)*ge;
-      if(delta!==0||P.moved){P.moved=true;touch('Resize notes');for(const o of P.orig)o.n.d=Math.max(fineT(),o.d+delta);}
-      break;
-    }
-    case'lsz':{
-      const ge=e.altKey?gridT():fineT();let delta=Math.round((S.set.invert?-1:1)*(tickOfY(y)-tickOfY(P.y0))/ge)*ge,lim=Infinity,lo=Infinity;
-      for(const o of P.orig){lim=Math.min(lim,o.d-fineT());lo=Math.min(lo,o.s);}
-      delta=clamp(delta,-lo,lim);
-      if(delta!==0||P.moved){P.moved=true;touch('Resize notes');for(const o of P.orig){o.n.s=o.s+delta;o.n.d=o.d-delta;}}
+    case'rsz':case'lsz':{
+      // the edge you did not grab stays put; drag the grabbed edge past it and the note flips over, so you then hold its other end
+      const ge=e.altKey?gridT():fineT(),g=fineT(),top=P.mode==='rsz';let delta=Math.round((tickOfY(y)-tickOfY(P.y0))/ge)*ge;
+      let lo=Infinity;for(const o of P.orig)lo=Math.min(lo,top?o.s+o.d:o.s);delta=Math.max(delta,-lo);
+      if(delta!==0||P.moved){P.moved=true;touch('Resize notes');
+        for(const o of P.orig){
+          const anchor=top?o.s:o.s+o.d,to=(top?o.s+o.d:o.s)+delta;
+          if(to>=anchor+g){o.n.s=anchor;o.n.d=to-anchor;}
+          else if(to<=anchor-g){o.n.s=Math.max(0,to);o.n.d=anchor-o.n.s;}
+          else if(top){o.n.s=anchor;o.n.d=g;}else{o.n.s=Math.max(0,anchor-g);o.n.d=anchor-o.n.s;}
+        }
+      }
       break;
     }
   }
@@ -2571,6 +2717,7 @@ ICON_P.loopNext='<path d="M12.6 6.4A4.8 4.8 0 004.2 4.6M3.4 9.6A4.8 4.8 0 0011.8
 ICON_P.loopEnd='<path d="M10.3 6.6A3.9 3.9 0 003.4 5M2.7 9.4A3.9 3.9 0 009.6 11" '+stk+' stroke-width="1.6"/><path d="M3.5 2.4V5h2.6M9.5 13.6V11H6.9" '+stk+' stroke-width="1.6"/><path d="M14 2.5v11" '+stk+' stroke-width="1.8"/>';
 ICON_P.pencil='<path d="M2.5 13.5l.7-3.2L11 2.5a1.6 1.6 0 012.3 2.3L5.5 12.6z" '+stk+' stroke-width="1.5"/>';
 ICON_P.palette='<path d="M8 1.8a6.2 6.2 0 100 12.4c1 0 1.4-.6 1.4-1.2 0-.9-.8-1.2-.8-2 0-.7.6-1.2 1.3-1.2h1.6a2.8 2.8 0 002.7-2.8C14.2 4.2 11.5 1.8 8 1.8z" '+stk+' stroke-width="1.4"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="7.6" cy="4.6" r="1" fill="currentColor"/><circle cx="10.6" cy="5.4" r="1" fill="currentColor"/>';
+ICON_P.x='<path d="M4 4l8 8M12 4l-8 8" '+stk+' stroke-width="1.8"/>';
 ICON_P.dots='<circle cx="3.5" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="12.5" cy="8" r="1.4" fill="currentColor"/>';
 function applyIcons(){
   document.querySelectorAll('[data-icon]').forEach(el=>{const k=el.dataset.icon,z=el.classList.contains('big')?19:el.classList.contains('bmI')?13:el.classList.contains('ti')?17:el.classList.contains('mini')?14:17;el.innerHTML=svgI(ICON_P[k],z);});
@@ -2597,7 +2744,7 @@ function renderTracks(){
   const box=$('tracks');box.innerHTML='';
   for(const tr of song.tracks){
     const on=tr.id===S.active,el=document.createElement('div'),hex=trHex(tr);
-    el.className='trk'+(on?' on':'')+(tr.hide?' hidden':'');el.dataset.id=tr.id;el.style.setProperty('--lc',hex);el.style.setProperty('--lh',headerHex(hex));
+    el.className='trk'+(on?' on':'')+(tr.hide?' hidden':'');el.dataset.id=tr.id;el.style.setProperty('--lc',hex);setHeaderColor(el,hex);
     const sl=(k,l,v=tr[k],data=k)=>`<label><span>${l}</span><input type="range" min="${k==='drawVel'?1:0}" max="127" value="${v}" data-k="${data}" aria-label="${l}"><input type="number" class="num" data-k="${data}" data-n="1" min="${k==='pan'?-64:k==='drawVel'?1:0}" max="${k==='pan'?63:127}" value="${k==='pan'?v-64:v}" aria-label="${l} value" title="${k==='pan'?'-64 = full left, 0 = center, 63 = full right':'0 to 127'}"></label>`;
     el.innerHTML=`<div class="trow nmrow"><input class="nm" value="${esc(tr.name)}" aria-label="Layer name"></div>
       <div class="trow ic"><button class="mini ${tr.hide?'on':''}" data-a="hide" title="${tr.hide?'Show':'Hide'} this layer" aria-label="${tr.hide?'Show':'Hide'} layer">${ICON[tr.hide?'eyeoff':'eye']}</button><button class="mini ${tr.lock?'on':''}" data-a="lock" title="${tr.lock?'Unlock':'Lock'} this layer (locked layers can't be edited or clicked)" aria-label="${tr.lock?'Unlock':'Lock'} layer">${ICON[tr.lock?'lock':'unlock']}</button><button class="mini ${tr.mute?'on':''}" data-a="mute" title="Mute audio" aria-label="Mute">${ICON[tr.mute?'muted':'mute']}</button><button class="mini ${tr.solo?'on':''}" data-a="solo" title="Solo audio" aria-label="Solo">${ICON.solo}</button><span style="flex:1"></span><button class="mini" data-a="up" title="Move layer up" aria-label="Move layer up">${ICON.up}</button><button class="mini" data-a="down" title="Move layer down" aria-label="Move layer down">${ICON.down}</button><button class="mini" data-a="del" title="Delete layer (Ctrl+click skips the confirmation)" aria-label="Delete layer">${ICON.trash}</button><button class="mini" data-a="menu" title="More: duplicate, copy, paste, merge (or right-click the layer)" aria-label="More layer actions" aria-haspopup="menu">⋯</button></div>
@@ -2654,7 +2801,7 @@ $('tracks').addEventListener('pointerdown',e=>{
   ensureAudio();
 });
 function syncColorUI(card,tr,skip){
-  card.style.setProperty('--lc',trHex(tr));card.style.setProperty('--lh',headerHex(trHex(tr)));
+  card.style.setProperty('--lc',trHex(tr));setHeaderColor(card,trHex(tr));
   card.querySelectorAll('[data-c]').forEach(el=>{if(el===skip)return;const v=tr[el.dataset.c]||trHex(tr);if(el.value.toLowerCase()!==v.toLowerCase())el.value=v;});
   card.querySelectorAll('[data-resetc]').forEach(b=>{b.disabled=!tr[b.dataset.resetc];});
 }
@@ -2663,7 +2810,9 @@ $('tracks').addEventListener('input',e=>{
   if(c){
     let v=e.target.value.trim();
     if(e.target.classList.contains('hx')){if(!/^#?[0-9a-fA-F]{6}$/.test(v))return;v=v[0]==='#'?v:'#'+v;}
-    touch('Change layer color');tr[c]=v.toLowerCase();syncColorUI(card,tr,e.target);redraw();return;
+    // while the color picker is open on this box, the color only previews; one undo step is written when it closes
+    if(CPICK.el===e.target){if(!CPICK.before)CPICK.before=snapState();markEdited();}else touch('Change layer color');
+    tr[c]=v.toLowerCase();syncColorUI(card,tr,e.target);redraw();return;
   }
   if(e.target.classList.contains('nm')){touch('Rename layer');tr.name=e.target.value;return;}
   if(!k||e.target.value==='')return;let v=+e.target.value;
@@ -2676,6 +2825,7 @@ $('tracks').addEventListener('input',e=>{
 });
 $('tracks').addEventListener('change',e=>{
   const card=e.target.closest('.trk');if(!card)return;const tr=song.tracks.find(t=>t.id===+card.dataset.id);
+  if(e.target.type==='color'&&CPICK.el===e.target&&CPICK.before){pushHFrom(CPICK.before,'Change layer color');CPICK.before=null;}
   if(e.target.classList.contains('hx')){e.target.value=tr[e.target.dataset.c]||trHex(tr);}
   if(e.target.classList.contains('num')){const k=e.target.dataset.k;e.target.value=k==='drawVel'?S.drawVel:k==='pan'?tr.pan-64:tr[k];}
   if(e.target.classList.contains('ins')){
@@ -2873,6 +3023,11 @@ function toggleSide(){
   setTimeout(sizeCanvases,30);
 }
 $('bCollapse').onclick=toggleSide;$('bExpand').onclick=toggleSide;
+// the Values sidebar folds away the same way; its tab then sits on the edge of the notes it went to
+// the bookmark buttons live under the sidebar; while it is folded away they move to the end of the playback bar
+function placeBmBar(){const closed=document.body.classList.contains('lane-closed'),b=$('bmBar');if(closed)$('progRow').appendChild(b);else document.querySelector('#lanepanel .pfill').before(b);}
+function toggleLane(){document.body.classList.toggle('lane-closed');placeBmBar();setTimeout(sizeCanvases,30);}
+$('bLaneFold').onclick=toggleLane;$('bLaneExpand').onclick=toggleLane;
 $('bTheme').onclick=()=>{S.set.mode=isDarkNow()?'light':'dark';saveSettings();applyTheme();syncSettingsUI();};
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S.set.mode==='auto')applyTheme();});
 $('bpm').onchange=e=>{
@@ -2892,7 +3047,7 @@ $('scRoot').innerHTML=NOTE_NAMES.map((n,i)=>`<option value="${i}">${n}</option>`
 $('scType').innerHTML=Object.keys(SCALES).map(k=>`<option>${k}</option>`).join('');
 $('scRoot').onchange=e=>{S.scaleRoot=+e.target.value;redraw();};$('scType').onchange=e=>{S.scaleType=e.target.value;redraw();};
 $('zxi').onclick=()=>zoomT(1.25);$('zxo').onclick=()=>zoomT(1/1.25);$('zyi').onclick=()=>zoomK(1.2);$('zyo').onclick=()=>zoomK(1/1.2);$('bFit').onclick=fitKeys;$('bFitN').onclick=fitNotes;
-document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{S.lane=b.dataset.lane;document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x===b));redraw();});
+document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{S.lane=b.dataset.lane;document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x===b));pHeadSync();redraw();});
 function bindSN(rg,nm,fn){
   const set=v=>{v=clamp(Math.round(+v),+rg.min,+rg.max);rg.value=v;fn(v);};
   rg.addEventListener('input',()=>{nm.value=rg.value;set(rg.value);});
@@ -2916,7 +3071,9 @@ function updatePos(){
   const t=S.playhead,s=secAt(t),m=Math.floor(s/60);
   $('posM').textContent=fmtPos(t);$('posT').textContent=String(m).padStart(2,'0')+':'+(s-m*60).toFixed(1).padStart(4,'0');
 }
-function syncUndo(){$('bUndo').disabled=!H.undo.length;$('bRedo').disabled=!H.redo.length;renderHistory();}
+function syncUndo(){$('bUndo').disabled=!H.undo.length;$('bRedo').disabled=!H.redo.length;renderHistory();pHeadSync();}
+// the header above the sidebar: the open tab, and under it the chosen lane or the step you are at in the history; Clear belongs to the history
+function pHeadSync(){const vals=!$('valsPane').hidden;$('pHeadT').textContent=vals?'Values':'Undo history';$('histClear').hidden=vals;$('pHeadS').textContent=vals?(LANES[S.lane]||''):(H.undo.length?'At: '+H.undo[H.undo.length-1].label:'At the start');}
 function syncHeader(){
   syncUndo();
   $('pgPlay').innerHTML=svgI(ICON_P[S.playing?'pause':'play'],14);$('pgPlay').setAttribute('aria-label',S.playing?'Pause':'Play');
@@ -2993,6 +3150,7 @@ $('histClear').onclick=()=>{H.undo=[];H.redo=[];syncUndo();toast('Undo history c
 function setPane(which){
   const vals=which==='vals';
   $('valsPane').hidden=!vals;$('histPane').hidden=vals;
+  pHeadSync();
   $('tabVals').setAttribute('aria-selected',String(vals));$('tabHist').setAttribute('aria-selected',String(!vals));
   $('tabVals').tabIndex=vals?0:-1;$('tabHist').tabIndex=vals?-1:0;
   if(vals)setTimeout(sizeCanvases,0);else renderHistory();
@@ -3026,7 +3184,7 @@ function wireSplit(el,axis,get,set,reset){
   });
 }
 wireSplit($('splitV'),'x',()=>UI.sideW,(v,dx)=>{UI.sideW=clamp(v+(S.set.sideRight?-dx:dx),190,560);applyUI();},()=>{UI.sideW=276;applyUI();});
-wireSplit($('splitL'),'x',()=>UI.laneW,(v,dx)=>{UI.laneW=clamp(v-dx,120,420);applyUI();},()=>{UI.laneW=170;applyUI();});
+wireSplit($('splitL'),'x',()=>UI.laneW,(v,dx)=>{UI.laneW=clamp(v+(S.set.sideRight?dx:-dx),120,420);applyUI();},()=>{UI.laneW=170;applyUI();});
 
 /* ================= Fancy playback (pre-rendered realistic instruments) ================= */
 const krange=(a,b,s)=>{const r=[];for(let k=a;k<=b;k+=s)r.push(k);return r;};
@@ -3285,6 +3443,7 @@ function applyTheme(){
 function applySide(){
   document.body.classList.toggle('side-right',S.set.sideRight);
   $('bCollapse').innerHTML=svgI(ICON_P[S.set.sideRight?'chevR':'chevL'],14);
+  $('bLaneFold').innerHTML=svgI(ICON_P[S.set.sideRight?'chevL':'chevR'],14);
 }
 // the project tab bar folds away with the chevron at the end of the second bar, and stays that way next time
 function applyTabsBar(){
@@ -3314,7 +3473,7 @@ const setFadeAmtUI=bindSN($('sFadeAmt'),$('sFadeAmtN'),v=>{S.set.fadeAmt=v;saveS
 function syncSettingsUI(){
   $('sMode').value=S.set.mode;$('sPalette').value=S.set.palette;$('sSide').value=S.set.sideRight?'right':'left';
   $('sFancy').checked=S.set.fancy;$('sNames').checked=S.set.names;$('sAud').checked=S.set.audition;$('sAuto').checked=S.set.autosave;
-  $('sKeyLabels').value=S.set.keyLabels;$('sHover').checked=S.set.hover;$('sInvert').checked=S.set.invert;$('sConfirm').checked=S.set.confirmDel;$('sStopLoop').checked=S.set.stopLoop;
+  $('sKeyLabels').value=S.set.keyLabels;$('sHover').checked=S.set.hover;$('sConfirm').checked=S.set.confirmDel;$('sStopLoop').checked=S.set.stopLoop;
   setAntiUI(S.set.antiMs);setLaneAntiUI(S.set.laneAntiMs);setClickUI(S.set.clickVol);setBrightUI(S.set.bright);setHandleUI(S.set.handle);
   setPnoBrightUI(S.set.pnoBright);setPnoLowUI(S.set.pnoLow);setPnoLowCurveUI(S.set.pnoLowCurve);setPnoBassUI(S.set.pnoBass);setPnoKnockUI(S.set.pnoKnock);
   setSatBaseUI(S.set.satBase);setSatAccUI(S.set.satAcc);setBlackUI(S.set.blackHit);setBarUI(S.set.barHit);$('sStageFx').checked=S.set.stageFx;setFadeAmtUI(S.set.fadeAmt);
@@ -3327,7 +3486,6 @@ $('sKeyLabels').onchange=e=>{S.set.keyLabels=e.target.value;saveSettings();redra
 $('sHover').onchange=e=>{S.set.hover=e.target.checked;S.hv=null;saveSettings();redraw();};
 $('sStageFx').onchange=e=>{S.set.stageFx=e.target.checked;saveSettings();};
 
-$('sInvert').onchange=e=>{S.set.invert=e.target.checked;saveSettings();};
 $('sConfirm').onchange=e=>{S.set.confirmDel=e.target.checked;saveSettings();};
 $('sStopLoop').onchange=e=>{S.set.stopLoop=e.target.checked;saveSettings();};
 $('sNames').onchange=e=>{S.set.names=e.target.checked;saveSettings();redraw();};
@@ -3335,6 +3493,125 @@ $('sAud').onchange=e=>{S.set.audition=e.target.checked;saveSettings();};
 $('sAuto').onchange=e=>{S.set.autosave=e.target.checked;saveSettings();if(e.target.checked)autosave();else{try{localStorage.removeItem('keyroll.autosave');localStorage.removeItem('mc.tabs');}catch(err){}}};
 $('bSettings').onclick=()=>{syncSettingsUI();if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','');};
 $('setClose').onclick=$('setDone').onclick=()=>dlg.close();
+/* ---- Settings: categories that fold, a search box in the header, and units after the numbers ---- */
+(function(){
+  const body=dlg.querySelector('.setBody');
+  // each heading and the rows under it become one foldable category; which ones are folded is remembered
+  let shut={};try{shut=JSON.parse(localStorage.getItem('mc.setCats'))||{};}catch(e){}
+  let searching=false;
+  for(const h of [...body.querySelectorAll(':scope>h3')]){
+    const d=document.createElement('details'),s=document.createElement('summary');d.className='setCat';d.open=!shut[h.textContent];
+    h.before(d);s.appendChild(h);d.appendChild(s);
+    while(d.nextSibling&&d.nextSibling.nodeName!=='H3')d.appendChild(d.nextSibling);
+    d.addEventListener('toggle',()=>{if(searching)return;shut[h.textContent]=!d.open;try{localStorage.setItem('mc.setCats',JSON.stringify(shut));}catch(e){}});
+  }
+  // units: every slider row gets the same slot after its number box (empty when there is no unit), so the boxes line up
+  const UNIT={sAntiN:'ms',sLaneAntiN:'ms',sHandleN:'px',sBarHitN:'px',sBlackHitN:'%',sFadeAmtN:'%',sSatBaseN:'%',sSatAccN:'%',sClickN:'%'};
+  for(const c of body.querySelectorAll('.setRow .ctl')){const n=c.querySelector('input.num'),u=document.createElement('span');u.className='unit';u.textContent=(n&&UNIT[n.id])||'';u.setAttribute('aria-hidden','true');c.appendChild(u);}
+  /* Search. Each setting is found by its name, its description, its category, and a list of other words people use for it
+     (KEYS below). The query is split into words; small words like "the" or "how" are ignored, word endings are trimmed
+     ("delays" finds "delay"), each word may also be a known synonym (SYN), and typos are forgiven. A setting shows when
+     every word matches; if none match all words, the settings that match the most words show instead.
+     Words found in a setting's own text are highlighted. */
+  const KEYS={
+    sMode:'dark light mode night day theme scheme black white appearance system auto',
+    sPalette:'theme colors look style skin accent palette forest',
+    sSatBase:'gray grey colorful vivid muted dull background panels saturation',
+    sSatAcc:'buttons highlights accent vivid muted gray grey saturation',
+    sSide:'sidebar layers layer panel tracks left right side position dock mirror flip swap move values',
+    sNames:'note names labels letters pitch text on notes show',
+    sKeyLabels:'keyboard piano keys labels letters names c octave black white sharps flats',
+    sBright:'background dark light contrast grid roll lighten darken',
+    sHover:'ghost preview cursor mouse hover note name tooltip',
+    sFancy:'realistic sound quality samples instruments piano guitar bass drums better audio synth playback',
+    sPnoBright:'piano tone timbre hammer bright mellow harsh soft dull sharp',
+    sPnoLow:'piano bass low notes left hand loud quiet balance volume',
+    sPnoLowCurve:'piano bass low notes focus spread curve octave',
+    sPnoBass:'piano rumble sub bass boom muddy low end deep',
+    sPnoKnock:'piano hammer knock thump click noise attack high notes',
+    sAnti:'stretch resize accidental drag place new note length delay wait lag time milliseconds',
+    sLaneAnti:'values velocity sidebar bar grab drag accidental delay wait lag time milliseconds',
+    sHandle:'grab resize stretch edge handle size length hitbox pixels',
+    sBarHit:'values velocity sidebar click target hitbox tolerance size pixels',
+    sBlackHit:'black keys keyboard piano click target hitbox width sharps flats',
+    sAud:'sound preview audition hear play click place edit mute silent quiet',
+    sConfirm:'delete remove layer track warning ask prompt confirm safety undo',
+    sStageFx:'full screen fullscreen ripple animation effects landing particles stage presentation',
+    sFadeAmt:'full screen fullscreen fade top gradient stage presentation',
+    sStopLoop:'loop stop return start repeat region',
+    sClick:'metronome click tick beat count volume loud quiet',
+    sAuto:'save storage restore session backup autosave browser local remember keep reopen'
+  };
+  const SYN=[['sidebar','panel','side','drawer','pane','dock'],['layer','track','channel','part','instrument'],['color','colour','theme','palette','hue','tint','look'],
+    ['volume','loud','loudness','quiet','gain','level'],['delay','wait','lag','latency','timeout','pause'],['key','keys','keyboard','piano'],
+    ['delete','remove','erase','trash','clear'],['dark','night','darker'],['light','day','white'],['size','width','big','small','hitbox','area','target'],
+    ['save','storage','store','autosave','backup','remember'],['fullscreen','full','stage','presentation','screen'],['sound','audio','playback','realistic','quality'],
+    ['label','name','letter','text'],['stretch','resize','length','lengthen','duration','longer','shorter'],['metronome','click','tick','beat'],
+    ['gray','grey','saturation','vivid','colorful','muted'],['show','display','see','visible'],['hide','off','disable','remove'],['bass','low'],['bright','brightness','light']];
+  const STOP=new Set('a an the to of for in on at by my me i you how do does can could is are it its this that with and or please want make change set turn get should where which what'.split(' '));
+  const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9%]+/g,' ').trim();
+  const stem=w=>w.length>4?w.replace(/(ies)$/,'y').replace(/(ing|ed|es|s)$/,''):w;
+  const words=s=>norm(s).split(' ').filter(Boolean);
+  const synOf=new Map();for(const g of SYN)for(const w of g){const k=stem(w);synOf.set(k,[...new Set([...(synOf.get(k)||[]),...g.map(stem)])]);}
+  // edit distance with a cut-off: is a within d typos of b?
+  const near=(a,b,d)=>{if(Math.abs(a.length-b.length)>d)return false;let prev=Array.from({length:b.length+1},(_,i)=>i);
+    for(let i=1;i<=a.length;i++){const cur=[i];let best=i;for(let j=1;j<=b.length;j++){cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));if(cur[j]<best)best=cur[j];}if(best>d)return false;prev=cur;}
+    return prev[b.length]<=d;};
+  const rows=[...body.querySelectorAll('.setRow')].map(r=>{
+    const lab=r.querySelector('label'),ctl=r.querySelector('input,select'),cat=r.closest('.setCat'),more=r.closest('.setMore');
+    const own=words(lab.textContent),extra=words((ctl&&KEYS[ctl.id])||''),ctx=words((cat?cat.querySelector('summary h3').textContent:'')+' '+(more?more.querySelector('summary').childNodes[0].textContent:''));
+    return{r,lab,html:lab.innerHTML,own:new Set(own.map(stem)),all:[...new Set([...own,...extra,...ctx].map(stem))]};
+  });
+  // how well one query word matches a setting: 3 its own words, 2 its other words or a synonym, 1 a typo or part of a word
+  const score=(row,w)=>{
+    const s=stem(w),syn=synOf.get(s)||[];let best=0;
+    for(const x of row.all){
+      let v=0;
+      if(x===s||(s.length>=2&&x.startsWith(s))||(x.length>=4&&s.length-x.length<=3&&s.startsWith(x)))v=row.own.has(x)?3:2;   // "louder" also finds "loud", "autosave" does not find "auto"
+      else if(syn.includes(x))v=2;
+      else if(s.length>=4&&x.includes(s))v=1;
+      else if(s.length>=4&&x.length>=4&&near(s,x,s.length>=7?2:1))v=1;
+      if(v>best)best=v;if(best===3)break;
+    }
+    return best;
+  };
+  const mark=(row,qs)=>{
+    row.lab.innerHTML=row.html;if(!qs.length)return;
+    const re=new RegExp('\\b('+qs.map(w=>stem(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')[a-z]*','gi');
+    const walk=n=>{for(const c of [...n.childNodes]){
+      if(c.nodeType===1)walk(c);
+      else if(c.nodeType===3&&re.test(c.textContent)){re.lastIndex=0;const sp=document.createElement('span');sp.innerHTML=esc(c.textContent).replace(re,'<mark>$&</mark>');c.replaceWith(...sp.childNodes);}
+      re.lastIndex=0;
+    }};
+    walk(row.lab);
+  };
+  const q=document.createElement('input');q.type='search';q.id='setSearch';q.placeholder='Search settings';q.setAttribute('aria-label','Search settings');q.autocomplete='off';q.spellcheck=false;
+  dlg.querySelector('.setHead h2').after(q);
+  const none=document.createElement('p');none.className='setNone';none.hidden=true;body.appendChild(none);
+  const folds=new Map();
+  const run=()=>{
+    const raw=q.value.trim(),all=words(raw),qs=all.filter(w=>!STOP.has(w)),use=qs.length?qs:all;
+    if(raw&&!searching)for(const d of body.querySelectorAll('details'))folds.set(d,d.open);
+    searching=!!raw;
+    let show=new Set();
+    if(use.length){
+      const res=rows.map(row=>{const sc=use.map(w=>score(row,w));return{row,hits:sc.filter(Boolean).length};});
+      const top=Math.max(...res.map(x=>x.hits));   // all words if any setting has them all, otherwise the best partial match
+      if(top>0)for(const x of res)if(x.hits===top)show.add(x.row);
+    }
+    for(const row of rows){row.r.hidden=!!raw&&!show.has(row);mark(row,raw&&show.has(row)?use:[]);}
+    let any=false;
+    for(const d of [...body.querySelectorAll('details')].reverse()){
+      const vis=[...d.querySelectorAll('.setRow')].some(r=>!r.hidden);
+      d.hidden=!!raw&&!vis;if(raw)d.open=vis;if(vis&&d.classList.contains('setCat'))any=true;
+    }
+    if(!raw){for(const [d,o] of folds)d.open=o;folds.clear();}
+    none.hidden=!raw||any;none.textContent='No settings match “'+raw+'”.';
+  };
+  q.addEventListener('input',run);
+  // Escape first clears the search, and only closes the dialog when the box is already empty
+  q.addEventListener('keydown',e=>{if(e.key==='Escape'&&q.value){e.preventDefault();e.stopPropagation();q.value='';run();}});
+})();
 $('setReset').onclick=()=>{Object.assign(S.set,DEF_SET);saveSettings();applyPnoBass();applyTheme();applySide();applyTabsBar();syncSettingsUI();syncHeader();redraw();toast('Settings reset to defaults');};
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
 
@@ -3712,10 +3989,15 @@ $('vSeek').oninput=e=>{if(VID.vw&&!VID.running)PV.currentTime=+e.target.value;};
 $('bVideo').onclick=()=>{vidSyncRes();vidSyncSteps();vidSyncRangeUI();vidDrawResult();if(vdlg.showModal)vdlg.showModal();else vdlg.setAttribute('open','');};
 $('vClose').onclick=()=>{PV.pause();VID.v.pause();vdlg.close();};
 vdlg.addEventListener('close',()=>{PV.pause();VID.v.pause();});
+// the file box is hidden: a button opens it, the name gets the whole row, and a video can be dropped on that row
+$('vPick').onclick=()=>$('vFile').click();
+{const dz=$('vDrop');dz.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();dz.classList.add('over');});dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+ dz.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('over');const fl=e.dataTransfer.files;if(fl&&fl.length){$('vFile').files=fl;$('vFile').dispatchEvent(new Event('change'));}});}
 $('vFile').onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   if(VID.url)URL.revokeObjectURL(VID.url);
   VID.url=URL.createObjectURL(f);VID.file=f;VID.name=f.name.replace(/\.[^.]+$/,'');VID.size=f.size;
+  $('vName').textContent=f.name;$('vName').title=f.name;$('vName').classList.add('set');$('vPick').textContent='Change video…';$('vInfoRow').hidden=false;
   VID.samples=null;VID.times=null;VID.clusters=[];VID.notes=[];VID.cal=[null,null,null,null];VID.step=0;VID.stats=null;vidSyncRes();vidSetTab('pre');
   $('vInfo').textContent='Loading…';$('vImport').disabled=true;$('vLayers').innerHTML='';$('vStats').textContent='';vidDrawResult();
   const v=VID.v;v.muted=true;v.setAttribute('playsinline','');PV.muted=true;
@@ -3724,7 +4006,7 @@ $('vFile').onchange=async e=>{
   }catch(err){$('vInfo').textContent='';toast(err.message);return;}
   PV.src=VID.url;await new Promise(r=>{PV.onloadedmetadata=r;PV.onerror=r;setTimeout(r,4000);});
   VID.vw=v.videoWidth;VID.vh=v.videoHeight;$('vFrame').style.aspectRatio=VID.vw+' / '+VID.vh;
-  $('vInfo').textContent=VID.vw+'×'+VID.vh+', '+fmtT(v.duration);
+  $('vInfo').textContent=VID.vw+' × '+VID.vh+' · '+fmtT(v.duration)+' · '+(f.size/1048576).toFixed(f.size<10485760?1:0)+' MB';
   $('vSeek').max=v.duration;$('vStart').value=0;$('vEnd').value=Math.floor(v.duration*10)/10;
   const restored=vidLoadCal();vidSyncRangeUI();vidSyncSteps();
   PV.currentTime=Math.min(10,v.duration*.2);vidDrawPreview();vidPvUpdate();
@@ -4379,7 +4661,7 @@ function applyTabSettings(set){
   S.valStep=+o.valStep||TAB_DEF.valStep;S.scaleRoot=clamp(o.scaleRoot|0,0,11);S.scaleType=o.scaleType in SCALES?o.scaleType:'off';
   S.layerMode=o.layerMode==='only'||o.layerMode==='all'?o.layerMode:null;S.lane=o.lane in LANES?o.lane:'vel';S.ghost=clamp(+o.ghost,0,1);S.drawVel=clamp(o.drawVel|0,1,127)||100;S.metro=!!o.metro;S.follow=o.follow!==false;S.octave=clamp(o.octave|0,-1,8);
   $('gridSel').value=S.gridIdx;$('fineSel').value=S.fineIdx;$('stepSel').value=S.valStep;$('scRoot').value=S.scaleRoot;$('scType').value=S.scaleType;
-  document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x.dataset.lane===S.lane));
+  document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x.dataset.lane===S.lane));pHeadSync();
   setGhostUI(Math.round(S.ghost*100));$('bFollow').classList.toggle('on',S.follow);octInfo();
 }
 function blankProject(name){return{name:name||'Untitled',tempos:[{tick:0,bpm:120}],ts:{n:4,d:4},marks:[],tracks:[newTrack({name:'Track 1',hue:205})]};}
@@ -4732,6 +5014,200 @@ $('tracks').addEventListener('contextmenu',e=>{
   for(const ev of ['wheel','scroll','resize'])window.addEventListener(ev,()=>{if(cur)hide();},true);
 })();
 
+/* ================= Color picker: the site's own pop-up for every color box ================= */
+// Clicking a color box opens this instead of the browser's picker. Changes reach the box as you go (input events, so
+// everything previews live); ✕, Enter or a click elsewhere keeps the color (one change event), Escape puts the old one back.
+// The numbers can be shown as Hex, RGB, HSL, HSV or OKLCH (perceptual: lightness, chroma, hue).
+// CPICK.el is the box being edited; CPICK.before can hold whatever a box's owner wants to restore or record when it closes.
+const CPICK={el:null,before:null};
+(function(){
+  const pop=document.createElement('div');pop.className='cpick';pop.setAttribute('role','dialog');pop.setAttribute('aria-label','Pick a color');
+  const MODES=['Hex','RGB','HSL','HSV','OKLCH'];
+  pop.innerHTML='<div class="cpHead"><strong>Color</strong><select class="cpMode" aria-label="Color format">'+MODES.map(m=>`<option>${m}</option>`).join('')+'</select>'+
+    '<button type="button" class="mini ico cpDrop" title="Pick a color from the screen" aria-label="Pick a color from the screen"></button>'+
+    '<button type="button" class="mini ico cpX" title="Close (keeps the color; Escape puts the old one back)" aria-label="Close"></button></div>'+
+    '<div class="cpSV" tabindex="0" role="slider" aria-label="Saturation and brightness"><div class="cpSVdot"></div></div>'+
+    '<div class="cpHue" tabindex="0" role="slider" aria-label="Hue" aria-valuemin="0" aria-valuemax="360"><div class="cpHueDot"></div></div>'+
+    '<div class="cpRow"><span class="cpNow" title="Left: the color you started with (click to go back to it). Right: the new color."><button type="button" class="cpOld" aria-label="Back to the starting color"></button><span class="cpNew"></span></span><div class="cpFields"></div></div>'+
+    '<div class="cpSw" role="group" aria-label="Preset colors"></div><div class="cpRecent" role="group" aria-label="Recent colors"></div>';
+  document.body.appendChild(pop);
+  const q=s=>pop.querySelector(s),sv=q('.cpSV'),svDot=q('.cpSVdot'),hue=q('.cpHue'),hueDot=q('.cpHueDot'),fields=q('.cpFields'),sw=q('.cpSw'),rec=q('.cpRecent'),modeSel=q('.cpMode');
+  q('.cpX').innerHTML=svgI('<path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',14);
+  q('.cpDrop').innerHTML=svgI('<path d="M1.5 14.5l.8-.8h2L10 8M2.3 13.7v-2L8 6M10 4l2.2-2.2a1.4 1.4 0 0 1 2 2L12 6l.4.4a1.4 1.4 0 0 1-2 2L7.6 5.6a1.4 1.4 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>',14);
+  const PRE=['#e5484d','#f76b15','#f2b84b','#86d86a','#38d6c4','#60a5fa','#7c66dc','#f472b6','#ffffff','#a3a3b8','#4b4b5c','#000000'];
+  const swatch=c=>`<button type="button" class="cpS" data-c="${c}" style="background:${c}" title="${c}" aria-label="${c}"></button>`;
+  sw.innerHTML=PRE.map(swatch).join('');
+  let mode='Hex';try{const m=localStorage.getItem('mc.cpMode');if(MODES.includes(m))mode=m;}catch(e){}
+  let recent=[];try{recent=(JSON.parse(localStorage.getItem('mc.cpRecent'))||[]).filter(c=>/^#[0-9a-f]{6}$/.test(c)).slice(0,6);}catch(e){}
+  let cur=null,orig='',h=0,s=0,v=0;
+
+  /* conversions; rgb is 0–255 */
+  const hexOf=(r,g,b)=>'#'+[r,g,b].map(x=>clamp(Math.round(x),0,255).toString(16).padStart(2,'0')).join('');
+  const rgbOf=c=>{const n=parseInt(c.slice(1),16);return[n>>16&255,n>>8&255,n&255];};
+  const hsvToRgb=(H,S,V)=>{const f=n=>{const k=(n+H/60)%6;return(V-V*S*Math.max(0,Math.min(k,4-k,1)))*255;};return[f(5),f(3),f(1)];};
+  const rgbToHsv=([r,g,b])=>{r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let H=null;if(d){H=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;H*=60;if(H<0)H+=360;}return[H,mx?d/mx:0,mx];};
+  const hslToRgb=(H,S,L)=>{const a=S*Math.min(L,1-L),f=n=>{const k=(n+H/30)%12;return(L-a*Math.max(-1,Math.min(k-3,9-k,1)))*255;};return[f(0),f(8),f(4)];};
+  const rgbToHsl=rgb=>{const[H,Sv,V]=rgbToHsv(rgb),L=V*(1-Sv/2),S=L===0||L===1?0:(V-L)/Math.min(L,1-L);return[H,S,L];};
+  const lin=c=>{c/=255;return c<=.04045?c/12.92:Math.pow((c+.055)/1.055,2.4);},unlin=c=>255*(c<=.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-.055);
+  const rgbToOklch=([r,g,b])=>{
+    r=lin(r);g=lin(g);b=lin(b);
+    const l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*b),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*b),s3=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*b);
+    const L=.2104542553*l+.793617785*m-.0040720468*s3,A=1.9779984951*l-2.428592205*m+.4505937099*s3,B=.0259040371*l+.7827717662*m-.808675766*s3;
+    const C=Math.hypot(A,B);let H=Math.atan2(B,A)*180/Math.PI;if(H<0)H+=360;return[L,C,C<1e-4?null:H];
+  };
+  const oklchToRgb=(L,C,H)=>{
+    const A=C*Math.cos(H*Math.PI/180),B=C*Math.sin(H*Math.PI/180);
+    const l=(L+.3963377774*A+.2158037573*B)**3,m=(L-.1055613458*A-.0638541728*B)**3,s3=(L-.0894841775*A-1.291485548*B)**3;
+    return[unlin(4.0767416621*l-3.3077115913*m+.2309699292*s3),unlin(-1.2684380046*l+2.6097574011*m-.3413193965*s3),unlin(-.0041960863*l-.7034186147*m+1.707614701*s3)];
+  };
+  // the fields for each format: label, maximum, step; values come from and go back to rgb
+  const FMT={
+    RGB:{f:[['R',255,1],['G',255,1],['B',255,1]],get:rgb=>rgb,set:a=>a},
+    HSL:{f:[['H',360,1],['S %',100,1],['L %',100,1]],get:rgb=>{const[H,S,L]=rgbToHsl(rgb);return[H??h,S*100,L*100];},set:([H,S,L])=>hslToRgb(H,S/100,L/100)},
+    HSV:{f:[['H',360,1],['S %',100,1],['V %',100,1]],get:rgb=>{const[H,S,V]=rgbToHsv(rgb);return[H??h,S*100,V*100];},set:([H,S,V])=>hsvToRgb(H,S/100,V/100)},
+    OKLCH:{f:[['L %',100,.1],['C',.4,.001],['H',360,.1]],get:rgb=>{const[L,C,H]=rgbToOklch(rgb);return[L*100,C,H??0];},set:([L,C,H])=>oklchToRgb(L/100,C,H)}
+  };
+  const now=()=>hexOf(...hsvToRgb(h,s,v));
+  const buildFields=()=>{
+    if(mode==='Hex')fields.innerHTML='<label class="cpF wide"><span>Hex</span><input type="text" class="cpHex" maxlength="7" spellcheck="false" aria-label="Hex color"></label>';
+    else fields.innerHTML=FMT[mode].f.map(([l,mx,st],i)=>`<label class="cpF"><span>${l}</span><input type="number" class="cpN" data-i="${i}" min="0" max="${mx}" step="${st}" aria-label="${l}"></label>`).join('');
+  };
+  const fill=()=>{
+    const c=now();
+    if(mode==='Hex'){const el=fields.querySelector('.cpHex');if(document.activeElement!==el)el.value=c;return;}
+    const vals=FMT[mode].get(rgbOf(c));
+    fields.querySelectorAll('.cpN').forEach((el,i)=>{if(document.activeElement===el)return;const st=+el.step;el.value=st<1?(+vals[i].toFixed(st<.01?3:1)):Math.round(vals[i]);});
+  };
+  const paint=()=>{
+    sv.style.background=`linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,hsl(${h},100%,50%))`;
+    svDot.style.left=s*100+'%';svDot.style.top=(1-v)*100+'%';hueDot.style.left=h/360*100+'%';
+    const c=now();q('.cpNew').style.background=c;svDot.style.background=c;fill();
+    hue.setAttribute('aria-valuenow',Math.round(h));sv.setAttribute('aria-valuetext',c);
+    for(const b of pop.querySelectorAll('.cpS'))b.classList.toggle('on',b.dataset.c===c);
+  };
+  const fromHex=c=>{const[H,S,V]=rgbToHsv(rgbOf(c));if(H!=null)h=H;s=S;v=V;};   // greys keep the hue they had
+  const push=c=>{if(!cur||cur.value===c)return;cur.value=c;cur.dispatchEvent(new Event('input',{bubbles:true}));};
+  const update=()=>{paint();push(now());};
+  const setHex=c=>{fromHex(c);paint();push(now());};
+  const drawRecent=()=>{rec.innerHTML=recent.length?'<span>Recent</span>'+recent.map(swatch).join(''):'';};
+  const place=()=>{
+    if(!cur)return;const r=cur.getBoundingClientRect(),w=pop.offsetWidth,ht=pop.offsetHeight;
+    let top=r.bottom+6;if(top+ht>innerHeight-6)top=Math.max(6,r.top-ht-6);
+    // whole device pixels, so the numbers and edges inside stay sharp
+    const px=n=>Math.round(n*devicePixelRatio)/devicePixelRatio+'px';
+    pop.style.left=px(clamp(r.left,6,Math.max(6,innerWidth-w-6)));pop.style.top=px(top);
+  };
+  const outside=e=>{if(cur&&!pop.contains(e.target)&&e.target!==cur&&!e.target.closest('#stepper'))close(true);};
+  const onResize=()=>close(true);
+  function close(keep){
+    if(!cur)return;const el=cur;cur=null;pop.classList.remove('show');
+    document.removeEventListener('pointerdown',outside,true);removeEventListener('resize',onResize);
+    if(!keep&&el.value!==orig){el.value=orig;el.dispatchEvent(new Event('input',{bubbles:true}));}
+    if(el.value!==orig){
+      recent=[el.value,...recent.filter(c=>c!==el.value)].slice(0,6);try{localStorage.setItem('mc.cpRecent',JSON.stringify(recent));}catch(e){}
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    CPICK.el=null;CPICK.before=null;
+    if(el.isConnected&&pop.contains(document.activeElement))el.focus({preventScroll:true});
+  }
+  function open(el){
+    cur=el;CPICK.el=el;CPICK.before=null;orig=el.value.toLowerCase();
+    const host=el.closest('dialog[open]')||document.body;if(pop.parentNode!==host)host.appendChild(pop);
+    modeSel.value=mode;buildFields();drawRecent();
+    q('.cpOld').style.background=orig;fromHex(/^#[0-9a-f]{6}$/i.test(orig)?orig:'#000000');paint();pop.classList.add('show');place();
+    setTimeout(()=>{document.addEventListener('pointerdown',outside,true);addEventListener('resize',onResize);},0);
+    sv.focus({preventScroll:true});
+  }
+  // dragging in the square (saturation across, brightness up) and along the rainbow (hue)
+  const drag=(el,fn)=>el.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;e.preventDefault();el.focus({preventScroll:true});el.setPointerCapture(e.pointerId);
+    const mv=ev=>{const r=el.getBoundingClientRect();fn(clamp((ev.clientX-r.left)/r.width,0,1),clamp((ev.clientY-r.top)/r.height,0,1));update();};
+    mv(e);el.onpointermove=mv;el.onpointerup=el.onpointercancel=()=>{el.onpointermove=null;};
+  });
+  drag(sv,(x,y)=>{s=x;v=1-y;});drag(hue,x=>{h=Math.min(359.9,x*360);});
+  sv.addEventListener('keydown',e=>{const d=e.shiftKey?.1:.02,k={ArrowLeft:[-d,0],ArrowRight:[d,0],ArrowUp:[0,d],ArrowDown:[0,-d]}[e.key];if(!k)return;e.preventDefault();s=clamp(s+k[0],0,1);v=clamp(v+k[1],0,1);update();});
+  hue.addEventListener('keydown',e=>{const d=e.shiftKey?20:3,k={ArrowLeft:-d,ArrowDown:-d,ArrowRight:d,ArrowUp:d}[e.key];if(k==null)return;e.preventDefault();h=(h+k+360)%360;update();});
+  fields.addEventListener('input',e=>{
+    const t=e.target;
+    if(t.classList.contains('cpHex')){const x=t.value.trim().replace(/^#?/,'#').toLowerCase();if(/^#[0-9a-f]{6}$/.test(x))setHex(x);return;}
+    const vals=[...fields.querySelectorAll('.cpN')].map(el=>+el.value);if(vals.some(x=>!isFinite(x)))return;
+    const[r,g,b]=FMT[mode].set(vals),c=hexOf(r,g,b),[H]=rgbToHsv(rgbOf(c));
+    // keep the typed hue even where the color itself has none (greys), so the next change starts from it
+    if(H==null&&mode!=='RGB')h=mode==='OKLCH'?h:vals[0];setHex(c);
+  });
+  fields.addEventListener('focusout',fill);
+  modeSel.addEventListener('change',()=>{mode=modeSel.value;try{localStorage.setItem('mc.cpMode',mode);}catch(e){}buildFields();fill();});
+  // Browsers without the EyeDropper (Firefox, Safari) pick from this page instead: the piano roll and other drawings give
+  // their exact pixel, anything else the color it is filled with. A magnified view of the pixels around the cursor follows
+  // it, with the one that will be picked boxed in the middle; the new-color swatch previews it too. Escape cancels.
+  // memo holds what one look-around has already read: each element's fill and, per canvas, one block of its pixels
+  // (reading a canvas is slow, so the whole block (x0,y0,n by n) comes in a single read).
+  const RGBA=/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/;
+  const fillOf=el=>{
+    for(;el;el=el.parentElement){const c=getComputedStyle(el);
+      for(const v of [el instanceof SVGElement?c.fill:'',c.backgroundColor]){const m=v&&v.match(RGBA);if(m&&(m[4]==null||+m[4]>.5))return hexOf(+m[1],+m[2],+m[3]);}}
+    return null;
+  };
+  const sampleAt=(x,y,memo=new Map(),x0=x,y0=y,n=1)=>{
+    const el=document.elementFromPoint(x,y);if(!el)return null;
+    if(memo.has(el)){const m=memo.get(el);return m&&m.px?m.px(x,y):m;}
+    if(el.tagName==='CANVAS'){
+      try{
+        const r=el.getBoundingClientRect(),sx=el.width/r.width,sy=el.height/r.height,bx=Math.floor((x0-r.left)*sx),by=Math.floor((y0-r.top)*sy),bw=Math.ceil(n*sx),bh=Math.ceil(n*sy);
+        const d=el.getContext('2d').getImageData(bx,by,bw,bh).data;
+        const px=(x,y)=>{const i=4*((Math.floor((y-r.top)*sy)-by)*bw+Math.floor((x-r.left)*sx)-bx);return d[i]==null?null:hexOf(d[i],d[i+1],d[i+2]);};
+        memo.set(el,{px});return px(x,y);
+      }catch(e){}
+    }
+    const c=fillOf(el);memo.set(el,c);return c;
+  };
+  const LN=11,LZ=11;   // the view shows 11 by 11 pixels, each 11 times bigger
+  const loupe=document.createElement('div');loupe.id='cpLoupe';loupe.setAttribute('aria-hidden','true');
+  loupe.innerHTML='<canvas></canvas><span></span>';
+  const lcv=loupe.firstChild,lhex=loupe.lastChild;
+  const pagePick=()=>new Promise(res=>{
+    const nw=q('.cpNew');document.body.classList.add('cpPicking');
+    (pop.parentNode||document.body).appendChild(loupe);
+    const dpr=devicePixelRatio||1,side=LN*LZ;lcv.width=lcv.height=Math.round(side*dpr);lcv.style.width=lcv.style.height=side+'px';
+    const g=lcv.getContext('2d',{alpha:false});
+    let mx=0,my=0,raf=0;
+    const draw=()=>{
+      raf=0;const memo=new Map(),h=LN>>1,x0=mx-h,y0=my-h;
+      g.setTransform(dpr,0,0,dpr,0,0);g.fillStyle='#000';g.fillRect(0,0,side,side);
+      for(let j=0;j<LN;j++)for(let i=0;i<LN;i++){g.fillStyle=sampleAt(x0+i,y0+j,memo,x0,y0,LN)||'#000';g.fillRect(i*LZ,j*LZ,LZ,LZ);}
+      g.fillStyle='rgba(128,128,128,.18)';for(let k=1;k<LN;k++){g.fillRect(k*LZ,0,1,side);g.fillRect(0,k*LZ,side,1);}
+      const c=sampleAt(mx,my,memo,x0,y0,LN);
+      g.lineWidth=2;g.strokeStyle='#000';g.strokeRect(h*LZ-1,h*LZ-1,LZ+2,LZ+2);g.lineWidth=1;g.strokeStyle='#fff';g.strokeRect(h*LZ-.5,h*LZ-.5,LZ+1,LZ+1);
+      lhex.textContent=c||'';if(c)nw.style.background=c;
+      // beside the cursor, flipped to the other side near the window edges
+      const w=loupe.offsetWidth,ht=loupe.offsetHeight;
+      loupe.style.left=(mx+18+w>innerWidth-4?mx-18-w:mx+18)+'px';loupe.style.top=(my+18+ht>innerHeight-4?my-18-ht:my+18)+'px';
+    };
+    const done=c=>{cancelAnimationFrame(raf);document.body.classList.remove('cpPicking');loupe.remove();removeEventListener('pointermove',move,true);removeEventListener('pointerdown',down,true);removeEventListener('keydown',key,true);nw.style.background=now();res(c);};
+    const move=e=>{mx=Math.round(e.clientX);my=Math.round(e.clientY);loupe.classList.add('show');if(!raf)raf=requestAnimationFrame(draw);};
+    const eat=e=>{e.preventDefault();e.stopPropagation();};
+    const down=e=>{eat(e);addEventListener('click',eat,{capture:true,once:true});done(e.button===0?sampleAt(Math.round(e.clientX),Math.round(e.clientY)):null);};
+    const key=e=>{if(e.key==='Escape'){eat(e);done(null);}};
+    addEventListener('pointermove',move,true);addEventListener('pointerdown',down,true);addEventListener('keydown',key,true);
+  });
+  pop.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.classList.contains('cpS'))setHex(b.dataset.c);
+    else if(b.classList.contains('cpOld'))setHex(orig);
+    else if(b.classList.contains('cpX'))close(true);
+    else if(b.classList.contains('cpDrop')){const keep=cur;('EyeDropper' in window?new EyeDropper().open().then(r=>r.sRGBHex):pagePick()).then(c=>{if(c&&cur===keep)setHex(c.toLowerCase());}).catch(()=>{});}
+  });
+  pop.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(false);}
+    else if(e.key==='Enter'&&!e.target.closest('button,select')){e.preventDefault();e.stopPropagation();close(true);}
+    else e.stopPropagation();   // typing here is not a shortcut (B, Z, X, the piano keys…)
+  });
+  document.addEventListener('click',e=>{
+    const el=e.target;if(!el.matches||!el.matches('input[type=color]')||el.disabled)return;
+    e.preventDefault();const same=cur===el;if(cur)close(true);if(!same)open(el);
+  },true);
+})();
+
 /* ================= Reset buttons: one per setting, shown while it differs from its default ================= */
 const RST=[];
 const rstVal=el=>el.type==='checkbox'?el.checked:el.value;
@@ -4794,6 +5270,8 @@ function boot(){
   if(!song.tracks.length)song.tracks.push(newTrack());
   S.active=song.tracks[0].id;buildTempoMap();octInfo();
   new ResizeObserver(sizeCanvases).observe(roll);new ResizeObserver(sizeCanvases).observe($('lanecol'));
+  addEventListener('resize',sizeCanvases);
+  {const tp=$('top'),setH=()=>document.documentElement.style.setProperty('--topH',Math.round(tp.getBoundingClientRect().bottom)+'px');new ResizeObserver(setH).observe(tp);setH();}
   refreshAll();sizeCanvases();
   tabLoad(curTab);
   if(restored)toast(nr>1?'Restored your '+nr+' tabs from this browser':'Restored your last session from this browser');
