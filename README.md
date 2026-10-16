@@ -2,7 +2,7 @@
 
 A piano roll in your browser for writing music, playing it back and exporting it as MIDI. It can also turn falling-notes piano videos into notes.
 
-It is a single web page. There is nothing to install, no account and no server: open `index.html` and start drawing notes. Everything stays on your computer.
+It is a single web page. There is nothing to install, no account and no server: open `index.html` or visit [patatanl.github.io/MIDI-creator/](https://patatanl.github.io/MIDI-creator/) and start drawing notes. Everything stays on your computer.
 
 > **Note:** this application is fully programmed by AI. The ideas are human-made, with AI additions.
 
