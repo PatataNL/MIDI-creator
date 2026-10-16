@@ -239,6 +239,7 @@ dialog#vidDlg{width:min(1120px,96vw)}
 .vrow label{display:flex;align-items:center;gap:6px;color:var(--dim);flex-wrap:wrap;max-width:100%;min-width:0}
 .vsteps{display:flex;flex-direction:column;gap:4px;margin:6px 0}
 .vsteps .btn{text-align:left}.vsteps .btn.done::after{content:' \2713'}
+#vidDlg.vFallRes .vKeysOnly{display:none}
 .vlayer{display:flex;align-items:center;gap:8px;padding:3px 0}.vlayer .sw{width:16px;height:16px;border-radius:4px;flex:none}.vlayer input[type=text]{flex:1;min-width:0}.vlayer small{color:var(--dim)}
 progress{width:100%;accent-color:var(--accent)}
 #vTime{display:inline-block;min-width:7ch;text-align:right;font-variant-numeric:tabular-nums}
@@ -259,7 +260,6 @@ progress{width:100%;accent-color:var(--accent)}
 .tools .btn.tool{border-color:transparent;background:transparent}
 .tools .btn.tool:hover{background:var(--panel2);border-color:var(--line)}
 .tools .btn.tool.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.tools .btn.tool.act{border-color:var(--line);background:var(--panel2)}
 .ti{display:inline-flex}.ti svg,.btn.ico svg{display:block}
 .btn.rec{color:var(--danger)}.btn.rec.on{color:#fff}
 .btn.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
@@ -322,6 +322,7 @@ body.side-right .ptabs{border-right:0;border-left:1px solid var(--line)}
 .trow .nm:hover,.trow .nm:focus{border-color:color-mix(in srgb,var(--lt,#fff) 50%,transparent);background:rgba(0,0,0,.14)}
 .colrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);font-size:12px}
 .colrow label{display:flex;align-items:center;gap:5px}
+.colrow .slmode{margin-left:auto;white-space:nowrap}
 input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer}
 input[type=color]::-webkit-color-swatch-wrapper{padding:2px}input[type=color]::-webkit-color-swatch{border:0;border-radius:3px}input[type=color]::-moz-color-swatch{border:0;border-radius:3px}
 input[type=color]:hover{border-color:var(--dim)}input[type=color]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -374,6 +375,10 @@ body.stage #main{grid-template-columns:minmax(0,1fr)}
 body.stage #work{grid-column:1;grid-template-columns:minmax(0,1fr)}
 body.stage .opts{position:fixed;left:0;right:0;bottom:0;z-index:39;border-bottom:0;border-top:1px solid var(--line);transition:transform .16s ease}
 body.stage.hide-bar .opts{transform:translateY(105%);pointer-events:none}
+body.stage.hide-bar,body.stage.hide-bar *{cursor:none!important}
+/* full screen shows no scrollbars under the keys (the roll still scrolls with the wheel) */
+body.stage #roll{right:0;scrollbar-width:none}
+body.stage #roll::-webkit-scrollbar{display:none}
 #stageProg{display:none}
 body.stage #stageProg{display:block;position:fixed;left:0;top:0;height:3px;width:100%;z-index:50}
 #stageProg div{height:100%;width:0;background:var(--accent)}
@@ -524,8 +529,6 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         <button class="btn tool" id="tSelect" title="Select (2): drag a box to select"><span class="ti" data-icon="select"></span><span>Select</span></button>
         <button class="btn tool" id="tErase" title="Erase (3): click or drag over notes"><span class="ti" data-icon="erase"></span><span>Erase</span></button>
         <button class="btn tool" id="tHand" title="Look (4): drag to scroll around, handy on touch screens"><span class="ti" data-icon="look"></span><span>Look</span></button>
-        <span class="sep"></span>
-        <button class="btn tool act" id="bQuant" title="Snap All: snap note starts to the grid (selected notes, or the whole layer)"><span class="ti" data-icon="snap"></span><span>Snap All</span></button>
       </div>
       <div class="grp right">
         <button class="btn" id="bMidi" title="Connect a MIDI keyboard">Connect MIDI</button>
@@ -717,14 +720,23 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           <div class="vrow"><small class="vdim">Click the video to mark the keyboard, one step at a time. Then check that the dots sit on the keys.</small></div>
           <div class="vrow"><button class="btn" id="vAuto" title="Looks for the keyboard in the video and places the marks for you. Check the dots afterwards.">Auto-position</button></div>
           <div class="vsteps" id="vSteps"><button class="btn" data-step="0"></button><button class="btn" data-step="1"></button><button class="btn" data-step="2"></button><button class="btn" data-step="3"></button></div>
-          <div class="vrow"><button class="btn" id="vSnapSides" title="Moves the left side of the lowest key and the right side of the highest key to the left and right edges of the video.">Snap sides to the video edges</button><button class="btn" id="vCalReset">Clear marks</button></div>
-          <details class="vsec vsub"><summary>Perspective and fine-tuning</summary>
+          <div class="vrow"><button class="btn" id="vSnapSides" title="Moves the left side of the lowest key and the right side of the highest key to the left and right edges of the video.">Snap sides to borders</button><button class="btn" id="vCalReset" title="Clears the keyboard marks and the scan area. Undo brings them back.">Clear marks</button></div>
+          <div class="vrow"><label title="Multiplies how far each point is from the middle of the keyboard. Use it when the dots drift away from the keys toward the sides. Auto-position sets it too."><span>Horizontal spread</span><input type="range" id="vSpread" min="0.95" max="1.05" step="0.0025" value="1"><input type="number" class="num" id="vSpreadN" min="0.95" max="1.05" step="0.0025" value="1" aria-label="Horizontal spread multiplier"></label></div>
+          <div class="vrow"><small class="vdim">Above 1 spreads the points out from the middle, below 1 pulls them in. 1.00 leaves them where they are.</small></div>
+          <div class="vrow"><label title="Bottom keyboard: reads the color of each key as it lights up. Falling notes: reads the notes in a band above the keys before they land, where key effects (fades, glow, particles) do not reach. Every note edge is then seen in many frames, which makes the timing more precise.">Read notes from <select id="vSrc"><option value="keys">Bottom keyboard</option><option value="fall">Falling notes (more precise)</option></select></label></div>
+          <div id="vFallOpts" hidden>
+            <div class="vrow"><small class="vdim">Notes are read between the two blue lines, clear of the keys and their effects. They sound when they reach the orange line. Drag a line on the video to move it.</small></div>
+            <div class="vsteps" id="vFSteps"><button class="btn" data-fstep="0">Top of the scan area</button><button class="btn" data-fstep="1">Bottom of the scan area</button><button class="btn" data-fstep="2">Where the notes reach the keys</button></div>
+            <div class="vrow"><button class="btn" id="vBandAuto" title="Places the scan area above the keys, clear of the effects just above them, and the orange line on the top edge of the keys.">Auto scan area</button></div>
+            <div class="vrow"><label title="How many rows of pixels are read across the scan area. More rows find note edges more precisely, but take longer.">Rows read <select id="vRows"><option value="50">50</option><option value="100">100</option><option value="200" selected>200</option><option value="400">400</option><option value="4000">Every pixel</option></select></label><label title="How much of each key's width is read, in the middle of its note. Narrower avoids note outlines, glow and neighboring notes; wider sees more of the note.">Lane width <input type="number" class="num" id="vLaneW" min="10" max="100" step="5" value="50">%</label></div>
+          </div>
+          <details class="vsec vsub"><summary>Advanced position tuning</summary>
+            <div class="vrow vband" id="vBandRow" hidden><label title="Top of the scan area, measured down from the top of the video">Scan from <input type="number" class="num" id="vBandTop" min="0" max="100" step="0.5">%</label><label title="Bottom of the scan area, measured down from the top of the video. Keep it above the effects drawn where notes reach the keys.">to <input type="number" class="num" id="vBandBot" min="0" max="100" step="0.5">%</label><label id="vBandHitL" title="Where the notes reach the keys (the top edge of the keys), measured down from the top of the video">Keys at <input type="number" class="num" id="vBandHit" min="0" max="100" step="0.5">%</label></div>
+            <div class="vrow" id="vBandInfo" hidden><small class="vdim">Measured down from the top of the video. Notes falling through the whole scan area are read most precisely; the higher it ends above the keys, the fewer key effects it sees.</small></div>
             <div class="vrow"><label title="Use this when the keyboard looks tilted, rotated or is filmed at an angle. You mark the four outer corners of the keys instead."><input type="checkbox" id="vPersp"> Perspective correction (mark four corners)</label></div>
-            <div class="vrow" id="vPerspOpts" hidden><label>White key sample height <input type="number" class="num" id="vHW" min="50" max="98" value="85">%</label><label>Black key sample height <input type="number" class="num" id="vHB" min="5" max="60" value="30">%</label></div>
+            <div class="vrow" id="vPerspOpts" hidden><label>White key sample height <input type="number" class="num" id="vHW" min="50" max="98" value="85">%</label><label>Black key sample height <input type="number" class="num" id="vHB" min="5" max="60" value="33">%</label></div>
             <div class="vrow"><label title="Works with and without perspective correction. 1.00 means the keyboard looks straight on."><span>Left/right perspective</span><input type="range" id="vLRm" min="0.5" max="2" step="0.01" value="1"><input type="number" class="num" id="vLRmN" min="0.5" max="2" step="0.01" value="1" aria-label="Left/right perspective multiplier"></label></div>
             <div class="vrow"><small class="vdim">Size of a key at the right end compared with the left end. Below 1 the right end looks farther away; above 1 it looks closer.</small></div>
-            <div class="vrow"><label title="Multiplies how far each point is from the middle of the keyboard. Use it when the dots drift away from the keys toward the sides."><span>Horizontal spread</span><input type="range" id="vSpread" min="0.9" max="1.1" step="0.005" value="1"><input type="number" class="num" id="vSpreadN" min="0.9" max="1.1" step="0.005" value="1" aria-label="Horizontal spread multiplier"></label></div>
-            <div class="vrow"><small class="vdim">Above 1 spreads the points out from the middle, below 1 pulls them in. 1.00 leaves them where they are.</small></div>
           </details>
         </section>
         <section class="vstepbox" id="vs3"><h3><span class="vnum">3</span>Analyze</h3>
@@ -749,13 +761,13 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           </section>
           <section class="vstepbox"><h3>Settings</h3>
             <div class="vrow"><label>Sensitivity <input type="range" id="vSens" min="1" max="100" value="60"><input type="number" class="num" id="vSensN" min="1" max="100" value="60" aria-label="Sensitivity value"></label></div>
-            <div class="vrow"><label title="Many videos fade a note out when the key is released. This ends the note when the fade begins."><input type="checkbox" id="vFade"> Stop notes when they fade</label></div>
-            <div class="vrow"><label title="When a key is pressed again while its light is still fading, or right after it faded, this makes it a new note instead of joining it to the old one. Uses the fade sensitivity below."><input type="checkbox" id="vSplit" checked> Split repeated presses of the same key</label></div>
-            <div class="vrow"><label title="How much the light has to fade to count. Used by both options above.">Fade sensitivity <input type="range" id="vFadeS" min="1" max="100" value="50"><input type="number" class="num" id="vFadeSN" min="1" max="100" value="50" aria-label="Fade sensitivity value"></label></div>
+            <div class="vrow vKeysOnly"><label title="Many videos fade a note out when the key is released. This ends the note when the fade begins."><input type="checkbox" id="vFade"> Stop notes when they fade</label></div>
+            <div class="vrow vKeysOnly"><label title="When a key is pressed again while its light is still fading, or right after it faded, this makes it a new note instead of joining it to the old one. Uses the fade sensitivity below."><input type="checkbox" id="vSplit" checked> Split repeated presses of the same key</label></div>
+            <div class="vrow vKeysOnly"><label title="How much the light has to fade to count. Used by both options above.">Fade sensitivity <input type="range" id="vFadeS" min="1" max="100" value="50"><input type="number" class="num" id="vFadeSN" min="1" max="100" value="50" aria-label="Fade sensitivity value"></label></div>
             <div class="vrow"><label title="Also sets the project tempo">Tempo (BPM) <input type="number" class="num" id="vBpm" min="20" max="300" value="120"></label><button class="btn" id="vEst" title="Guess the tempo from where the notes start">Estimate</button></div>
             <div class="vrow"><label>Snap to <select id="vSnap"><option value="0">Nothing</option><option value="60">1/32</option><option value="120">1/16</option><option value="240">1/8</option></select></label></div>
             <details class="vsec vsub"><summary>Advanced detection</summary>
-              <div class="vrow"><label title="When the whole screen fades in or out, or flashes, every key changes at once. This removes that change so it is not read as notes."><input type="checkbox" id="vFlash" checked> Ignore fades and flashes of the whole screen</label></div>
+              <div class="vrow vKeysOnly"><label title="When the whole screen fades in or out, or flashes, every key changes at once. This removes that change so it is not read as notes."><input type="checkbox" id="vFlash" checked> Ignore fades and flashes of the whole screen</label></div>
               <div class="vrow"><label title="If more keys than this are pressed at the same moment, the notes starting then are discarded, because that is almost always a flash or a smash of the whole screen. 0 turns this off.">Simultaneous keys pressed to discard these notes <input type="number" class="num" id="vMaxKeys" min="0" max="128" value="24"></label></div>
               <div class="vrow"><label>Ignore flashes shorter than (ms) <input type="number" class="num" id="vMin" min="0" max="500" value="0"></label></div>
               <div class="vrow"><label>Join gaps shorter than (ms) <input type="number" class="num" id="vGap" min="0" max="500" value="0"></label></div>
@@ -777,6 +789,9 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
 <div id="toolsPanel" role="dialog" aria-label="Note tools" hidden>
   <div class="tpHead"><strong>Note tools</strong><button class="mini" id="tpClose" aria-label="Close note tools">✕</button></div>
   <div class="tpScope" id="tpScope">Applies to: the whole layer</div>
+  <section><h4>Snap to grid</h4>
+    <div class="tpRow"><button class="btn" id="bQuant" title="Snap note starts to the grid">Snap All</button></div>
+    <small>Moves each note's start to the nearest line of the grid set above the notes.</small></section>
   <section><h4>Transpose</h4>
     <div class="tpRow"><button class="mini" data-tr="-12">−12</button><button class="mini" data-tr="-1">−1</button><input type="number" class="num" id="tpSemi" value="0" min="-48" max="48" aria-label="Semitones"><button class="mini" data-tr="1">+1</button><button class="mini" data-tr="12">+12</button><button class="btn" id="tpTransApply">Apply</button></div></section>
   <section><h4>Swing</h4>
@@ -1074,14 +1089,15 @@ function writeMidi(sg){
     colEv('L',tr.color);colEv('W',tr.colorWhite);colEv('B',tr.colorBlack);
     const cc=(t,n,v)=>ev.push({t,o:2,b:[0xB0|ch,n,Math.max(0,Math.min(127,v))]});
     if(!tr.drum)ev.push({t:0,o:2,b:[0xC0|ch,tr.program&127]});
-    const last={7:tr.vol,10:tr.pan,91:tr.rev,74:mufToCC(tr.muf)};
+    // the file holds what is heard: the layer's whole-layer values are worked into every note
+    const base=playVals(tr,{v:1}),last={7:tr.vol,10:base.pan,91:base.rev,74:mufToCC(base.muf)};
     for(const k of [7,10,91,74])cc(0,+k,last[k]);
     for(const r of (tr.pedal||[])){ev.push({t:r.s,o:2,b:[0xB0|ch,64,127]});ev.push({t:r.s+r.d,o:1,b:[0xB0|ch,64,0]});}
     const ns=[...tr.notes].sort((a,b)=>a.s-b.s);
     for(const n of ns){
-      const want={7:tr.vol,10:n.pan??tr.pan,91:n.rev??tr.rev,74:mufToCC(n.muf??tr.muf)};
+      const pv=playVals(tr,n),want={10:pv.pan,91:pv.rev,74:mufToCC(pv.muf)};
       for(const k of [10,91,74])if(want[k]!==last[k]){cc(n.s,+k,want[k]);last[k]=want[k];}
-      ev.push({t:n.s,o:3,b:[0x90|ch,n.p&127,Math.max(1,Math.min(127,n.v))]});
+      ev.push({t:n.s,o:3,b:[0x90|ch,n.p&127,pv.v]});
       ev.push({t:n.s+n.d,o:1,b:[0x80|ch,n.p&127,0]});
     }
     chunks.push(chunk('MTrk',body(ev)));
@@ -1361,6 +1377,20 @@ function newTrack(o={}){
 }
 const activeTrack=()=>song.tracks.find(t=>t.id===S.active)||song.tracks[0];
 function effVal(n,tr,key){return key==='vel'?n.v:(n[key]??tr[key]);}
+// A note without its own pan, reverb or muffle takes the layer's (tr.pan, tr.rev, tr.muf: from an imported file, or the
+// defaults). On top of that a layer has two sets of values, each with its own sliders:
+// new notes (nv…): the velocity, pan, reverb and muffle that notes drawn or recorded in it start with; until set, the
+// layer's own and the last velocity used;
+// whole layer (mx…): what it does to all of its notes when they play: velocity, reverb and muffle as a share of each
+// note's own (100 = unchanged), pan moved over. Volume (tr.vol) also counts for the whole layer.
+const nvOf=tr=>({v:tr.nvV??S.drawVel,pan:tr.nvPan??tr.pan,rev:tr.nvRev??tr.rev,muf:tr.nvMuf??tr.muf});
+// what a new note in the layer starts with (pan, reverb and muffle only where they differ from the layer's)
+function newNoteVals(tr){const o=nvOf(tr),r={v:o.v};for(const k of ['pan','rev','muf'])if(o[k]!==tr[k])r[k]=o[k];return r;}
+// what a note plays with
+function playVals(tr,n){
+  return{v:clamp(Math.round(n.v*(tr.mxV??100)/100),1,127),pan:clamp((n.pan??tr.pan)+(tr.mxPan??0),0,127),
+    rev:clamp(Math.round((n.rev??tr.rev)*(tr.mxRev??100)/100),0,127),muf:clamp(Math.round((n.muf??tr.muf)*(tr.mxMuf??100)/100),0,127)};
+}
 
 /* ================= Tempo map ================= */
 let tmap=[];
@@ -1527,10 +1557,11 @@ function click(t,accent){
   const ctx=Audio_.ctx,o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=accent?1650:1100;o.type='square';
   g.gain.setValueAtTime((accent?.16:.1)*(S.set.clickVol/50)+1e-5,t);g.gain.exponentialRampToValueAtTime(.001,t+.04);o.connect(g);g.connect(Audio_.master);o.start(t);o.stop(t+.05);
 }
-function audition(tr,p,v,dur=.28,force=false){
+// n: the note heard (it plays with its own values), else the layer's
+function audition(tr,p,v,dur=.28,force=false,n=null){
   if(!S.set.audition&&!force)return;
-  const ctx=ensureAudio();if(!ctx)return;const t=ctx.currentTime+.005;
-  const h=startVoice(tr,p,v,t,{pan:tr.pan,rev:tr.rev,muf:tr.muf});if(h)h.release(t+dur);
+  const ctx=ensureAudio();if(!ctx)return;const t=ctx.currentTime+.005,pv=playVals(tr,{...n,v});
+  const h=startVoice(tr,p,pv.v,t,pv);if(h)h.release(t+dur);
 }
 
 /* ================= Playback ================= */
@@ -1546,7 +1577,7 @@ function emit(a,b,seg){
   for(let i=lowerBound(a);i<flat.length&&flat[i].s<b;i++){
     const {n,tr}=flat[i];if(!audible(tr))continue;
     const t=seg.base+secAt(n.s),dur=secAt(sustainEnd(tr,n.s+n.d))-secAt(n.s);
-    const h=startVoice(tr,n.p,n.v,Math.max(t,Audio_.ctx.currentTime),{pan:n.pan??tr.pan,rev:n.rev??tr.rev,muf:n.muf??tr.muf});
+    const pv=playVals(tr,n),h=startVoice(tr,n.p,pv.v,Math.max(t,Audio_.ctx.currentTime),pv);
     if(h)h.release(Math.max(t,Audio_.ctx.currentTime)+dur);
   }
   if(S.metro){const bt=beatTicks(),bar=barTicks();for(let k=Math.ceil(a/bt);k*bt<b;k++){const tk=k*bt;click(seg.base+secAt(tk),tk%bar===0);}}
@@ -1605,7 +1636,8 @@ const live={held:new Map(),sustain:false,pend:[]};
 const rec={pending:new Map()};
 function liveOn(src,p,v){
   const ctx=ensureAudio();if(!ctx)return;const key=src+':'+p;if(live.held.has(key))liveOff(src,p);
-  const tr=activeTrack(),h=startVoice(tr,p,v,ctx.currentTime+.002,{pan:tr.pan,rev:tr.rev,muf:tr.muf});
+  // played live, a key sounds as a note recorded or drawn now would
+  const tr=activeTrack(),pv=playVals(tr,{...nvOf(tr),v}),h=startVoice(tr,p,pv.v,ctx.currentTime+.002,pv);
   live.held.set(key,{h,p,tr});
   if(S.rec&&S.playing)rec.pending.set(key,{s:currentTick(),p,v,tr});
   redraw();
@@ -1621,7 +1653,7 @@ function finishRec(r,endTick){
   let s=r.s,d=Math.max(fineT(),endTick-s);
   if(!d||isNaN(d))return;
   s=Math.round(s);d=Math.round(d);
-  pushH('Record notes');r.tr.notes.push({id:nextId++,s,d:Math.max(1,d),p:r.p,v:clamp(r.v,1,127)});markEdited();
+  pushH('Record notes');r.tr.notes.push({id:nextId++,s,d:Math.max(1,d),p:r.p,...newNoteVals(r.tr),v:clamp(r.v,1,127)});markEdited();
 }
 function flushRec(){const t=S.playhead;for(const [k,r] of rec.pending){rec.pending.delete(k);finishRec(r,t);}}
 function setSustain(on){
@@ -1770,7 +1802,9 @@ function drawRoll(){
   const layers=S.ghost>0?song.tracks.filter(t=>!t.hide&&t!==act):[];if(!act.hide)layers.push(act);
   g.font='9px Figtree,system-ui,sans-serif';g.textBaseline='middle';g.textAlign='center';
   let ghost=null,ghostDone=false;
-  if(S.set.hover&&S.hv&&!P.mode&&S.tool==='draw'&&!S.hv.over&&!act.lock&&!act.hide)ghost={p:S.hv.p,tick:S.hv.tick};
+  // full-screen playback with its bars tucked away: no placement ghost or hover label (the cursor is hidden too)
+  const idle=document.body.classList.contains('hide-bar');
+  if(S.set.hover&&S.hv&&!idle&&!P.mode&&S.tool==='draw'&&!S.hv.over&&!act.lock&&!act.hide)ghost={p:S.hv.p,tick:S.hv.tick};
   const drawGhost=()=>{
     const x0=keyX0(ghost.p)+1,x1=keyX1(ghost.p)-1,gh=Math.max(4,gridT()*ppt),yB=yOfTick(ghost.tick);
     g.globalAlpha=.4;g.fillStyle=noteFill(act,ghost.p,.9);rr(g,x0,yB-gh,x1-x0,gh,3);g.fill();g.globalAlpha=1;
@@ -1818,7 +1852,7 @@ function drawRoll(){
     g.globalAlpha=1;
   }
   if(!act.hide&&act.pedal&&act.pedal.length){g.fillStyle=C.accent;g.globalAlpha=.55;for(const r of act.pedal){const yT=yOfTick(r.s+r.d),yB=yOfTick(r.s);if(yB<0||yT>AH)continue;rr(g,W-9,yT,6,Math.max(2,yB-yT),3);g.fill();}g.globalAlpha=1;}
-  if(S.set.hover&&S.hv&&!P.mode&&S.tool!=='hand'){
+  if(S.set.hover&&S.hv&&!idle&&!P.mode&&S.tool!=='hand'){
     const hv=S.hv,over=hv.over;let label=noteName(over?over.p:hv.p);
     if(over){const x0=keyX0(over.p)+1,x1=keyX1(over.p)-1,yB=yOfTick(over.s),h=Math.max(2,over.d*ppt);g.strokeStyle=C.accent;g.lineWidth=2;rr(g,x0-1,yB-h-1,x1-x0+2,h+2,4);g.stroke();label+=' · '+(over.d/gridT()).toFixed(2)+' steps';}
     else if(ghost){label+=' · '+fmtPos(hv.tick);}
@@ -2330,7 +2364,7 @@ cv.addEventListener('pointerdown',e=>{
   if(x>=RULERW&&y>=AH-1&&y<=AH+4){P.mode='keyh';return;}
   if(y>AH){
     if(x<RULERW)return;
-    const p=pitchAtKey(x,y);P.mode='key';P.key=p;liveOn('mouse',p,S.drawVel);return;
+    const p=pitchAtKey(x,y);P.mode='key';P.key=p;liveOn('mouse',p,nvOf(activeTrack()).v);return;
   }
   if(x<RULERW){
     if(x>=RULERW-14){P.mode='loop';P.a=snapDown(Math.max(0,tickOfY(y)),e.altKey);}
@@ -2350,13 +2384,13 @@ cv.addEventListener('pointerdown',e=>{
     P.mode=h.edge==='r'?'rsz':h.edge==='l'?'lsz':'move';P.n=h.n;
     P.orig=[...S.sel].map(n=>({n,s:n.s,d:n.d,p:n.p}));P.prim=P.orig.find(o=>o.n===h.n);P.copy=(e.ctrlKey||e.metaKey)&&P.mode==='move';P.lastP=h.n.p;
     P.ox=x-(keyX0(h.n.p)+keyX1(h.n.p))/2;
-    audition(activeTrack(),h.n.p,h.n.v,.18);updateInspector();redraw();return;
+    audition(activeTrack(),h.n.p,h.n.v,.18,false,h.n);updateInspector();redraw();return;
   }
   if(S.tool==='draw'){
     if(!canEdit())return;
     const p=pitchAtX(x),tick=snapDown(Math.max(0,tickOfY(y)),e.altKey),tr=activeTrack();
-    touch('Draw note');const n={id:nextId++,s:tick,d:e.altKey?fineT():gridT(),p,v:S.drawVel};tr.notes.push(n);S.sel.clear();S.sel.add(n);
-    P.mode='new';P.n=n;P.t0=performance.now();audition(tr,p,n.v,.25);updateInspector();redraw();
+    touch('Draw note');const n={id:nextId++,s:tick,d:e.altKey?fineT():gridT(),p,...newNoteVals(tr)};tr.notes.push(n);S.sel.clear();S.sel.add(n);
+    P.mode='new';P.n=n;P.t0=performance.now();audition(tr,p,n.v,.25,false,n);updateInspector();redraw();
   }else{
     P.mode='box';P.box={x0:x,y0:y,x,y};P.base=e.shiftKey?new Set(S.sel):new Set();if(!e.shiftKey)S.sel.clear();updateInspector();redraw();
   }
@@ -2387,7 +2421,7 @@ function dragMove(e){
     case'keyh':setKeyH(roll.clientHeight-y);break;
     case'ruler':seek(playTickAt(y,fine));break;
     case'loop':{if(Math.abs(y-P.y0)>3)P.moved=true;if(!P.moved)break;let a=P.a,b=snapRound(Math.max(0,tickOfY(y)),fine);if(b<a)[a,b]=[b,a];if(b-a<gridT())b=a+gridT();S.loop.a=a;S.loop.b=b;S.loop.on=true;syncHeader();redraw();break;}
-    case'key':{const p=pitchAtX(x,y-AH<KEYH*.62);if(p!==P.key){liveOff('mouse',P.key);P.key=p;liveOn('mouse',p,S.drawVel);}break;}
+    case'key':{const p=pitchAtX(x,y-AH<KEYH*.62);if(p!==P.key){liveOff('mouse',P.key);P.key=p;liveOn('mouse',p,nvOf(activeTrack()).v);}break;}
     case'pan':roll.scrollLeft=P.sl-(x-P.x0);roll.scrollTop=P.st-(y-P.y0);break;
     case'erase':{const h=hitNote(x,y);if(h)delNote(h.tr,h.n);redraw();break;}
     case'box':{
@@ -2412,7 +2446,7 @@ function dragMove(e){
       touch(P.copy?'Copy notes':'Move notes');
       if(P.copy&&!P.copyMade){P.copyMade=true;for(const o of P.orig)tr.notes.push({...o.n,id:nextId++,s:o.s,d:o.d,p:o.p});}
       for(const o of P.orig){o.n.s=o.s+dT;o.n.p=o.p+dP;}
-      if(P.prim.p+dP!==P.lastP){P.lastP=P.prim.p+dP;audition(tr,P.lastP,P.n.v,.15);}
+      if(P.prim.p+dP!==P.lastP){P.lastP=P.prim.p+dP;audition(tr,P.lastP,P.n.v,.15,false,P.n);}
       break;
     }
     case'rsz':case'lsz':{
@@ -2591,7 +2625,7 @@ lane.addEventListener('pointermove',e=>{
   if(PL.mode==='pedal'){pedalDrag(y,e);return;}
   PL.ly=PL.y;PL.x=x;PL.y=y;laneApply(x);redraw();
 });
-function endLane(){clearTimeout(PL.timer);const m=PL.mode;if(m==='pedal'&&PL.touched)normalizePedal(activeTrack());PL={mode:null};if(m&&m!=='seek'&&m!=='pedal'){const tr=activeTrack();if(S.sel.size===1&&S.lane==='vel'){const n=[...S.sel][0];audition(tr,n.p,n.v,.2);}}endEdit();redraw();}
+function endLane(){clearTimeout(PL.timer);const m=PL.mode;if(m==='pedal'&&PL.touched)normalizePedal(activeTrack());PL={mode:null};if(m&&m!=='seek'&&m!=='pedal'){const tr=activeTrack();if(S.sel.size===1&&S.lane==='vel'){const n=[...S.sel][0];audition(tr,n.p,n.v,.2,false,n);}}endEdit();redraw();}
 lane.addEventListener('pointerup',endLane);lane.addEventListener('pointercancel',endLane);
 lane.addEventListener('wheel',e=>{
   e.preventDefault();
@@ -2620,7 +2654,7 @@ function nudge(dt,dp){
   if(dt<0&&Math.min(...a.map(n=>n.s))+dt<0)dt=-Math.min(...a.map(n=>n.s));
   if(dp<0&&Math.min(...a.map(n=>n.p))+dp<0)dp=-Math.min(...a.map(n=>n.p));
   if(dp>0&&Math.max(...a.map(n=>n.p))+dp>127)dp=127-Math.max(...a.map(n=>n.p));
-  touch('Nudge notes');for(const n of a){n.s+=dt;n.p+=dp;}if(dp)audition(activeTrack(),a[0].p,a[0].v,.15);endEdit();
+  touch('Nudge notes');for(const n of a){n.s+=dt;n.p+=dp;}if(dp)audition(activeTrack(),a[0].p,a[0].v,.15,false,a[0]);endEdit();
 }
 function quantize(){
   if(!canEdit())return;H.nextLabel='Snap all';
@@ -2696,7 +2730,6 @@ const ICON_P={
   select:'<rect x="2" y="2" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 1.8"/><path d="M8 8l6 2.2-2.6 1 1.6 2.6-1.3.8-1.6-2.6-1.7 1.7z" fill="currentColor"/>',
   erase:'<path d="M3 10.2l6.3-6.3a1.4 1.4 0 012 0l2.6 2.6a1.4 1.4 0 010 2l-4.4 4.4H5.5z" '+stk+' stroke-width="1.5"/><path d="M6.2 7l4.6 4.6M8 14h6" '+stk+' stroke-width="1.4"/>',
   look:EYE,
-  snap:'<path d="M3 3v6a5 5 0 0010 0V3h-3v6a2 2 0 01-4 0V3z" '+stk+' stroke-width="1.5"/><path d="M3 5.5h3M10 5.5h3" '+stk+' stroke-width="1.5"/>',
   gear:GEAR_P,
   sun:'<circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4" '+stk+' stroke-width="1.5"/>',
   moon:'<path d="M12.6 9.8A5.3 5.3 0 016.2 3.4a5.3 5.3 0 106.4 6.4z" fill="currentColor"/>',
@@ -2729,9 +2762,22 @@ function darkHdr(tr){return headerHex(trHex(tr));}
 const advOpen=new Set();
 function colorBlock(tr){
   const hex=trHex(tr),w=tr.colorWhite||hex,b=tr.colorBlack||hex;
-  const row=(key,label,val,reset)=>`<div class="colrow"><label>${label} <input type="color" class="cp" data-c="${key}" value="${val}" aria-label="${label} color"><input type="text" class="hx" data-c="${key}" value="${val}" maxlength="7" spellcheck="false" aria-label="${label} color as hex"></label>${reset?`<button class="mini" data-resetc="${key}" ${tr[key]?'':'disabled'} title="Use the layer color for ${label.toLowerCase()} again">Reset</button>`:''}</div>`;
-  return row('color','Layer color',hex,false)+`<details class="advcol"${advOpen.has(tr.id)?' open':''}><summary>More settings</summary>${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</details>`;
+  const row=(key,label,val,reset,extra='')=>`<div class="colrow"><label>${label} <input type="color" class="cp" data-c="${key}" value="${val}" aria-label="${label} color"><input type="text" class="hx" data-c="${key}" value="${val}" maxlength="7" spellcheck="false" aria-label="${label} color as hex"></label>${reset?`<button class="mini" data-resetc="${key}" ${tr[key]?'':'disabled'} title="Use the layer color for ${label.toLowerCase()} again">Reset</button>`:''}${extra}</div>`;
+  const mix=S.slMode==='mix',sw=`<button class="mini slmode" title="${mix?'The sliders change the whole layer: every note in it, as it plays. Click to set what new notes start with instead.':'The sliders set what new notes in this layer start with. Click to change the whole layer instead.'}">${mix?'Whole layer':'New notes'} ⇄</button>`;
+  return row('color','Color',hex,false,sw)+`<details class="advcol"${advOpen.has(tr.id)?' open':''}><summary>More settings</summary>${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</details>`;
 }
+// The layer sliders, in two sets (see playVals): what notes drawn or recorded in the layer start with, or what the whole
+// layer does to its notes. The number box shows the value minus off (pan: -64 to 63 around the middle).
+const PAN_TIP='-64 = full left, 0 = center, 63 = full right',PCT_TIP=w=>'Percent of each note’s own '+w+' (100 = unchanged)';
+const SLIDERS={
+  new:[{k:'nvV',l:'Velocity',min:1,max:127,get:tr=>nvOf(tr).v,tip:'1 to 127'},{k:'nvPan',l:'Pan',min:0,max:127,off:64,get:tr=>nvOf(tr).pan,tip:PAN_TIP},
+    {k:'nvRev',l:'Reverb',min:0,max:127,get:tr=>nvOf(tr).rev,tip:'0 to 127'},{k:'nvMuf',l:'Muffle',min:0,max:127,get:tr=>nvOf(tr).muf,tip:'0 to 127'}],
+  mix:[{k:'vol',l:'Volume',min:0,max:127,get:tr=>tr.vol,tip:'0 to 127'},{k:'mxPan',l:'Pan',min:-64,max:63,get:tr=>tr.mxPan??0,tip:'Moves every note left (below 0) or right (above 0)'},
+    {k:'mxV',l:'Velocity %',min:0,max:200,get:tr=>tr.mxV??100,tip:PCT_TIP('velocity')},{k:'mxRev',l:'Reverb %',min:0,max:200,get:tr=>tr.mxRev??100,tip:PCT_TIP('reverb')},
+    {k:'mxMuf',l:'Muffle %',min:0,max:200,get:tr=>tr.mxMuf??100,tip:PCT_TIP('muffle')}]
+};
+const slSpec=k=>SLIDERS.new.find(s=>s.k===k)||SLIDERS.mix.find(s=>s.k===k);
+S.slMode=(()=>{try{return localStorage.getItem('mc.slMode')==='mix'?'mix':'new';}catch(e){return'new';}})();
 // "Only this" stays on as a mode: it follows the selected layer, also when you pick or add another one.
 function syncLayerMode(){
   const vis=song.tracks.every(t=>!t.hide),one=song.tracks.length<=1;
@@ -2745,11 +2791,12 @@ function renderTracks(){
   for(const tr of song.tracks){
     const on=tr.id===S.active,el=document.createElement('div'),hex=trHex(tr);
     el.className='trk'+(on?' on':'')+(tr.hide?' hidden':'');el.dataset.id=tr.id;el.style.setProperty('--lc',hex);setHeaderColor(el,hex);
-    const sl=(k,l,v=tr[k],data=k)=>`<label><span>${l}</span><input type="range" min="${k==='drawVel'?1:0}" max="127" value="${v}" data-k="${data}" aria-label="${l}"><input type="number" class="num" data-k="${data}" data-n="1" min="${k==='pan'?-64:k==='drawVel'?1:0}" max="${k==='pan'?63:127}" value="${k==='pan'?v-64:v}" aria-label="${l} value" title="${k==='pan'?'-64 = full left, 0 = center, 63 = full right':'0 to 127'}"></label>`;
+    // the selected layer shows the whole set, the others its first two
+    const set=SLIDERS[S.slMode],sl=s=>{const v=s.get(tr),o=s.off||0;return`<label><span>${s.l}</span><input type="range" min="${s.min}" max="${s.max}" value="${v}" data-k="${s.k}" aria-label="${s.l}"><input type="number" class="num" data-k="${s.k}" data-n="1" min="${s.min-o}" max="${s.max-o}" value="${v-o}" aria-label="${s.l} value" title="${s.tip}"></label>`;};
     el.innerHTML=`<div class="trow nmrow"><input class="nm" value="${esc(tr.name)}" aria-label="Layer name"></div>
       <div class="trow ic"><button class="mini ${tr.hide?'on':''}" data-a="hide" title="${tr.hide?'Show':'Hide'} this layer" aria-label="${tr.hide?'Show':'Hide'} layer">${ICON[tr.hide?'eyeoff':'eye']}</button><button class="mini ${tr.lock?'on':''}" data-a="lock" title="${tr.lock?'Unlock':'Lock'} this layer (locked layers can't be edited or clicked)" aria-label="${tr.lock?'Unlock':'Lock'} layer">${ICON[tr.lock?'lock':'unlock']}</button><button class="mini ${tr.mute?'on':''}" data-a="mute" title="Mute audio" aria-label="Mute">${ICON[tr.mute?'muted':'mute']}</button><button class="mini ${tr.solo?'on':''}" data-a="solo" title="Solo audio" aria-label="Solo">${ICON.solo}</button><span style="flex:1"></span><button class="mini" data-a="up" title="Move layer up" aria-label="Move layer up">${ICON.up}</button><button class="mini" data-a="down" title="Move layer down" aria-label="Move layer down">${ICON.down}</button><button class="mini" data-a="del" title="Delete layer (Ctrl+click skips the confirmation)" aria-label="Delete layer">${ICON.trash}</button><button class="mini" data-a="menu" title="More: duplicate, copy, paste, merge (or right-click the layer)" aria-label="More layer actions" aria-haspopup="menu">⋯</button></div>
       <select class="ins" aria-label="Instrument">${INSTR_HTML}</select>
-      <div class="sl">${sl('vol','Volume')}${sl('pan','Pan')}${on?sl('rev','Reverb')+sl('muf','Muffle')+sl('drawVel','New note vel.',S.drawVel,'drawVel'):''}</div>${on?colorBlock(tr):''}`;
+      <div class="sl">${(on?set:set.slice(0,2)).map(sl).join('')}</div>${on?colorBlock(tr):''}`;
     el.querySelector('.ins').value=tr.drum?'drum':String(tr.program);
     box.appendChild(el);
   }
@@ -2778,6 +2825,7 @@ $('tracks').addEventListener('click',e=>{
   if(e.target.closest('.pastetrk')){pasteLayer(null);return;}
   if(e.target.closest('.addtrk')){addLayer();return;}
   const card=e.target.closest('.trk');if(!card)return;const tr=song.tracks.find(t=>t.id===+card.dataset.id);
+  if(e.target.closest('.slmode')){S.slMode=S.slMode==='mix'?'new':'mix';try{localStorage.setItem('mc.slMode',S.slMode);}catch(err){}renderTracks();const b=$('tracks').querySelector('.trk.on .slmode');if(b)b.focus();return;}
   const rb=e.target.closest('button[data-resetc]');
   if(rb){if(!rb.disabled){act(()=>{delete tr[rb.dataset.resetc];},'Reset note color');renderTracks();}return;}
   const btn=e.target.closest('button[data-a]'),a=btn&&btn.dataset.a;
@@ -2815,19 +2863,19 @@ $('tracks').addEventListener('input',e=>{
     tr[c]=v.toLowerCase();syncColorUI(card,tr,e.target);redraw();return;
   }
   if(e.target.classList.contains('nm')){touch('Rename layer');tr.name=e.target.value;return;}
-  if(!k||e.target.value==='')return;let v=+e.target.value;
-  const isNum=e.target.dataset.n==='1';
-  if(isNum){if(k==='pan')v+=64;v=clamp(Math.round(v),k==='drawVel'?1:0,127);}
-  if(k==='drawVel'){S.drawVel=v;}else{touch('Change layer settings');tr[k]=v;updateBus(tr);}
+  const s=k&&slSpec(k);if(!s||e.target.value==='')return;let v=+e.target.value;
+  const isNum=e.target.dataset.n==='1',o=s.off||0;
+  if(isNum)v=clamp(Math.round(v)+o,s.min,s.max);
+  touch(SLIDERS.new.includes(s)?'Change new note values':'Change layer settings');tr[k]=v;if(k==='vol')updateBus(tr);
   const lab=e.target.closest('label'),rg=lab.querySelector('input[type=range]'),nm=lab.querySelector('input.num');
-  if(isNum)rg.value=v;else nm.value=k==='pan'?v-64:v;
+  if(isNum)rg.value=v;else nm.value=v-o;
   flatDirty=true;redraw();updateInspector();
 });
 $('tracks').addEventListener('change',e=>{
   const card=e.target.closest('.trk');if(!card)return;const tr=song.tracks.find(t=>t.id===+card.dataset.id);
   if(e.target.type==='color'&&CPICK.el===e.target&&CPICK.before){pushHFrom(CPICK.before,'Change layer color');CPICK.before=null;}
   if(e.target.classList.contains('hx')){e.target.value=tr[e.target.dataset.c]||trHex(tr);}
-  if(e.target.classList.contains('num')){const k=e.target.dataset.k;e.target.value=k==='drawVel'?S.drawVel:k==='pan'?tr.pan-64:tr[k];}
+  if(e.target.classList.contains('num')){const s=slSpec(e.target.dataset.k);if(s)e.target.value=s.get(tr)-(s.off||0);}
   if(e.target.classList.contains('ins')){
     const val=e.target.value;
     act(()=>{delete tr.variant;if(val==='drum'){tr.drum=true;}else{tr.drum=false;tr.program=+val;}},'Change instrument');
@@ -2991,7 +3039,7 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyZ'){S.octave=Math.max(-1,S.octave-1);octInfo();return;}
   if(e.code==='KeyX'){S.octave=Math.min(8,S.octave+1);octInfo();return;}
   if(e.code in KEYMAP&&!e.repeat&&!kbdDown.has(e.code)){
-    const p=12*(S.octave+1)+KEYMAP[e.code];if(p>127)return;kbdDown.set(e.code,p);liveOn('kbd',p,S.drawVel);
+    const p=12*(S.octave+1)+KEYMAP[e.code];if(p>127)return;kbdDown.set(e.code,p);liveOn('kbd',p,nvOf(activeTrack()).v);
   }
 });
 document.addEventListener('keyup',e=>{
@@ -3617,9 +3665,12 @@ dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
 
 /* ================= Video import (falling-notes videos) ================= */
 const VPRESETS={'88':[21,108],'76':[28,103],'61':[36,96],'49':[36,84],'37':[48,84],'25':[48,72]};
-const VSTEPS=['Left edge of the lowest key','Right edge of the highest key','A white key, near its bottom','A black key, near its bottom'];
+const VSTEPS=['Left edge of the lowest key','Right edge of the highest key','A white key, near its bottom','A black key, in its middle'];
 const VSTEPS_P=['Top-left corner of the lowest key','Top-right corner of the highest key','Bottom-right corner of the highest key','Bottom-left corner of the lowest key'];
-const VID={persp:false,file:null,src:null,v:$('vVid'),pv:$('vPrev'),url:null,vw:0,vh:0,cal:[null,null,null,null],step:0,samples:null,times:null,F:0,t0:0,map:[],clusters:[],running:false,cancel:false,layerUI:[],name:'video',size:0,notes:[],stats:null};
+const VID={persp:false,file:null,src:null,v:$('vVid'),pv:$('vPrev'),url:null,vw:0,vh:0,cal:[null,null,null,null],step:0,samples:null,times:null,F:0,t0:0,map:[],clusters:[],running:false,cancel:false,layerUI:[],name:'video',size:0,notes:[],stats:null,
+  // falling-notes reading: the scan area (fall.top, fall.bot) and the line where notes reach the keys (fall.hit), in video pixels
+  fall:{top:null,bot:null,hit:null},fstep:0,kbTop:null,kind:'keys',fallData:null};
+let vidCleared=null;   // the marks before Clear marks, while it can still be undone
 const hueDist=(a,b)=>{const d=Math.abs(a-b)%360;return d>180?360-d:d;};
 function rgb2hsv(c){
   const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;
@@ -3647,7 +3698,8 @@ function vidHomography(q){
     g=(sx*dy2-dx2*sy)/den;h=(dx1*sy-sx*dy1)/den;
   }
   const a=x1-x0+g*x1,b=x3-x0+h*x3,c=x0,d=y1-y0+g*y1,e=y3-y0+h*y3,f=y0;
-  return(u,v)=>{const w=g*u+h*v+1;return{x:(a*u+b*v+c)/w,y:(d*u+e*v+f)/w};};
+  const fn=(u,v)=>{const w=g*u+h*v+1;return{x:(a*u+b*v+c)/w,y:(d*u+e*v+f)/w};};
+  fn.k=[a,b,c,d,e,f,g,h];return fn;
 }
 function vidKeyMapQuad(lo,hi,q,vW,vB,m=1){
   const H=vidHomography(q),x0=KG.x0[lo],span=KG.x1[hi]-x0,h=.5/span,out=[];
@@ -3671,12 +3723,589 @@ function vidSamplePoints(d,bw,bh,map,bx,by,out,off){
     const o=off+i*3;if(c){out[o]=R/c;out[o+1]=G/c;out[o+2]=B/c;}
   }
 }
-function vidSampleStrip(d,map,vw,out,off){
+// rw, rb: the first of the three rows a white and a black key are read on
+function vidSampleStrip(d,map,vw,out,off,rw=0,rb=3){
   for(let i=0;i<map.length;i++){
-    const m=map[i],r=m.r,row=m.black?3:0,xc=Math.round(m.x);let R=0,G=0,B=0,c=0;
+    const m=map[i],r=m.r,row=m.black?rb:rw,xc=Math.round(m.x);let R=0,G=0,B=0,c=0;
     for(let yy=row;yy<row+3;yy++)for(let xx=Math.max(0,xc-r);xx<=Math.min(vw-1,xc+r);xx++){const q=(yy*vw+xx)*4;R+=d[q];G+=d[q+1];B+=d[q+2];c++;}
     const o=off+i*3;if(c){out[o]=R/c;out[o+1]=G/c;out[o+2]=B/c;}
   }
+}
+
+/* ---- reading the falling notes above the keys ---- */
+// Instead of watching the keys light up, the notes are read in a scan area: a band across the video above the keys, clear
+// of the effects many videos draw on and just above the keyboard (fades, glow, particles). Every note falls through the
+// whole band, so each of its edges is seen in many frames, and every sighting says when the note will reach the keys.
+// Lanes: for every key and every scanned row, which pixel columns lie inside that key's falling notes, and how far along
+// the fall the row is (s, in pixels, growing toward the keys). Without perspective a lane runs straight up from its key;
+// with it, the lane follows the keyboard's perspective. White-key lanes sit in the part of the key no black key covers,
+// so a black note falling beside them is not read as theirs. rows: how many rows to read (the setting when left out).
+function vidFallGeom(map,rows){
+  const FL=VID.fall,vw=VID.vw,vh=VID.vh,c=VID.cal;
+  if(!map||!map.length||FL.top==null||FL.bot==null||(!VID.persp&&FL.hit==null))return null;
+  const y0=clamp(Math.round(Math.min(FL.top,FL.bot)),0,vh-1),y1=clamp(Math.round(Math.max(FL.top,FL.bot)),0,vh-1);
+  if(y1-y0<8)return null;
+  const want=rows||clamp(+$('vRows').value||200,20,4000),step=Math.max(1,Math.round((y1-y0+1)/want)),R=Math.max(2,Math.floor((y1-y0+1)/step));
+  const sc=Math.min(1,1920/vw),cw=Math.max(1,Math.round(vw*sc)),lw=clamp(+$('vLaneW').value||50,10,100)/100;
+  const {lo,hi}=vidRange(),k0=KG.x0[lo],span=KG.x1[hi]-k0,m=vidLR(),K=vidSpreadK(),N=map.length;
+  const mid=(map[0].x+map[N-1].x)/2,spr=x=>mid+(x-mid)*K,rowY=j=>y0+j*step+(step-1)/2;
+  // a point given in key units (KG) on row y: where it is, and how far along the fall
+  let at;
+  if(VID.persp){
+    const H=vidHomography(c),[a,b,cc,d,e,f,g,h]=H.k,t=H(.5,0),u1=H(.5,1),Lk=Math.hypot(u1.x-t.x,u1.y-t.y)||1;
+    at=(kx,y)=>{const u=vidWarp((kx-k0)/span,m),dn=y*h-e,v=Math.abs(dn)>1e-9?(d*u+f-y*(g*u+1))/dn:0,w=g*u+h*v+1;return{x:spr((a*u+b*v+cc)/w),s:v*Lk};};
+  }else{const [xL,xR]=c;at=(kx,y)=>({x:spr(xL+(xR-xL)*vidWarp((kx-k0)/span,m)),s:y});}
+  const XA=new Int16Array(N*R),XB=new Int16Array(N*R),S=new Float32Array(N*R),sK=new Float32Array(N),sA=new Float32Array(N),sB=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const p=map[i].p;let ka,kb;
+    // A black key's lane straddles the line between its two white neighbors: a black note covers both sides of that
+    // line, a white neighbor's note only one, so it never fills the lane. Black keys sit off that line, so the lane is
+    // centered halfway between the line and the key's middle, and kept within the narrowest usual black note.
+    if(isBlack(p)){const hw=.3*lw,bnd=KG.x1[p-1],c=(bnd+KG.cx[p])/2;ka=Math.max(KG.cx[p]-.22,c-hw);kb=Math.min(KG.cx[p]+.22,c+hw);}
+    else{let l=KG.x0[p],r=KG.x1[p];if(p>0&&isBlack(p-1))l=Math.max(l,KG.x1[p-1]);if(p<127&&isBlack(p+1))r=Math.min(r,KG.x0[p+1]);const hw=(r-l)*lw/2;ka=(l+r)/2-hw;kb=(l+r)/2+hw;}
+    for(let j=0;j<R;j++){
+      const y=rowY(j),A=at(ka,y),B=at(kb,y),k=i*R+j,l=Math.min(A.x,B.x)*sc,r=Math.max(A.x,B.x)*sc;
+      S[k]=at((ka+kb)/2,y).s;
+      // a lane the spread or perspective pushes off the video is not read (XA -1)
+      if(r<=0||l>=cw){XA[k]=-1;XB[k]=-2;continue;}
+      const xa=clamp(Math.round(l),0,cw-1);XA[k]=xa;XB[k]=clamp(Math.round(r)-1,xa,cw-1);
+    }
+    sA[i]=S[i*R];sB[i]=S[i*R+R-1];sK[i]=VID.persp?0:FL.hit;
+  }
+  return{N,R,step,y0,y1,sc,cw,vh,XA,XB,S,sK,sA,sB,rowY,black:Uint8Array.from(map,m=>m.black?1:0),
+    minPiece:Math.max(2,Math.round(.018*vh/step)),sepMax:Math.max(1,Math.round(.012*vh/step)),glow:Math.max(2,Math.round(.025*vh/step)),
+    ys:y0,ka:0,RK:R,KR:null};
+}
+// The keys are read in the same draw as the scan area: every draw of a decoded frame costs about as much as reading the
+// whole scan area, a few more rows hardly anything. The rows read then reach from the scan area to the keys, on the
+// same grid, so the scan area reads exactly as before. G gets ys (the first row read), ka (rows read above the scan
+// area), RK (all the rows read) and KR (each key's box in them: x0, y0, x1, y1).
+function vidFallKeys(G,map){
+  const {N,step,y0,R,sc,cw,vh}=G,K=vidKeySpec(map),box=K.map.map(m=>{
+    if(K.persp)return[(m.x-m.r)*sc,m.y-m.r,(m.x+m.r)*sc,m.y+m.r];
+    const y=m.black?K.yb:K.yw;return[(m.x-m.r)*sc,y-1,(m.x+m.r)*sc,y+1];
+  });
+  let top=y0,bot=y0+R*step;for(const b of box){top=Math.min(top,b[1]);bot=Math.max(bot,b[3]+1);}
+  const ka=Math.min(Math.floor(y0/step),Math.max(0,Math.ceil((y0-top)/step))),ys=y0-ka*step;
+  const RK=Math.max(ka+R,Math.min(Math.floor((vh-ys)/step),Math.ceil((bot-ys)/step))),KR=new Int16Array(N*4),row=y=>clamp(Math.floor((y-ys)/step),0,RK-1);
+  box.forEach((b,i)=>{KR[i*4]=clamp(Math.floor(b[0]),0,cw-1);KR[i*4+1]=row(b[1]);KR[i*4+2]=clamp(Math.ceil(b[2]),0,cw-1);KR[i*4+3]=row(b[3]);});
+  Object.assign(G,{ys,ka,RK,KR});
+}
+// The color of every key in a frame read with the keys (vidFallKeys).
+function vidFallKeyRead(G,d){
+  const {N,cw,KR}=G,out=new Uint8Array(N*3);
+  for(let i=0;i<N;i++){
+    const x0=KR[i*4],y0=KR[i*4+1],x1=KR[i*4+2],y1=KR[i*4+3];let r=0,g=0,b=0,n=0;
+    for(let y=y0;y<=y1;y++)for(let x=x0,q=(y*cw+x0)*4;x<=x1;x++,q+=4){r+=d[q];g+=d[q+1];b+=d[q+2];n++;}
+    if(n){out[i*3]=r/n;out[i*3+1]=g/n;out[i*3+2]=b/n;}
+  }
+  return out;
+}
+// The scan area's own rows in what vidFallReader read.
+const vidFallView=(G,d)=>G.ka?d.subarray(G.ka*G.cw*4):d;
+// Reads the scan area of a frame (and the keys, after vidFallKeys): the rows the lanes need, scaled to at most 1920
+// pixels across.
+function vidFallReader(G){
+  const oc=document.createElement('canvas');oc.width=G.cw;oc.height=G.RK;const og=oc.getContext('2d',{willReadFrequently:true});
+  return src=>{og.drawImage(src,0,G.ys,VID.vw,G.RK*G.step,0,0,G.cw,G.RK);return og.getImageData(0,0,G.cw,G.RK).data;};
+}
+// Background threads that read and analyze frames (vidFallFrame) while the next ones are decoded: each takes a decoded
+// frame, draws the scan area (and the keys) on its own canvas and returns the frame's note stretches and key colors.
+// post hands a frame over, busy says when enough are waiting, finish waits for the last results ({s, k} by frame
+// number). null where workers or canvases off the page are not available.
+function vidFallPool(G,bg,n){
+  if(!(window.Worker&&window.OffscreenCanvas&&window.VideoFrame))return null;
+  const src='const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));'+vidFallFrame.toString()+';'+vidFallKeyRead.toString()+
+    ';let G,bg,cx;onmessage=e=>{const m=e.data;if(m.type==="init"){G=m.G;bg=m.bg;cx=new OffscreenCanvas(G.cw,G.RK).getContext("2d",{willReadFrequently:true});return;}'+
+    'const f=m.frame;let s,k;try{cx.drawImage(f,0,G.ys,G.vw,G.RK*G.step,0,0,G.cw,G.RK);const d=cx.getImageData(0,0,G.cw,G.RK).data;'+
+    's=vidFallFrame(G,bg,G.ka?d.subarray(G.ka*G.cw*4):d);k=G.KR?vidFallKeyRead(G,d):new Uint8Array(G.N*3);}'+
+    'catch(err){postMessage({i:m.i,error:String(err)});return;}finally{f.close();}postMessage({i:m.i,s,k},[s.buffer,k.buffer]);};';
+  let url=null;const ws=[];
+  try{url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));for(let k=0;k<n;k++)ws.push(new Worker(url));}
+  catch(e){ws.forEach(w=>w.terminate());if(url)URL.revokeObjectURL(url);return null;}
+  const data={N:G.N,R:G.R,step:G.step,y0:G.y0,cw:G.cw,vw:VID.vw,vh:G.vh,XA:G.XA,XB:G.XB,S:G.S,minPiece:G.minPiece,sepMax:G.sepMax,glow:G.glow,black:G.black,ys:G.ys,ka:G.ka,RK:G.RK,KR:G.KR};
+  for(const w of ws)w.postMessage({type:'init',G:data,bg});
+  const res=[],load=new Array(n).fill(0);let out=0,fail=null,wake=null;
+  ws.forEach((w,k)=>{
+    w.onmessage=e=>{const m=e.data;load[k]--;out--;if(m.error)fail=fail||new Error(m.error);else res[m.i]={s:m.s,k:m.k};if(wake&&(out<=0||fail))wake();};
+    w.onerror=ev=>{ev.preventDefault();fail=fail||new Error('a background thread failed');if(wake)wake();};
+  });
+  return{
+    post(frame,i){let k=0;for(let j=1;j<n;j++)if(load[j]<load[k])k=j;load[k]++;out++;ws[k].postMessage({i,frame},[frame]);},
+    busy:()=>out>=n*3,failed:()=>fail,
+    finish:()=>new Promise((ok,bad)=>{const done=()=>{wake=null;if(fail)bad(fail);else ok(res);};if(out<=0||fail)done();else wake=done;}),
+    close(){ws.forEach(w=>w.terminate());URL.revokeObjectURL(url);}
+  };
+}
+// Each lane's mean color on every scanned row.
+function vidFallMeans(G,d,out){
+  const {N,R,cw,XA,XB}=G;
+  for(let k=0;k<N*R;k++){
+    const j=k%R,row=j*cw*4,xa=XA[k],xb=XB[k];let r=0,g=0,b=0;
+    if(xa<0){out[k*3]=out[k*3+1]=out[k*3+2]=0;continue;}
+    for(let x=xa;x<=xb;x++){const q=row+x*4;r+=d[q];g+=d[q+1];b+=d[q+2];}
+    const n=xb-xa+1;out[k*3]=r/n;out[k*3+1]=g/n;out[k*3+2]=b/n;
+  }
+}
+// The background of every lane and row, from frames spread over the range: its most common color (notes come and go and
+// change color, the background stays). The background of a row is much the same in every lane of the same kind (white
+// or black), so a lane whose most common color is something else (a key that is held most of the song, a lane a wide
+// neighboring note keeps covering) takes the row's usual background instead, when it shows that often enough.
+// The frames come straight from the MP4 file when it can be read (direct), else by seeking the player.
+async function vidFallLearnBg(G,read,map,t0,t1,onProg,direct){
+  const K=32,{N,R}=G,M=N*R,smp=new Uint8Array(K*M*3),tmp=new Float32Array(M*3);let k=0;
+  const take=src=>{vidFallMeans(G,vidFallView(G,read(src)),tmp);for(let q=0;q<M*3;q++)smp[k*M*3+q]=tmp[q];k++;onProg(k/K);};
+  if(direct)try{await vidDecodeSpread(VID.file,t0,t1,K,take);}catch(e){if(VID.cancel)throw e;k=0;}
+  for(;k<K;){
+    if(VID.cancel)throw new Error('cancelled');
+    await vidSeek(t0+(k+.5)/K*(t1-t0),VID.v);take(VID.v);
+  }
+  const bg=new Float32Array(M*3),sup=new Float32Array(M),near=(A,B)=>{const r=smp[A]-smp[B],g=smp[A+1]-smp[B+1],b=smp[A+2]-smp[B+2];return r*r+g*g+b*b<=576;};
+  for(let q=0;q<M;q++){
+    let best=0,bn=0;
+    for(let a=0;a<K;a++){let n=0;const A=(a*M+q)*3;for(let b=0;b<K;b++)if(near(A,(b*M+q)*3))n++;if(n>bn){bn=n;best=a;}}
+    let r=0,g=0,b=0,n=0;const A=(best*M+q)*3;
+    for(let c=0;c<K;c++){const B=(c*M+q)*3;if(near(A,B)){r+=smp[B];g+=smp[B+1];b+=smp[B+2];n++;}}
+    bg[q*3]=r/n;bg[q*3+1]=g/n;bg[q*3+2]=b/n;sup[q]=bn/K;
+  }
+  for(let j=0;j<R;j++)for(const kind of [false,true]){
+    const ok=[],all=[];
+    for(let i=0;i<N;i++)if(map[i].black===kind&&G.XA[i*R+j]>=0){all.push(i*R+j);if(sup[i*R+j]>=.35)ok.push(i*R+j);}
+    if(!ok.length)continue;
+    const md=[0,1,2].map(c=>{const a=ok.map(q=>bg[q*3+c]).sort((x,y)=>x-y);return a[a.length>>1];});
+    // an even background: most lanes of this kind agree on the row's color (a picture behind the notes does not)
+    const even=ok.filter(q=>Math.hypot(bg[q*3]-md[0],bg[q*3+1]-md[1],bg[q*3+2]-md[2])<=20).length>=.7*ok.length;
+    for(const q of all){
+      if(Math.hypot(bg[q*3]-md[0],bg[q*3+1]-md[1],bg[q*3+2]-md[2])<=40)continue;
+      // the frames where this lane looks like the row's usual background
+      let r=0,g=0,b=0,n=0;
+      for(let c=0;c<K;c++){const B=(c*M+q)*3;if(Math.hypot(smp[B]-md[0],smp[B+1]-md[1],smp[B+2]-md[2])<=40){r+=smp[B];g+=smp[B+1];b+=smp[B+2];n++;}}
+      if(n>=3){bg[q*3]=r/n;bg[q*3+1]=g/n;bg[q*3+2]=b/n;}
+      else if(even||sup[q]<.35){bg[q*3]=md[0];bg[q*3+1]=md[1];bg[q*3+2]=md[2];}
+    }
+  }
+  return bg;
+}
+// One frame: in every lane, the stretches a note covers, returned as
+// [lane, s of the top edge, s of the bottom edge, clipped (1: runs past the top of the scan area, 2: past the bottom), strength, r, g, b] each.
+// On every row, the pixel of the lane that differs least from the background counts, so a note that covers only part of
+// the lane (a neighbor's note, the gap between two notes) is not taken for one. The edge of a note is put where the color
+// changes most sharply near the end of the stretch: glow fades out smoothly and is passed over, the outer edge of an
+// outline is sharp and is used, and the exact spot between two rows comes from the shape of the change.
+// Two notes on the same key are told apart where the light drops to the background between them, or where a thin dark
+// line (their outlines) crosses the lane; such a cut has to leave a real note on both sides, so a label or a stripe
+// drawn near the end of a note does not split it.
+function vidFallFrame(G,bg,d){
+  const {N,R,cw,XA,XB,S,minPiece,sepMax,glow}=G,M=N*R;
+  const C=G.C||(G.C=new Float32Array(M*3)),D=G.D||(G.D=new Float32Array(M)),Dm=G.Dm||(G.Dm=new Float32Array(M)),Sp=G.Sp||(G.Sp=new Float32Array(M)),Lm=G.Lm||(G.Lm=new Float32Array(R)),cut=G.cut||(G.cut=new Uint8Array(R));
+  // the whole screen fading or changing color: the shift most lanes share is taken off first
+  const sh=[0,0,0],ns=N*Math.ceil(R/4),ds=G.ds||(G.ds=[0,1,2].map(()=>new Float32Array(ns))),hist=G.hist||(G.hist=new Int32Array(512));
+  {let t=0;for(let i=0;i<N;i++)for(let j=0;j<R;j+=4,t++){const k=i*R+j,q=j*cw*4+((XA[k]+XB[k])>>1)*4;for(let c=0;c<3;c++)ds[c][t]=XA[k]<0?0:d[q+c]-bg[k*3+c];}
+   // the exact median, found through a histogram of whole values instead of sorting them all
+   const median=a=>{hist.fill(0);for(let u=0;u<ns;u++)hist[Math.floor(a[u])+256]++;const want=ns>>1;let acc=0,h=0;while(acc+hist[h]<=want)acc+=hist[h++];
+     const lo=h-256,v=[];for(let u=0;u<ns;u++)if(a[u]>=lo&&a[u]<lo+1)v.push(a[u]);v.sort((x,y)=>x-y);return v[want-acc];};
+   const med=ds.map(median),mag=Math.hypot(...med);
+   if(mag>2){const lim=(.35*mag+12)**2;let close=0;for(let u=0;u<ns;u++){const e0=ds[0][u]-med[0],e1=ds[1][u]-med[1],e2=ds[2][u]-med[2];if(e0*e0+e1*e1+e2*e2<=lim)close++;}if(close>=.55*ns){sh[0]=med[0];sh[1]=med[1];sh[2]=med[2];}}}
+  // row by row, so the pixels are read in the order they lie in memory; each pixel read at once (red, green, blue, alpha)
+  const px=new Uint32Array(d.buffer,d.byteOffset,d.length>>2),sh0=sh[0],sh1=sh[1],sh2=sh[2];
+  for(let j=0;j<R;j++)for(let i=0,row=j*cw;i<N;i++){
+    const k=i*R+j,xa=XA[k],xb=XB[k],br=bg[k*3]+sh0,bgg=bg[k*3+1]+sh1,bb=bg[k*3+2]+sh2;let r=0,g=0,b=0,ss=0,mn=1e9,mn2=1e9;
+    if(xa<0){C[k*3]=br;C[k*3+1]=bgg;C[k*3+2]=bb;D[k]=Dm[k]=Sp[k]=0;continue;}   // off the video: nothing to read
+    for(let q=row+xa,qe=row+xb;q<=qe;q++){const v=px[q],R_=v&255,G_=(v>>>8)&255,B_=(v>>>16)&255,e0=R_-br,e1=G_-bgg,e2=B_-bb,e=e0*e0+e1*e1+e2*e2;r+=R_;g+=G_;b+=B_;ss+=R_*R_+G_*G_+B_*B_;if(e<mn){mn2=mn;mn=e;}else if(e<mn2)mn2=e;}
+    // the weakest pixel decides (the second weakest in a wide lane, so a single pixel at a note's edge does not)
+    const n=xb-xa+1,mr=r/n,mg=g/n,mb=b/n,f0=mr-br,f1=mg-bgg,f2=mb-bb;C[k*3]=mr;C[k*3+1]=mg;C[k*3+2]=mb;D[k]=Math.sqrt(n>=6?mn2:mn);Dm[k]=Math.sqrt(f0*f0+f1*f1+f2*f2);
+    // how unevenly colored the row is across the lane (a label, a diagonal streak: high; a line across the lane: low)
+    Sp[k]=Math.sqrt(Math.max(0,ss/n-(r*r+g*g+b*b)/(n*n)));
+  }
+  const out=[],T0=22,NB=60,tm=G.tm||(G.tm=new Float32Array(15));
+  // A white neighbor's note seen in a black key's lane (its glow, or its edge where the black key is off center): in a
+  // stretch of the lane, the rows beside a covered neighbor that are clearly weaker than the lane's own rows. A black
+  // note played together with its neighbor stays as strong as itself there, and is kept.
+  for(let i=0;i<N;i++){
+    if(!G.black[i])continue;
+    const k=i*R,nb=[i-1,i+1].filter(x=>x>=0&&x<N&&!G.black[x]);if(!nb.length)continue;
+    const medOf=a=>a.sort((x,y)=>x-y)[a.length>>1];
+    for(let a=0;a<R;){
+      if(D[k+a]<T0){a++;continue;}let b=a;while(b+1<R&&D[k+b+1]>=T0)b++;
+      // a neighbor counts where it clearly holds a note, not where only some glow brushes its lane
+      const sh=t=>nb.some(x=>D[x*R+t]>=NB),own=[],ownSp=[];for(let t=a;t<=b;t++)if(!sh(t)){own.push(D[k+t]);ownSp.push(Sp[k+t]);}
+      if(own.length>=3){
+        // weaker than the lane's own note, or a bit weaker and much patchier (half the lane the neighbor's bright note,
+        // half its glow, where the lane's own note is even)
+        const ref=medOf(own),refSp=medOf(ownSp);
+        for(let t=a;t<=b;){if(!sh(t)){t++;continue;}let e=t;while(e<b&&sh(e+1))e++;
+          const v=[],vs=[];for(let u=t;u<=e;u++){v.push(D[k+u]);vs.push(Sp[k+u]);}
+          const m=medOf(v);
+          if(m<.6*ref||(m<.8*ref&&medOf(vs)>1.4*refSp+10))for(let u=t;u<=e;u++){D[k+u]=0;Dm[k+u]=0;}
+          t=e+1;}
+      }
+      a=b+1;
+    }
+  }
+  const med=(A,k,a,b)=>{const n=b-a+1,m=Math.min(n,15);for(let u=0;u<m;u++)tm[u]=A[k+a+Math.floor((u+.5)*n/m)];return tm.subarray(0,m).sort()[m>>1];};
+  // a stretch's strength: the median of its body, the rows at least half as strong as its usual bright rows, so a short
+  // note's soft edges (or a dark spot on a textured note) do not drag it down
+  const body=(k,a,b)=>{const n=b-a+1,m=Math.min(n,15);for(let u=0;u<m;u++)tm[u]=D[k+a+Math.floor((u+.5)*n/m)];const s=tm.subarray(0,m).sort(),half=.5*s[Math.floor(.75*(m-1))];let c=0;for(let u=0;u<m;u++)if(s[u]>=half)c++;return s[m-c+(c>>1)];};
+  // how sharply the color changes across row t of lane k
+  const gr=(k,t)=>{if(t<1||t>R-2)return 0;const a=(k+t-1)*3,b=(k+t+1)*3;const e0=C[b]-C[a],e1=C[b+1]-C[a+1],e2=C[b+2]-C[a+2];return Math.sqrt(e0*e0+e1*e1+e2*e2)/2;};
+  // the edge between lo and hi (outermost: the lowest row when top, else the highest), as a fractional row on the boundary
+  const edge=(k,lo,hi,top,P)=>{
+    let gm=0;for(let t=lo;t<=hi;t++)gm=Math.max(gm,gr(k,t));
+    if(gm>=6){
+      let t=-1;for(let u=0;u<=hi-lo;u++){const v=top?lo+u:hi-u;if(gr(k,v)>=.5*gm){t=v;break;}}
+      for(const dir=top?1:-1;t+dir>=lo&&t+dir<=hi&&gr(k,t+dir)>gr(k,t);)t+=dir;
+      const g1=gr(k,t-1),g2=gr(k,t),g3=gr(k,t+1),den=g1-2*g2+g3;
+      return t+(den<0?clamp(.5*(g1-g3)/den,-.5,.5):0);
+    }
+    // no sharp change (a soft or blurred edge): where the light crosses half its height
+    const h=.5*P;
+    if(top){for(let t=lo;t<=hi;t++)if(D[k+t]>=h){const p=t>0?D[k+t-1]:0;return t-1+clamp((h-p)/Math.max(1e-6,D[k+t]-p),0,1);}return lo-.5;}
+    for(let t=hi;t>=lo;t--)if(D[k+t]>=h){const n=t<R-1?D[k+t+1]:0;return t+clamp((D[k+t]-h)/Math.max(1e-6,D[k+t]-n),0,1);}return hi+.5;
+  };
+  const sAt=(k,e)=>{const j=clamp(Math.floor(e),0,R-2),f=e-j;return S[k+j]+f*(S[k+j+1]-S[k+j]);};
+  for(let i=0;i<N;i++){
+    const k=i*R;
+    for(let j=0;j<R;j++){const q=(k+j)*3;Lm[j]=.299*C[q]+.587*C[q+1]+.114*C[q+2];}
+    for(let a=0;a<R;){
+      if(D[k+a]<T0){a++;continue;}
+      let b=a;while(b+1<R&&D[k+b+1]>=T0)b++;
+      // A short break joins the stretches on either side when the lane is still mostly covered across it (a label or
+      // a stripe drawn on the note only darkens some of its pixels), or when one side is too short to be a note.
+      for(;;){
+        let c=b+1;while(c<R&&D[k+c]<T0&&c-b<=sepMax)c++;
+        if(c>=R||D[k+c]<T0)break;
+        let e=c;while(e+1<R&&D[k+e+1]>=T0)e++;
+        // covered: the lane's mean still looks like the note, or it is patchy (some pixels note, some not: a label),
+        // where a gap or glow between two notes is even across the lane
+        const Pr=med(Dm,k,a,b);let covered=true;
+        for(let t=b+1;t<c;t++){const m=Dm[k+t];if(!(m>=.5*Pr||(m>=.3*Pr&&D[k+t]<.6*m))){covered=false;break;}}
+        if(covered||b-a+1<minPiece||e-c+1<minPiece)b=e;else break;
+      }
+      if(b>a){
+        // Cuts between two notes: the whole lane falls back to the background (a gap), turns dark (their outlines), or a
+        // thin line of another color crosses it evenly (outlines only a little darker or lighter than the notes).
+        // Judged on the lane's mean color, and a line has to be even across the lane, so a label that covers only some
+        // of the pixels is no cut.
+        const Pm=med(Dm,k,a,b),Lr=med(Lm,0,a,b),n0=b-a+1,m0=Math.min(n0,15),cr=[0,0,0];
+        for(let c=0;c<3;c++){for(let u=0;u<m0;u++)tm[u]=C[(k+a+Math.floor((u+.5)*n0/m0))*3+c];cr[c]=tm.subarray(0,m0).sort()[m0>>1];}
+        const lineT=Math.max(30,.3*Pm);
+        for(let t=a;t<=b;t++){
+          const z=(k+t)*3;
+          const dc=Math.hypot(C[z]-cr[0],C[z+1]-cr[1],C[z+2]-cr[2]);
+          cut[t]=Dm[k+t]<.45*Pm?1:Lm[t]<.55*Lr?2:dc>=lineT&&Sp[k+t]<=Math.max(10,.3*dc)?3:0;
+        }
+        // A dark or different stretch longer than an outline is part of the note (shading, a gradient), not a line
+        // between two notes; so is one that fades in and out (a highlight or a dark streak on a shiny note). A line
+        // between notes is box-shaped: near its foot it is at most a few pixels wider than at half its height (its
+        // smoothed edges). A highlight is a soft bump: much wider near its foot. Measured in pixels, so it does not
+        // depend on how many rows the scan area is read with.
+        const dcAt=t=>{const z=(k+t)*3;return Math.hypot(C[z]-cr[0],C[z+1]-cr[1],C[z+2]-cr[2]);};
+        for(let t=a;t<=b;){
+          if(cut[t]<2){t++;continue;}let e=t;while(e<b&&cut[e+1]>=2)e++;
+          let undo=e-t+1>sepMax;
+          if(!undo){
+            let pk=0,pi=t;for(let u=t;u<=e;u++){const v=dcAt(u);if(v>pk){pk=v;pi=u;}}
+            const width=f=>{let l=pi,r=pi;while(l>a&&dcAt(l-1)>=f*pk)l--;while(r<b&&dcAt(r+1)>=f*pk)r++;return r-l+1;};
+            if((width(.15)-width(.5))*G.step>=4)undo=true;
+          }
+          if(undo)for(let u=t;u<=e;u++)cut[u]=0;t=e+1;
+        }
+        // A label drawn on the note (letters, often in a box with a dark border) makes dark or background-like lines
+        // too, but beside them the lane stays patchy for the height of the letters (strokes in part of the lane), where
+        // beside a line between two notes it is plain note color, or patchy for only a few pixels (rounded corners).
+        // A cut with a letter-high patchy stretch right beside it is part of the note; so are two cuts close together
+        // with patchy rows between them (the top and bottom of a label's box, even with some plain padding inside it).
+        // Patchy means much patchier than the rest of the stretch, so the texture of a shiny or glowing note does not
+        // count; sizes follow the video's height.
+        {const spLim=Math.max(25,3*med(Sp,k,a,b)),L=Math.max(3,Math.round(.006*G.vh/G.step)),lab=Math.max(3,Math.round(.045*G.vh/G.step));
+         // most rows from u0 to u1 (those not cut) patchy
+         const patchy=(u0,u1)=>{let n=0,p=0;for(let u=Math.max(a,u0);u<=Math.min(b,u1);u++)if(!cut[u]){n++;if(Sp[k+u]>spLim)p++;}return n>=Math.min(L,u1-u0+1)&&p>=.8*n;};
+         // Letters often have a color of their own, neither the note's nor the background's: a row is lettered when
+         // part of it (not all) is far from every mix of the two (a rounded corner or a smoothed edge is such a mix).
+         const lettered=u=>{const q=k+u,b0=bg[q*3]+sh0,b1=bg[q*3+1]+sh1,b2=bg[q*3+2]+sh2,d0=cr[0]-b0,d1=cr[1]-b1,d2=cr[2]-b2,dd=d0*d0+d1*d1+d2*d2||1;let n=0,f=0;
+           for(let x=XA[q],r0=u*cw;x<=XB[q];x++){const v=px[r0+x],e0=(v&255)-b0,e1=((v>>>8)&255)-b1,e2=((v>>>16)&255)-b2,s=Math.max(0,Math.min(1,(e0*d0+e1*d1+e2*d2)/dd)),g0=e0-s*d0,g1=e1-s*d1,g2=e2-s*d2;n++;if(g0*g0+g1*g1+g2*g2>2500)f++;}
+           return f>=.08*n&&f<=.92*n;};
+         const inked=(u0,u1)=>{let n=0,p=0;for(let u=Math.max(a,u0);u<=Math.min(b,u1);u++)if(!cut[u]){n++;if(lettered(u))p++;}return n>=Math.min(L,u1-u0+1)&&p>=.6*n;};
+         const cs=[];for(let t=a;t<=b;){if(!cut[t]){t++;continue;}let e=t;while(e<b&&cut[e+1])e++;cs.push([t,e]);t=e+1;}
+         const undo=new Set();
+         cs.forEach(([t,e],n)=>{
+           if(patchy(t-L,t-1)||patchy(e+1,e+L)||inked(t-L,t-1)||inked(e+1,e+L))undo.add(n);
+           const nx=cs[n+1];if(nx&&nx[0]-e-1>=2&&nx[0]-e-1<=lab&&(patchy(e+1,nx[0]-1)||inked(e+1,nx[0]-1))){undo.add(n);undo.add(n+1);}
+         });
+         for(const n of undo)for(let u=cs[n][0];u<=cs[n][1];u++)cut[u]=0;}
+        // pieces between the cuts (start, end, and the part outside any cut); a cut that would leave too short a piece
+        // on either side is undone
+        const pcs=[];
+        for(let t=a;t<=b;){if(cut[t]){t++;continue;}let e=t;while(e<b&&!cut[e+1])e++;pcs.push([t,e,t,e]);t=e+1;}
+        if(pcs.length){pcs[0][0]=a;pcs[pcs.length-1][1]=b;}
+        const keep=[];
+        for(const pc of pcs){const L=keep[keep.length-1];if(L&&(L[3]-L[2]+1<minPiece||pc[3]-pc[2]+1<minPiece)){L[1]=pc[1];L[3]=pc[3];}else keep.push(pc);}
+        // The edges are looked for around the piece's own part (outward by up to an outline's width, inward through glow),
+        // and only in its own half of the gap to the next piece: the bright outline of the note beside it is not its edge.
+        let r0=a;while(r0>0&&D[k+r0-1]<T0)r0--;
+        let r1=b;while(r1<R-1&&D[k+r1+1]<T0)r1++;
+        keep.forEach(([pa,pb,ca,cb],n)=>{
+          const lim0=Math.max(1,n?Math.ceil((keep[n-1][3]+ca)/2):Math.ceil((r0-1+a)/2)),lim1=Math.min(R-2,n<keep.length-1?Math.floor((cb+keep[n+1][2])/2):Math.floor((b+r1+1)/2));
+          const md=(ca+cb)>>1,q=Math.floor((cb-ca)/5),P2=body(k,ca+q,cb-q);
+          // outward, the search stops at the first row the lane is not covered at all: past it the lane's mean color
+          // only changes with something beside the lane (a neighbor's note ending where this one starts)
+          let u0=ca;while(u0>lim0&&D[k+u0-1]>=T0)u0--;let u1=cb;while(u1<lim1&&D[k+u1+1]>=T0)u1++;
+          let fl=0,eT,eB;
+          if(pa===0&&ca<=1){fl|=1;eT=-.5;}else{const lo=Math.max(1,ca-sepMax-1,lim0,u0-1),hi=Math.min(R-2,ca+glow,md);eT=lo<=hi?edge(k,lo,hi,true,P2):ca-.5;}
+          if(pb===R-1&&cb>=R-2){fl|=2;eB=R-.5;}else{const lo=Math.max(1,cb-glow,md),hi=Math.min(R-2,cb+sepMax+1,lim1,u1+1);eB=lo<=hi?edge(k,lo,hi,false,P2):cb+.5;}
+          let r=0,g=0,bl=0;for(let t=ca+q;t<=cb-q;t++){const z=(k+t)*3;r+=C[z];g+=C[z+1];bl+=C[z+2];}const nn=cb-q-(ca+q)+1;
+          if(eB>eT)out.push(i,sAt(k,eT),sAt(k,eB),fl,P2,r/nn,g/nn,bl/nn);
+        });
+      }
+      a=b+1;
+    }
+  }
+  return Float32Array.from(out);
+}
+// How fast the notes fall, in s units per second, from the edges seen in the frames: first the move between neighboring
+// frames that most edges agree on, then the same edges followed over about a quarter of a second for precision.
+// When the notes speed up or slow down along the way (a 3D view), the speed is a straight line in s: v0 + a·s.
+// Returns null when no steady movement is found.
+function vidFallSpeed(segs,off,times,F,band){
+  const edges=f=>{const o=[];for(let q=off[f];q<off[f+1];q+=8){const fl=segs[q+3],i=segs[q];if(!(fl&1))o.push(i*2,segs[q+1]);if(!(fl&2))o.push(i*2+1,segs[q+2]);}return o;};
+  const dl=[];for(let f=1;f<F;f++)dl.push(times[f]-times[f-1]);dl.sort((a,b)=>a-b);const dt0=dl.length?dl[dl.length>>1]:1/30;
+  const maxMove=.3*band,vmax=maxMove/dt0,NB=240,hist=new Float32Array(NB),votes=[],stride=Math.max(1,Math.floor(F/2500));
+  // frames 1 to 8 apart: the true speed agrees at every distance, while edges rounded to whole rows (few rows read,
+  // or slow notes) agree with a wrong speed only at one
+  for(const kk of [1,2,3,5,8])for(let f=0;f+kk<F;f+=stride){
+    const dt=times[f+kk]-times[f];if(!(dt>0&&dt<.15*kk))continue;
+    const A=edges(f),B=edges(f+kk);
+    for(let x=0;x<A.length;x+=2)for(let y=0;y<B.length;y+=2){if(A[x]!==B[y])continue;const dv=B[y+1]-A[x+1];if(Math.abs(dv)<=maxMove){const v=dv/dt;votes.push(v);hist[clamp(Math.floor((v+vmax)/(2*vmax)*NB),0,NB-1)]++;}}
+  }
+  // still edges (a logo, a line in the background) are not notes
+  let pk=-1;for(let b=0;b<NB;b++){const c=(b+.5)/NB*2*vmax-vmax;if(Math.abs(c)<.03*vmax)continue;if(pk<0||hist[b]>hist[pk])pk=b;}
+  if(pk<0||hist[pk]<20)return null;
+  const bw=2*vmax/NB,pc=(pk+.5)*bw-vmax;let sum=0,n=0;for(const v of votes)if(Math.abs(v-pc)<=1.5*bw){sum+=v;n++;}
+  const v1=sum/n,k=Math.max(1,Math.min(Math.round(.25/dt0),Math.floor(.6*band/Math.max(1e-6,Math.abs(v1)*dt0)))),pts=[];
+  for(let f=0;f+k<F;f+=stride){
+    const dt=times[f+k]-times[f];if(!(dt>0))continue;
+    const A=edges(f),B=edges(f+k),tol=Math.max(3,.12*Math.abs(v1)*dt);
+    for(let x=0;x<A.length;x+=2){const want=A[x+1]+v1*dt;let best=null,bd=tol;for(let y=0;y<B.length;y+=2)if(A[x]===B[y]&&Math.abs(B[y+1]-want)<=bd){bd=Math.abs(B[y+1]-want);best=B[y+1];}
+      if(best!=null)pts.push((best-A[x+1])/dt,(best+A[x+1])/2);}
+  }
+  if(pts.length<20)return{v0:v1,a:0};
+  const vs=[];for(let x=0;x<pts.length;x+=2)vs.push(pts[x]);vs.sort((a,b)=>a-b);const md=vs[vs.length>>1];
+  let kept=[];for(let x=0;x<pts.length;x+=2)if(Math.abs(pts[x]-md)<=.08*Math.abs(md))kept.push([pts[x+1],pts[x]]);
+  const fit=P=>{let ms=0,mv=0;for(const[s,v]of P){ms+=s;mv+=v;}ms/=P.length;mv/=P.length;let sv=0,ss=0;for(const[s,v]of P){sv+=(s-ms)*(v-mv);ss+=(s-ms)**2;}const a=ss>1e-9?sv/ss:0;return{a,v0:mv-a*ms,mv};};
+  let r=fit(kept);
+  const res=kept.map(([s,v])=>Math.abs(v-(r.v0+r.a*s))).sort((a,b)=>a-b),mad=res[res.length>>1]||0;
+  kept=kept.filter(([s,v])=>Math.abs(v-(r.v0+r.a*s))<=3*mad+1e-6);if(kept.length>=10)r=fit(kept);
+  // a change of under 2% across the scan area is measuring noise: one steady speed then
+  if(Math.abs(r.a)*band<.02*Math.abs(r.mv))return{v0:r.mv,a:0};
+  return{v0:r.v0,a:r.a};
+}
+// Falling notes to notes. Every stretch of a note seen in a frame says when that part will reach the keys: a point at s
+// arrives del(s) seconds later. Counted in arrival time a note stands still while the frames go by, so all the frames that
+// showed it vote together: a moment counts as part of a note when most of the frames that could see it found a note
+// there, and a note starts and ends at the median of all its edges that were seen. Glow, flicker, labels and effects that
+// show in only some frames are outvoted. A note on a black key that starts and ends exactly with a note beside it, in the
+// same color, is that neighbor's note showing through and is left out.
+function vidDetectFall(d,o){
+  const {segs,off,times,F,N,sK,sA,sB,p,black,v0,a}=d,cl=(x,l,h)=>x<l?l:x>h?h:x;
+  const del=a?(s,i)=>Math.log((v0+a*sK[i])/(v0+a*s))/a:(s,i)=>(sK[i]-s)/v0;
+  const lead=v0>0?2:1,trail=v0>0?1:2;   // which edge (1 top, 2 bottom) reaches the keys first
+  let tmin=1e9,tmax=-1e9;
+  for(let i=0;i<N;i++){const x=del(sA[i],i),y=del(sB[i],i);tmin=Math.min(tmin,times[0]+Math.min(x,y));tmax=Math.max(tmax,times[F-1]+Math.max(x,y));}
+  const bdt=cl(.6/Math.abs(v0),.0015,.01),nb=Math.ceil((tmax-tmin)/bdt)+2,bin=t=>(t-tmin)/bdt-.5;
+  // the segments of each lane
+  const nS=segs.length/8,cnt=new Int32Array(N+1),fr=new Int32Array(nS);
+  for(let f=0;f<F;f++)for(let q=off[f]/8;q<off[f+1]/8;q++){fr[q]=f;cnt[segs[q*8]+1]++;}
+  for(let i=0;i<N;i++)cnt[i+1]+=cnt[i];
+  const idx=new Int32Array(nS),fill=cnt.slice(0,N);for(let q=0;q<nS;q++)idx[fill[segs[q*8]]++]=q;
+  const obs=new Int32Array(nb+1),cov=new Int32Array(nb+1),lanes=[];
+  const span=(arr,t0,t1)=>{const b0=Math.max(0,Math.ceil(bin(t0))),b1=Math.min(nb-1,Math.floor(bin(t1)));if(b1>=b0){arr[b0]++;arr[b1+1]--;}};
+  for(let i=0;i<N;i++){
+    obs.fill(0);cov.fill(0);
+    const wA=Math.min(del(sA[i],i),del(sB[i],i)),wB=Math.max(del(sA[i],i),del(sB[i],i));
+    for(let f=0;f<F;f++)span(obs,times[f]+wA,times[f]+wB);
+    const ons=[],offs=[],mine=[],Ls=[],at=new Map();
+    for(let x=cnt[i];x<cnt[i+1];x++){
+      const q=idx[x]*8;if(segs[q+4]<o.thr)continue;
+      const f=fr[idx[x]],t=times[f];if(!at.has(f))at.set(f,[Ls.length,Ls.length]);at.get(f)[1]++;
+      Ls.push({q,f,fl:segs[q+3],tl:t+del(segs[q+lead],i),tt:t+del(segs[q+trail],i)});
+    }
+    // A stretch counts only when a neighboring frame shows the same note: one of its edges lands at the same moment.
+    // Notes fall at the measured speed, so their edges keep their landing time from frame to frame; sparks, glow that
+    // stays put and other effects drift by a whole frame's time or more.
+    for(const s of Ls){
+      let ok=false;
+      for(const g of [s.f-1,s.f+1]){
+        const r=at.get(g);if(!r||ok)continue;
+        // the same edge may wobble by a pixel or two (rounding, uneven frame timing); a still one is a whole frame off
+        const dtg=Math.abs(times[g]-times[s.f]),tolE=Math.min(.7*dtg,Math.max(2.5/Math.abs(v0),.5*dtg));
+        for(let z=r[0];z<r[1]&&!ok;z++){
+          const u=Ls[z];
+          if(!(s.fl&lead)&&!(u.fl&lead)&&Math.abs(s.tl-u.tl)<=tolE)ok=true;
+          else if(!(s.fl&trail)&&!(u.fl&trail)&&Math.abs(s.tt-u.tt)<=tolE)ok=true;
+          // a note longer than the scan area shows no edge: it has to cover the same moments instead
+          else if((s.fl&3)===3&&Math.min(s.tt,u.tt)-Math.max(s.tl,u.tl)>=.8*Math.min(s.tt-s.tl,u.tt-u.tl))ok=true;
+        }
+      }
+      if(!ok)continue;
+      span(cov,s.tl,s.tt);mine.push(s.q,s.tl,s.tt);
+      if(!(s.fl&lead))ons.push(s.tl);if(!(s.fl&trail))offs.push(s.tt);
+    }
+    for(let b=1;b<=nb;b++){obs[b]+=obs[b-1];cov[b]+=cov[b-1];}
+    ons.sort((x,y)=>x-y);offs.sort((x,y)=>x-y);
+    const near=(L,t,w)=>{let lo=0,hi=L.length;while(lo<hi){const m=(lo+hi)>>1;if(L[m]<t-w)lo=m+1;else hi=m;}const v=[];for(let z=lo;z<L.length&&L[z]<=t+w;z++)v.push(L[z]);return v.length?v[v.length>>1]:null;};
+    const W=Math.max(3*bdt,.015),notes=[];
+    // A note needs the votes of a fair share of the frames that could have seen it: at the very start of the range a
+    // note that was already landing was seen by only a few, and sparks rising through the scan area only by chance.
+    let full=0;for(let b=0;b<nb;b++)if(obs[b]>full)full=obs[b];
+    const minObs=Math.max(3,.25*full),minLen=Math.max(.02,3/Math.abs(v0));
+    for(let b=0;b<nb;){
+      if(!(obs[b]>=2&&cov[b]*2>=obs[b])){b++;continue;}
+      let e=b,so=obs[b];while(e+1<nb&&obs[e+1]>=2&&cov[e+1]*2>=obs[e+1]){e++;so+=obs[e];}
+      if(so/(e-b+1)<minObs||(e-b+1)*bdt<minLen){b=e+1;continue;}
+      const ta=tmin+b*bdt,tb=tmin+(e+1)*bdt,s0=near(ons,ta,W),s1=near(offs,tb,W);
+      // A note's start or end passes through the scan area at the speed of the notes. Something that fills the whole
+      // scan area without ever showing such an edge (a title card, a still picture) is no note.
+      if(s0==null&&s1==null){b=e+1;continue;}
+      let t0=s0??ta,t1=s1??tb;if(t1<=t0){t0=ta;t1=tb;}
+      // Two notes that touch (only their outlines between them) leave no gap, but most frames that saw the spot found
+      // one note ending and the next starting there (a label or stripe makes such an edge in only some): the run is split there.
+      const cuts=[];
+      {let lo=0;while(lo<offs.length&&offs[lo]<=t0+W)lo++;
+       for(let z=lo;z<offs.length&&offs[z]<t1-W;){
+         let y=z;while(y+1<offs.length&&offs[y+1]-offs[y]<=bdt*2&&offs[y+1]<t1-W)y++;
+         const m=offs[(z+y)>>1],need=Math.max(3,.3*obs[Math.max(0,Math.min(nb-1,Math.round(bin(m))))]),on=near(ons,m,W);
+         if(y-z+1>=need&&on!=null){let c=0;for(const x of ons)if(Math.abs(x-on)<=W)c++;if(c>=need)cuts.push([m,Math.max(m,on)]);}
+         z=y+1;
+       }}
+      let s=t0;for(const [m,on] of cuts){if(m-s>W){notes.push({p:p[i],t0:s,t1:m,f0:0,f1:0,c:[0,0,0,0,0]});s=on;}}
+      notes.push({p:p[i],t0:s,t1,f0:0,f1:0,c:[0,0,0,0,0]});
+      b=e+1;
+    }
+    // each note's color: the stretches that fall inside it
+    for(let z=0;z<mine.length;z+=3){
+      const q=mine[z],tc=(mine[z+1]+mine[z+2])/2,w=mine[z+2]-mine[z+1];let lo=0,hi=notes.length-1,hit=null;
+      while(lo<=hi){const m=(lo+hi)>>1;if(notes[m].t1<tc)lo=m+1;else if(notes[m].t0>tc)hi=m-1;else{hit=notes[m];break;}}
+      if(hit){hit.c[0]+=segs[q+5]*w;hit.c[1]+=segs[q+6]*w;hit.c[2]+=segs[q+7]*w;hit.c[3]+=w;hit.c[4]+=segs[q+4]*w;}
+    }
+    for(const n of notes){const w=n.c[3]||1;n.color=[n.c[0]/w|0,n.c[1]/w|0,n.c[2]/w|0];n.str=n.c[4]/w;n.seen=n.c[3];delete n.c;}
+    // a run with no stretch of its own inside (only the edges of others reach into it) is no note
+    lanes.push(notes.filter(n=>n.seen>0&&n.t1-n.t0>=minLen));
+  }
+  const tol=Math.max(2.5*bdt,.015,3/Math.abs(v0)),cd=(x,y)=>Math.hypot(x.color[0]-y.color[0],x.color[1]-y.color[1],x.color[2]-y.color[2]);
+  // More keys starting at the same moment than anyone plays is something else crossing the scan area (a picture
+  // sliding in, a title): those notes are left out, as when reading the keys.
+  if(o.maxKeys>0){
+    const st=[];lanes.forEach(L=>{for(const n of L)st.push(n);});st.sort((x,y)=>x.t0-y.t0);
+    const w=Math.max(2*bdt,.02),drop=new Set();
+    for(let x=0,y=0;x<st.length;x++){while(st[y].t0<st[x].t0-w)y++;if(x-y+1>o.maxKeys)for(let z=y;z<=x;z++)drop.add(st[z]);}
+    if(drop.size)for(let i=0;i<N;i++)lanes[i]=lanes[i].filter(n=>!drop.has(n));
+  }
+  const hue=c=>{const[r,g,b]=c,mx=Math.max(r,g,b),mn=Math.min(r,g,b),dd=mx-mn;if(dd<25||mx<40)return null;let h=mx===r?((g-b)/dd)%6:mx===g?(b-r)/dd+2:(r-g)/dd+4;return(h*60+360)%360;};
+  const sameHue=(x,y)=>{const a=hue(x.color),b=hue(y.color);if(a==null||b==null)return false;const d=Math.abs(a-b)%360;return Math.min(d,360-d)<20;};
+  const out=[],kept=[],fin=[];
+  for(let i=0;i<N;i++){
+    let L=lanes[i];
+    if(black[i]){
+      const nb2=[];for(const j of [i-1,i+1])if(j>=0&&j<N&&!black[j])nb2.push(...lanes[j]);
+      // the same color or hue (each lane sees a different part of the note: its fill, its outline, its glow), or a
+      // weaker one (the neighbor covers only part of the lane, the rest is the gap beside it)
+      const like=(w,n)=>cd(w,n)<60||sameHue(w,n)||n.str<.85*w.str;
+      L=L.filter(n=>{const st=nb2.some(w=>Math.abs(w.t0-n.t0)<=tol&&like(w,n)),en=nb2.some(w=>Math.abs(w.t1-n.t1)<=tol&&like(w,n));return!(st&&en);});
+      // or it lies within one neighbor's note and shares its start or its end (the rest cut short by a rounded corner)
+      L=L.filter(n=>!nb2.some(w=>like(w,n)&&n.t0>=w.t0-tol&&n.t1<=w.t1+tol&&(Math.abs(w.t0-n.t0)<=tol||Math.abs(w.t1-n.t1)<=tol)));
+    }
+    kept.push(L);
+  }
+  for(let i=0;i<N;i++){
+    let L=kept[i];
+    // Either way round: a note that lies within a neighbor's note (the other kind of key) and is much weaker than it is
+    // that neighbor's glow. A note really played while the neighbor is held is as strong as any note. Only neighbors
+    // still standing count (a copy already left out above does not take the real note with it).
+    {const nb3=[];for(const j of [i-1,i+1])if(j>=0&&j<N&&black[j]!==black[i])nb3.push(...kept[j]);
+     L=L.filter(n=>!nb3.some(w=>w.t0<=n.t0+tol&&n.t1<=w.t1+tol&&n.str<.6*w.str));}
+    fin.push(L);
+  }
+  const kw=d.kb?vidKeyWitness(d,fin,tol,(x,y)=>cd(x,y)<60||sameHue(x,y)):null;
+  for(let i=0;i<N;i++){
+    const L=fin[i];
+    // joining short gaps, then leaving out flashes
+    const J=[];for(const n of L){const pr=J[J.length-1];if(pr&&o.gapMs>0&&(n.t0-pr.t1)*1000<=o.gapMs)pr.t1=Math.max(pr.t1,n.t1);else J.push(n);}
+    // The scan area sees notes before they land: only those sounding within the chosen range are kept, and one that
+    // was already sounding when the range starts begins there (as when reading the keys).
+    for(const n of J){
+      if((n.t1-n.t0)*1000<o.flashMs)continue;
+      if(d.rng){if(n.t0>d.rng[1]||n.t1<=d.rng[0]+.01)continue;if(n.t0<d.rng[0])n.t0=d.rng[0];}
+      out.push(n);
+    }
+  }
+  out.kw=kw;return out;
+}
+// The keys below as a second witness (d.kb: the color of every key in every frame). A note beside a neighbor's note
+// (the other kind of key) can be that neighbor showing through its lane: all of it, or only its end or start where it
+// runs on into the neighbor's note. Where this key stays dark while the neighbor's key lights up, that stretch is the
+// neighbor's and is taken off. Light on a key can come from elsewhere (glow, sparks), so a lit key proves nothing and
+// the keys never add a note. They only count where they light up for notes like this one elsewhere in the video (some
+// videos barely light the keys, or not for every color), and only when they light up as the notes land.
+// Returns how many notes it left out and shortened ({drop, cut}), or 'unlit' when the keys are no witness.
+function vidKeyWitness(d,fin,tol,like){
+  const {times,F,N,black,kb}=d,D=vidBase(kb,F,black.map(b=>({black:!!b})),true).D;
+  const first=t=>{let lo=0,hi=F;while(lo<hi){const m=(lo+hi)>>1;if(times[m]<t)lo=m+1;else hi=m;}return lo;};
+  const med=v=>{if(!v.length)return null;v.sort((x,y)=>x-y);return v[v.length>>1];};
+  const dts=[];for(let f=1;f<F;f+=Math.max(1,F>>9))dts.push(times[f]-times[f-1]);const dt=med(dts)||1/30;
+  // the neighbors' notes (the other kind of key) that sound at the same time as note n on key i
+  const nbOf=(i,n)=>{const r=[];for(const j of [i-1,i+1])if(j>=0&&j<N&&black[j]!==black[i])for(const w of fin[j])if(Math.min(n.t1,w.t1)>Math.max(n.t0,w.t0))r.push([j,w]);return r;};
+  const clean=[];for(let i=0;i<N;i++)for(const n of fin[i])if(!nbOf(i,n).length)clean.push([i,n]);
+  // how long after a note lands its key lights up (earlier, where the keys light up before the line the notes are
+  // timed at), from notes with no such neighbor: the moment the key's light comes on nearest to the landing (a frame
+  // shows a light that came on somewhere since the frame before, half a frame early on average)
+  const lags=[];
+  for(const [i,n] of clean){
+    if(n.t1-n.t0<.15)continue;
+    let mx=0;for(let f=first(n.t0),b=first(n.t1);f<b;f++)mx=Math.max(mx,D[i*F+f]);if(mx<15)continue;
+    let best=null;
+    for(let f=Math.max(1,first(n.t0-.3)),e=first(n.t0+.3);f<e;f++)if(D[i*F+f]>=.5*mx&&D[i*F+f-1]<.5*mx&&(best==null||Math.abs(times[f]-n.t0)<Math.abs(best)))best=times[f]-n.t0;
+    if(best!=null)lags.push(best);
+  }
+  // keys that light up at no steady moment (marks off the keys, nothing lit at all) are no witness
+  if(lags.length<5)return'unlit';
+  lags.sort((x,y)=>x-y);if(lags[Math.floor(lags.length*.75)]-lags[Math.floor(lags.length*.25)]>Math.max(3*dt,.08))return'unlit';
+  const lag=med(lags)-dt/2;
+  // a note's level: the key's distance from its resting color while the note sounds
+  const lvl=(i,n)=>{const e=Math.min(dt,.25*(n.t1-n.t0)),v=[];for(let f=first(n.t0+lag+e),b=first(n.t1+lag-e);f<b;f++)v.push(D[i*F+f]);return med(v);};
+  const cl=[];for(const [i,n] of clean){const lv=lvl(i,n);if(lv!=null)cl.push({i,n,lv});}
+  // how brightly the keys light up for notes like n (same kind of key, same color), and for n's own key
+  const ref=(i,n)=>{const all=[],own=[];for(const x of cl)if(black[x.i]===black[i]&&like(x.n,n)){all.push(x.lv);if(x.i===i)own.push(x.lv);}
+    const r=all.length>=3?med(all):null;if(r==null||r<15)return null;
+    // a key that stays dark for its own clean notes (something drawn over it, a mark off the key) is no witness
+    return own.length>=2&&med(own)<.5*r?null:r;};
+  const drop=new Set(),cut=[];
+  for(let i=0;i<N;i++)for(const n of fin[i]){
+    const nb=nbOf(i,n);if(!nb.length)continue;
+    const r=ref(i,n);if(r==null)continue;
+    const ws=nb.map(([j,w])=>({j,w,r:ref(j,w)})).filter(x=>x.r!=null);if(!ws.length)continue;
+    const a=first(n.t0+lag),b=first(n.t1+lag),nf=b-a;if(nf<2)continue;
+    // per frame: the neighbor's key lit and this one out (bad: dark; off: under half, as while its light fades)
+    const bad=new Uint8Array(nf),off=new Uint8Array(nf);let nbad=0,nl=0,fl=-1,ff=-1;
+    for(let f=a;f<b;f++){
+      const v=D[i*F+f],tf=times[f]-lag;
+      if(v>=.5*r){fl=f;if(ff<0)ff=f;nl++;continue;}
+      if(!ws.some(x=>tf>=x.w.t0&&tf<=x.w.t1&&D[x.j*F+f]>=.5*x.r))continue;
+      off[f-a]=1;if(v<.2*r){bad[f-a]=1;nbad++;}
+    }
+    if(!nbad)continue;
+    // dark nearly all along and never really lit: the neighbor's note, when it lines up with it as a copy does (a key
+    // that does light up for a moment is a real note the copy ran into, and keeps that part below)
+    if(nbad>=.8*nf&&nl<2){if(ws.some(({w})=>Math.abs(w.t0-n.t0)<=tol||Math.abs(w.t1-n.t1)<=tol||(n.t0>=w.t0-tol&&n.t1<=w.t1+tol)))drop.add(n);continue;}
+    // Lit, then out (a light may take a few frames to fade) and dark at the end, all while the neighbor's key is lit,
+    // and ending together with the neighbor's note: the note ends where the key's light went out. The same at the start.
+    const tail=fl>=0?b-1-fl:0,head=ff>=0?ff-a:0,sum=(x,k0,k1)=>{let s=0;for(let k=k0;k<k1;k++)s+=x[k];return s;};let t0=n.t0,t1=n.t1;
+    if(tail>=2&&bad[nf-1]&&sum(off,nf-tail,nf)>=tail-(tail>=5?1:0)&&ws.some(({w})=>Math.abs(w.t1-n.t1)<=tol))t1=(times[fl]+times[fl+1])/2-lag;
+    if(head>=2&&bad[0]&&sum(off,0,head)>=head-(head>=5?1:0)&&ws.some(({w})=>Math.abs(w.t0-n.t0)<=tol))t0=(times[ff-1]+times[ff])/2-lag;
+    if(t0!==n.t0||t1!==n.t1)cut.push([n,t0,t1]);
+  }
+  let nc=0;for(const [n,t0,t1] of cut){if(t1-t0>=Math.max(.02,dt)){[n.t0,n.t1]=[t0,t1];nc++;}else drop.add(n);}
+  if(drop.size)for(let i=0;i<N;i++)fin[i]=fin[i].filter(n=>!drop.has(n));
+  return{drop:drop.size,cut:nc};
 }
 
 /* ---- note detection (works on real frame times, so skipped frames do not matter) ---- */
@@ -3751,17 +4380,33 @@ function vidFadedGaps(on,dist,F,drop){
 }
 const VID_CACHE=new WeakMap();
 // Each key's resting color: the median over the frames (one pass, so memory is read in order).
-function vidMedBg(samples,F,N){
+// With map, a key whose median is far from the usual resting color of its kind (white or black keys), because it is held
+// for most of the song, takes its resting color from the frames where it does look like the others at rest.
+function vidMedBg(samples,F,N,map){
   const M=N*3,hist=new Uint32Array(M*256),bg=new Float32Array(M);
   for(let f=0;f<F;f++){const b=f*M;for(let j=0;j<M;j++)hist[j*256+samples[b+j]]++;}
   for(let j=0;j<M;j++){let acc=0;const o=j*256;for(let v=0;v<256;v++){acc+=hist[o+v];if(acc>=F/2){bg[j]=v;break;}}}
+  if(map)for(const kind of [false,true]){
+    const ids=[];for(let i=0;i<N;i++)if(!!map[i].black===kind)ids.push(i);if(ids.length<4)continue;
+    const md=[0,1,2].map(c=>{const a=ids.map(i=>bg[i*3+c]).sort((x,y)=>x-y);return a[a.length>>1];});
+    const even=ids.filter(i=>Math.hypot(bg[i*3]-md[0],bg[i*3+1]-md[1],bg[i*3+2]-md[2])<=25).length>=.7*ids.length;
+    for(const i of ids){
+      if(Math.hypot(bg[i*3]-md[0],bg[i*3+1]-md[1],bg[i*3+2]-md[2])<=60)continue;
+      let r=0,g=0,b=0,n=0;
+      for(let f=0;f<F;f++){const q=(f*N+i)*3;if(Math.hypot(samples[q]-md[0],samples[q+1]-md[1],samples[q+2]-md[2])<=60){r+=samples[q];g+=samples[q+1];b+=samples[q+2];n++;}}
+      // a key at rest for only a moment: those moments, or the others' resting color when they all look alike
+      if(n>=3){bg[i*3]=r/n;bg[i*3+1]=g/n;bg[i*3+2]=b/n;}
+      else if(even){bg[i*3]=md[0];bg[i*3+1]=md[1];bg[i*3+2]=md[2];}
+    }
+  }
   return bg;
 }
 function vidGroups(map){const grp=[[],[]];map.forEach((m,i)=>grp[m.black?1:0].push(i));return grp;}
 // Distance of every key from its resting color in frame f, written to row. With "common" on, a color change that hits most keys
-// of the same kind (white or black) at once, like a fade or flash of the whole screen, is subtracted first.
+// of the same kind (white or black) at once, like a fade or flash of the whole screen, is subtracted first. Returns the
+// size of the largest change taken off (0 for none).
 function vidFrameDist(samples,f,N,map,bg,grp,common,scr,row){
-  const zero=[0,0,0],cm=[zero,zero];
+  const zero=[0,0,0],cm=[zero,zero];let big=0;
   if(common)for(let g=0;g<2;g++){
     const ids=grp[g],n=ids.length;if(n<4)continue;
     const med=[0,0,0];
@@ -3769,19 +4414,20 @@ function vidFrameDist(samples,f,N,map,bg,grp,common,scr,row){
     const mag=Math.hypot(med[0],med[1],med[2]);if(mag<15)continue;
     const lim=(.35*mag+12)*(.35*mag+12);let close=0;
     for(let j=0;j<n;j++){const i=ids[j],k=(f*N+i)*3;let d=0;for(let c=0;c<3;c++){const e=samples[k+c]-bg[i*3+c]-med[c];d+=e*e;}if(d<=lim)close++;}
-    if(close>=.6*n)cm[g]=med;
+    if(close>=.6*n){cm[g]=med;big=Math.max(big,mag);}
   }
   for(let i=0;i<N;i++){const sh=cm[map[i].black?1:0],k=(f*N+i)*3;let d=0;for(let c=0;c<3;c++){const e=samples[k+c]-bg[i*3+c]-sh[c];d+=e*e;}row[i]=Math.sqrt(d);}
+  return big;
 }
 // D is stored key by key (D[i*F+f]) so detection reads it in order.
 function vidBase(samples,F,map,common){
   let ent=VID_CACHE.get(samples);if(!ent){ent={};VID_CACHE.set(samples,ent);}
   const ck=common?1:0;if(ent[ck])return ent[ck];
-  const N=map.length,bg=vidMedBg(samples,F,N),grp=vidGroups(map),D=new Float32Array(F*N),scr=new Float32Array(N),row=new Float32Array(N);
+  const N=map.length,bg=vidMedBg(samples,F,N,map),grp=vidGroups(map),D=new Float32Array(F*N),scr=new Float32Array(N),row=new Float32Array(N);
   for(let f=0;f<F;f++){vidFrameDist(samples,f,N,map,bg,grp,common,scr,row);for(let i=0;i<N;i++)D[i*F+f]=row[i];}
   return ent[ck]={D};
 }
-function vidDetect(samples,times,F,map,o){
+function vidDetect(samples,times,F,map,o,prof){
   const N=map.length,notes=[],dist=new Float32Array(F),on=new Uint8Array(F);
   const dl=[];for(let f=1;f<F;f++)dl.push(times[f]-times[f-1]);dl.sort((a,b)=>a-b);const step=o.step||(dl.length?dl[dl.length>>1]:1/30);
   const D=vidBase(samples,F,map,!!o.common).D;
@@ -3817,7 +4463,63 @@ function vidDetect(samples,times,F,map,o){
       f=e;
     }
   }
-  return notes;
+  return vidKeysGlow(notes,D,F,map,Math.max(2,Math.round(.06/step)),prof&&{U:vidBase(prof[0],F,map,!!o.common).D,L:vidBase(prof[1],F,map,!!o.common).D},times);
+}
+// Glow: in many videos a lit key lights up the black keys near it a little (its light spills over them, most toward
+// the top of the keys, and a landing flash reaches the next black key too). A black key's note that only sounds while
+// a white key beside it or a clearly brighter black key next to it is lit, and is much dimmer than the black keys of
+// this video get when they are played with no white key beside them lit, in the lit keys' color (glow is too dim to
+// show a color of its own), is that glow and is left out. A black key really played next to a lit one is as bright as
+// any. tol: frames of leeway at the ends.
+// Then the shape of the light down the key (P: the black keys read higher (U) and lower (L) on the key too, every
+// frame): glow comes in from above and beside and fades out quickly going down the key, while a key really played
+// keeps this video's usual shape (even in some videos, already fading in others), learned from its black keys played
+// with no white key beside them lit, in the same color. The frames of a black key's note with a lit key near it whose
+// light fades much faster than that are glow: a note that is mostly glow is left out, glow at its start or end is
+// taken off.
+function vidKeysGlow(notes,D,F,map,tol,P,times){
+  const lo=map[0].p,N=map.length,blk=n=>map[n.p-lo].black;
+  const level=n=>{if(n.lv==null){const i=n.p-lo,v=[];for(let f=n.f0;f<n.f1;f++)v.push(D[i*F+f]);v.sort((a,b)=>a-b);n.lv=v[v.length>>1]||0;}return n.lv;};
+  const hue=c=>{const[r,g,b]=c,mx=Math.max(r,g,b),mn=Math.min(r,g,b),dd=mx-mn;if(dd<25||mx<40)return null;let h=mx===r?((g-b)/dd)%6:mx===g?(b-r)/dd+2:(r-g)/dd+4;return(h*60+360)%360;};
+  const like=(x,y)=>{if(Math.hypot(x.color[0]-y.color[0],x.color[1]-y.color[1],x.color[2]-y.color[2])<60)return true;const a=hue(x.color),b=hue(y.color);if(a==null||b==null)return false;const d=Math.abs(a-b)%360;return Math.min(d,360-d)<20;};
+  const byKey=Array.from({length:N},()=>[]);for(const n of notes)byKey[n.p-lo].push(n);
+  // the notes on keys up to two away that sound at the same time
+  const near=n=>{const i=n.p-lo,r=[];for(let j=Math.max(0,i-2);j<=Math.min(N-1,i+2);j++)if(j!==i)for(const w of byKey[j])if(w.f0<n.f1&&n.f0<w.f1)r.push(w);return r;};
+  const clean=[];for(const n of notes)if(blk(n)&&!near(n).some(w=>!blk(w)&&Math.abs(w.p-n.p)===1))clean.push(n);
+  const drop=new Set();
+  for(const n of notes){
+    if(!blk(n))continue;
+    // the keys that could light it up (a white one beside it, or a clearly brighter black one), lit through nearly all of it
+    const lv=level(n),ws=near(n).filter(w=>blk(w)?level(w)>=1.5*lv:Math.abs(w.p-n.p)===1);if(!ws.length)continue;
+    let cov=0;for(let f=n.f0;f<n.f1;f++)if(ws.some(w=>f>=w.f0-tol&&f<w.f1+tol))cov++;if(cov<.9*(n.f1-n.f0))continue;
+    const v=clean.filter(x=>ws.some(w=>like(x,w))).map(level).sort((a,b)=>a-b);if(v.length<3)continue;
+    if(lv<.55*v[v.length>>1])drop.add(n);
+  }
+  if(P&&times){
+    // the middle and lower readings against the higher one (none where the key is hardly lit at the top)
+    const shape=(i,f)=>{const u=P.U[i*F+f];return u<30?null:(D[i*F+f]+P.L[i*F+f])/2/u;};
+    const med=v=>{if(!v.length)return null;v.sort((a,b)=>a-b);return v[v.length>>1];};
+    for(const n of clean){const i=n.p-lo,v=[];for(let f=n.f0;f<n.f1;f++){const s=shape(i,f);if(s!=null)v.push(s);}n.sh=med(v);}
+    const shaped=clean.filter(n=>n.sh!=null);
+    {
+      const tAt=f=>f<=0?times[0]:f>=F?times[F-1]:(times[f-1]+times[f])/2;
+      for(const n of notes){
+        if(!blk(n)||drop.has(n))continue;
+        const i=n.p-lo,lv=level(n),ws=near(n).filter(w=>blk(w)?level(w)>=1.5*lv:Math.abs(w.p-n.p)===1);if(!ws.length)continue;
+        // the usual shape of a played black key in this note's color or that of the keys lighting it
+        const v=shaped.filter(x=>like(x,n)||ws.some(w=>like(x,w))).map(x=>x.sh);if(v.length<5)continue;const S0=med(v);
+        const nf=n.f1-n.f0,g=new Uint8Array(nf);let ng=0;
+        for(let f=n.f0;f<n.f1;f++){const s=shape(i,f);if(s!=null&&s<.6*S0&&ws.some(w=>f>=w.f0&&f<w.f1)){g[f-n.f0]=1;ng++;}}
+        if(!ng)continue;
+        if(ng>=.7*nf){drop.add(n);continue;}
+        let a=0;while(a<nf&&g[a])a++;let b=nf;while(b>a&&g[b-1])b--;
+        if(a>=2){n.f0+=a;n.t0=tAt(n.f0);}
+        if(nf-b>=2){n.f1-=nf-b;n.t1=tAt(n.f1);}
+      }
+    }
+  }
+  for(const n of notes){delete n.lv;delete n.sh;}
+  return drop.size?notes.filter(n=>!drop.has(n)):notes;
 }
 function vidCluster(notes,tol=28){
   let cl=[];
@@ -3891,22 +4593,85 @@ $('vtPre').onclick=()=>vidSetTab('pre');$('vtRes').onclick=()=>vidSetTab('res');
 for(const [a,b] of [['vtPre','vtRes'],['vtRes','vtPre']])$(a).addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();$(b).click();$(b).focus();}});
 function vidSyncRes(){
   const has=!!VID.samples;
-  $('vResEmpty').hidden=has;$('vResBody').hidden=!has;
+  vdlg.classList.toggle('vFallRes',has&&VID.kind==='fall');$('vResEmpty').hidden=has;$('vResBody').hidden=!has;
   $('vs3').classList.toggle('done',has);
 }
 function vidSyncSteps(){
   const box=$('vSteps'),st=vSteps();
   [...box.children].forEach((b,i)=>{b.textContent=(i+1)+'. '+st[i];b.classList.toggle('on',VID.step===i);b.classList.toggle('done',VID.cal[i]!=null);});
+  // a new mark: Clear marks can no longer be undone
+  if(vidCleared&&(VID.cal.some(v=>v!=null)||vidFallVals().some(v=>v!=null))){vidCleared=null;vidSyncClearBtn();}
+  // reading the falling notes adds the scan area: steps 5 and 6, and 7 (where the notes reach the keys) without perspective
+  const fall=vidSrc()==='fall',fn=vidFallSteps(),fv=vidFallVals();$('vFallOpts').hidden=$('vBandRow').hidden=$('vBandInfo').hidden=!fall;
+  [...$('vFSteps').children].forEach((b,i)=>{b.hidden=i>=fn;b.textContent=(i+5)+'. '+VFSTEPS[i];b.classList.toggle('on',VID.step>3&&VID.fstep===i);b.classList.toggle('done',fv[i]!=null);});
+  vidSyncBandUI();
+  const fallOk=!fall||fv.slice(0,fn).every(v=>v!=null);
   $('vPh').hidden=!!VID.vw;
-  $('vs1').classList.toggle('done',!!VID.vw);$('vs2').classList.toggle('done',!!VID.vw&&VID.cal.every(v=>v!=null));
-  $('vAnalyze').disabled=VID.running||!VID.vw||VID.cal.some(v=>v==null);
+  $('vs1').classList.toggle('done',!!VID.vw);$('vs2').classList.toggle('done',!!VID.vw&&VID.cal.every(v=>v!=null)&&fallOk);
+  $('vAnalyze').disabled=VID.running||!VID.vw||VID.cal.some(v=>v==null)||!fallOk;
   const h=$('vHint');
   if(!VID.vw)h.textContent='Choose a video file to begin.';
   else if(VID.step<4)h.textContent='Step '+(VID.step+1)+': click on the video. '+st[VID.step]+'.';
+  else if(fall&&VID.fstep<fn)h.textContent='Step '+(VID.fstep+5)+': click on the video. '+VFSTEPS[VID.fstep]+'.';
+  else if(fall)h.textContent='Check that the blue lines hold falling notes clear of the keys and their effects, the orange line sits on the top edge of the keys, and the lanes line up with the notes. Drag a line to move it.';
   else h.textContent='Check that the dots sit on the keys (yellow on white keys, pink on black keys). Click a numbered step to redo it.';
 }
+const VFSTEPS=['Top of the scan area','Bottom of the scan area','Where the notes reach the keys (the top edge of the keys)'];
+// the scan area as numbers: percent of the video height, from the top
+const BAND_IN={vBandTop:'top',vBandBot:'bot',vBandHit:'hit'};
+function vidSyncBandUI(){
+  $('vBandHitL').hidden=VID.persp;
+  for(const id in BAND_IN){const el=$(id),v=VID.fall[BAND_IN[id]];if(document.activeElement!==el)el.value=v==null||!VID.vh?'':Math.round(v/VID.vh*1000)/10;}
+}
+for(const id in BAND_IN)$(id).addEventListener('input',e=>{
+  if(!VID.vh||e.target.value==='')return;
+  VID.fall[BAND_IN[id]]=clamp(Math.round(+e.target.value/100*VID.vh),0,VID.vh-1);
+  const nx=vidFallVals().slice(0,vidFallSteps()).findIndex(v=>v==null);VID.fstep=nx<0?vidFallSteps():nx;
+  vidSyncSteps();vidDrawPreview();vidSaveCal();
+});
+const vidSrc=()=>$('vSrc').value;
+const vidFallSteps=()=>VID.persp?2:3;   // with perspective, the notes reach the keys at the top of the marked keyboard
+const vidFallVals=()=>[VID.fall.top,VID.fall.bot,VID.fall.hit];
+// Puts the scan area above the keys: from a little over them (clear of the effects drawn where notes land) up to about
+// half the video, and the orange line on the top edge of the keys.
+function vidAutoBand(quiet){
+  if(!VID.vw)return false;
+  const vh=VID.vh,c=VID.cal;let hit=null;
+  if(VID.persp){if(c[0]&&c[1])hit=(c[0].y+c[1].y)/2;}
+  else if(VID.kbTop!=null)hit=VID.kbTop;
+  else if(c[2]!=null&&c[3]!=null)hit=c[3]-1.27*(c[2]-c[3]);   // from the two sample rows, with a usual key shape
+  if(hit==null){if(!quiet)toast('Mark the keyboard first.');return false;}
+  hit=clamp(Math.round(hit),2,vh-1);
+  const bot=Math.max(1,Math.round(hit-.08*vh)),top=clamp(Math.round(Math.max(.06*vh,hit-.5*vh)),0,Math.max(0,bot-20));
+  VID.fall={top,bot,hit};VID.fstep=vidFallSteps();
+  vidSyncSteps();vidDrawPreview();vidSaveCal();
+  if(!quiet)toast('The scan area is above the keys. Drag its lines to adjust it.');
+  return true;
+}
+// The scan area on the video: the band (blue), the lanes that are read (yellow for white keys, pink for black keys),
+// and where the notes reach the keys (orange).
+function vidDrawFall(g){
+  const FL=VID.fall,W=VID.vw,lw=Math.max(1,W/700);
+  const hl=(y,col)=>{g.strokeStyle=col;g.lineWidth=lw*2;g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();};
+  if(FL.top!=null&&FL.bot!=null){
+    g.fillStyle='rgba(56,189,248,.10)';g.fillRect(0,Math.min(FL.top,FL.bot),W,Math.abs(FL.bot-FL.top));
+    const mp=vidMap(),G=vidFallGeom(mp,2);
+    if(G){
+      const s=1/G.sc,r0=G.rowY(0),r1=G.rowY(1),ya=G.y0,yb=G.y1+1,ex=(a,b,y)=>a+(b-a)*(y-r0)/(r1-r0);
+      for(let i=0;i<G.N;i++){
+        const k=i*2;if(G.XA[k]<0||G.XA[k+1]<0)continue;
+        const a0=G.XA[k]*s,a1=G.XA[k+1]*s,b0=(G.XB[k]+1)*s,b1=(G.XB[k+1]+1)*s;
+        g.fillStyle=mp[i].black?'rgba(240,171,252,.3)':'rgba(253,224,71,.2)';
+        g.beginPath();g.moveTo(ex(a0,a1,ya),ya);g.lineTo(ex(b0,b1,ya),ya);g.lineTo(ex(b0,b1,yb),yb);g.lineTo(ex(a0,a1,yb),yb);g.closePath();g.fill();
+      }
+    }
+  }
+  if(FL.top!=null)hl(FL.top,'#38bdf8');if(FL.bot!=null)hl(FL.bot,'#38bdf8');
+  if(VID.persp){const c=VID.cal;if(c[0]&&c[1]){g.strokeStyle='#fb923c';g.lineWidth=lw*2;g.beginPath();g.moveTo(c[0].x,c[0].y);g.lineTo(c[1].x,c[1].y);g.stroke();}}
+  else if(FL.hit!=null)hl(FL.hit,'#fb923c');
+}
 const vidLR=()=>clamp(+$('vLRm').value||1,.5,2);
-const vidSpreadK=()=>clamp(+$('vSpread').value||1,.9,1.1);
+const vidSpreadK=()=>clamp(+$('vSpread').value||1,.95,1.05);
 // Multiplies every point's horizontal distance from the middle of the keyboard.
 function vidSpread(map,k){
   if(!map||Math.abs(k-1)<1e-6||!map.length)return map;
@@ -3919,7 +4684,7 @@ function vidMap(){
 function vidMap0(){
   const {lo,hi}=vidRange(),c=VID.cal;if(c.some(v=>v==null))return null;
   const m=vidLR();
-  if(VID.persp)return vidKeyMapQuad(lo,hi,c,clamp(+$('vHW').value||85,50,98)/100,clamp(+$('vHB').value||30,5,60)/100,m);
+  if(VID.persp)return vidKeyMapQuad(lo,hi,c,clamp(+$('vHW').value||85,50,98)/100,clamp(+$('vHB').value||33,5,60)/100,m);
   const [xL,xR,yW,yB]=c;if(xR<=xL)return null;return vidKeyMap(lo,hi,xL,xR,yW,yB,m);
 }
 // The overlay canvas only holds the calibration marks. The video itself plays natively underneath, so playback stays smooth.
@@ -3940,7 +4705,8 @@ function vidDrawPreview(){
     if(yW!=null)line(0,yW,VID.vw,yW,'#fde047');if(yB!=null)line(0,yB,VID.vw,yB,'#f0abfc');
   }
   const m=vidMap();
-  if(m&&m.length>1){for(const k of m){const r=Math.max(2,k.w*.12);g.fillStyle=k.black?'#f0abfc':'#fde047';g.strokeStyle='#000';g.beginPath();g.arc(k.x,k.y,r,0,6.283);g.fill();g.stroke();}}
+  if(vidSrc()==='fall')vidDrawFall(g);
+  if(m&&m.length>1){g.lineWidth=Math.max(1,VID.vw/700);for(const k of m){const r=Math.max(2,k.w*.12);g.fillStyle=k.black?'#f0abfc':'#fde047';g.strokeStyle='#000';g.beginPath();g.arc(k.x,k.y,r,0,6.283);g.fill();g.stroke();}}
 }
 function vidSeek(t,v=VID.v){
   return new Promise(res=>{
@@ -3952,24 +4718,27 @@ function vidSeek(t,v=VID.v){
 }
 
 /* ---- remembering marks and settings ---- */
-const VOPT_IDS=['vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB'];
+const VOPT_IDS=['vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB','vSrc','vRows','vLaneW'];
 function vidSaveOpts(){const o={ver:3};for(const id of VOPT_IDS){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value;}try{localStorage.setItem('mc.vid.opts',JSON.stringify(o));}catch(e){}}
 function vidLoadOpts(){
   try{const o=JSON.parse(localStorage.getItem('mc.vid.opts'));if(o&&!(o.ver>=2)){o.vShow=true;if(o.vSpeed==='auto')o.vSpeed='direct';}
     // ver 3: flash ignoring and gap joining are off by default; saved values still at the old defaults move with them
     if(o&&!(o.ver>=3)){if(+o.vMin===50)o.vMin=0;if(+o.vGap===40)o.vGap=0;}
-    if(o)for(const id of VOPT_IDS){const e=$(id);if(e&&id in o){if(e.type==='checkbox')e.checked=!!o[id];else e.value=o[id];}}}catch(e){}
+    if(o)for(const id of VOPT_IDS){const e=$(id);if(e&&id in o){if(e.type==='checkbox')e.checked=!!o[id];else if(e.tagName!=='SELECT'||[...e.options].some(op=>op.value===String(o[id])))e.value=o[id];}}}catch(e){}   // a menu keeps its default for a value it no longer has
 }
 let vidOptTimer=0;const vidOptsSoon=()=>{clearTimeout(vidOptTimer);vidOptTimer=setTimeout(vidSaveOpts,400);};
 const vidCalKey=()=>'mc.vid.cal.'+VID.name+'.'+VID.size;
-function vidSaveCal(){try{localStorage.setItem(vidCalKey(),JSON.stringify({persp:VID.persp,cal:VID.cal,lo:+$('vLo').value,hi:+$('vHi').value,preset:$('vPreset').value}));}catch(e){}}
+function vidSaveCal(){try{localStorage.setItem(vidCalKey(),JSON.stringify({persp:VID.persp,cal:VID.cal,lo:+$('vLo').value,hi:+$('vHi').value,preset:$('vPreset').value,src:vidSrc(),fall:VID.fall}));}catch(e){}}
 function vidLoadCal(){
   try{
     const o=JSON.parse(localStorage.getItem(vidCalKey()));
     if(o&&Array.isArray(o.cal)&&o.cal.length===4){
       VID.persp=!!o.persp;$('vPersp').checked=VID.persp;$('vPerspOpts').hidden=!VID.persp;VID.cal=o.cal;
       if(o.lo)$('vLo').value=o.lo;if(o.hi)$('vHi').value=o.hi;if(o.preset)$('vPreset').value=o.preset;
-      const nx=VID.cal.findIndex(v=>v==null);VID.step=nx<0?4:nx;return true;
+      const nx=VID.cal.findIndex(v=>v==null);VID.step=nx<0?4:nx;
+      if(o.src)$('vSrc').value=o.src;
+      if(o.fall&&typeof o.fall==='object'){VID.fall={top:o.fall.top??null,bot:o.fall.bot??null,hit:o.fall.hit??null};const fx=vidFallVals().slice(0,vidFallSteps()).findIndex(v=>v==null);VID.fstep=fx<0?vidFallSteps():fx;}
+      return true;
     }
   }catch(e){}
   return false;
@@ -3998,7 +4767,7 @@ $('vFile').onchange=async e=>{
   if(VID.url)URL.revokeObjectURL(VID.url);
   VID.url=URL.createObjectURL(f);VID.file=f;VID.name=f.name.replace(/\.[^.]+$/,'');VID.size=f.size;
   $('vName').textContent=f.name;$('vName').title=f.name;$('vName').classList.add('set');$('vPick').textContent='Change video…';$('vInfoRow').hidden=false;
-  VID.samples=null;VID.times=null;VID.clusters=[];VID.notes=[];VID.cal=[null,null,null,null];VID.step=0;VID.stats=null;vidSyncRes();vidSetTab('pre');
+  VID.samples=null;VID.times=null;VID.fallData=null;VID.prof=null;VID.kind='keys';VID.fall={top:null,bot:null,hit:null};VID.fstep=0;VID.kbTop=null;vidCleared=null;vidSyncClearBtn();VID.clusters=[];VID.notes=[];VID.cal=[null,null,null,null];VID.step=0;VID.stats=null;vidSyncRes();vidSetTab('pre');
   $('vInfo').textContent='Loading…';$('vImport').disabled=true;$('vLayers').innerHTML='';$('vStats').textContent='';vidDrawResult();
   const v=VID.v;v.muted=true;v.setAttribute('playsinline','');PV.muted=true;
   try{
@@ -4013,13 +4782,42 @@ $('vFile').onchange=async e=>{
   if(restored)toast('Restored the keyboard marks you made for this video.');
   else vidAutoKeyboard(true);
 };
+// The scan-area line within reach of a point (10 screen pixels), for dragging it.
+const FKEYS=['top','bot','hit'];
+function vidFallLineAt(cv,clientY){
+  if(vidSrc()!=='fall'||VID.step<4||VID.fstep<vidFallSteps())return null;
+  const r=cv.getBoundingClientRect(),y=(clientY-r.top)/r.height*VID.vh;let best=null,bd=10*VID.vh/r.height;
+  for(let i=0;i<vidFallSteps();i++){const v=VID.fall[FKEYS[i]];if(v!=null&&Math.abs(v-y)<=bd){bd=Math.abs(v-y);best=FKEYS[i];}}
+  return best;
+}
 $('vCv').addEventListener('pointerdown',e=>{
-  if(!VID.vw||VID.step>3||VID.running)return;
-  const r=e.currentTarget.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*VID.vw,y=(e.clientY-r.top)/r.height*VID.vh;
-  VID.cal[VID.step]=VID.persp?{x:Math.round(x),y:Math.round(y)}:Math.round(VID.step<2?x:y);
-  const nx=VID.cal.findIndex(v=>v==null);VID.step=nx<0?4:nx;vidSyncSteps();vidDrawPreview();vidSaveCal();
+  if(!VID.vw||VID.running)return;
+  const cv=e.currentTarget,r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*VID.vw,y=(e.clientY-r.top)/r.height*VID.vh;
+  if(VID.step<=3){
+    VID.cal[VID.step]=VID.persp?{x:Math.round(x),y:Math.round(y)}:Math.round(VID.step<2?x:y);
+    const nx=VID.cal.findIndex(v=>v==null);VID.step=nx<0?4:nx;vidSyncSteps();vidDrawPreview();vidSaveCal();return;
+  }
+  if(vidSrc()!=='fall')return;
+  const fn=vidFallSteps();
+  if(VID.fstep<fn){
+    VID.fall[FKEYS[VID.fstep]]=clamp(Math.round(y),0,VID.vh-1);
+    const nx=vidFallVals().slice(0,fn).findIndex(v=>v==null);VID.fstep=nx<0?fn:nx;vidSyncSteps();vidDrawPreview();vidSaveCal();return;
+  }
+  const key=vidFallLineAt(cv,e.clientY);if(!key)return;
+  e.preventDefault();cv.setPointerCapture(e.pointerId);
+  cv.onpointermove=ev=>{VID.fall[key]=clamp(Math.round((ev.clientY-r.top)/r.height*VID.vh),0,VID.vh-1);vidDrawPreview();vidSyncBandUI();};
+  cv.onpointerup=cv.onpointercancel=()=>{cv.onpointermove=cv.onpointerup=cv.onpointercancel=null;vidSyncSteps();vidSaveCal();};
 });
+// a line that can be dragged shows the up/down cursor
+$('vCv').addEventListener('pointermove',e=>{if(!e.currentTarget.onpointermove)e.currentTarget.style.cursor=vidFallLineAt(e.currentTarget,e.clientY)?'ns-resize':'';});
 $('vSteps').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;VID.step=+b.dataset.step;vidSyncSteps();});
+$('vFSteps').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;VID.fstep=+b.dataset.fstep;if(VID.cal.every(v=>v!=null))VID.step=4;vidSyncSteps();});
+$('vSrc').onchange=()=>{
+  if(vidSrc()==='fall'&&vidFallVals().slice(0,vidFallSteps()).some(v=>v==null))vidAutoBand(true);
+  vidSyncSteps();vidDrawPreview();vidSaveCal();vidOptsSoon();
+};
+$('vBandAuto').onclick=()=>{if(!VID.vw){toast('Choose a video first.');return;}vidAutoBand(false);};
+for(const id of ['vRows','vLaneW'])$(id).addEventListener('input',()=>{vidDrawPreview();vidOptsSoon();});
 $('vPersp').onchange=e=>{VID.persp=e.target.checked;$('vPerspOpts').hidden=!VID.persp;VID.cal=[null,null,null,null];VID.step=0;vidSyncSteps();vidDrawPreview();vidSaveCal();};
 for(const id of ['vHW','vHB'])$(id).addEventListener('input',()=>vidDrawPreview());
 $('vSnapSides').onclick=()=>{
@@ -4035,7 +4833,14 @@ $('vSnapSides').onclick=()=>{
   vidSyncSteps();vidDrawPreview();vidSaveCal();vidOptsSoon();
   toast('The keyboard now reaches the left and right edges of the video.');
 };
-$('vCalReset').onclick=()=>{VID.cal=[null,null,null,null];VID.step=0;vidSyncSteps();vidDrawPreview();vidSaveCal();};
+// Clear marks can be taken back: until a new mark is made, the button reads Undo clear (and Ctrl+Z in the dialog does the same).
+const vidSyncClearBtn=()=>{$('vCalReset').textContent=vidCleared?'Undo clear':'Clear marks';};
+$('vCalReset').onclick=()=>{
+  if(vidCleared){const s=vidCleared;vidCleared=null;VID.cal=s.cal;VID.step=s.step;VID.fall=s.fall;VID.fstep=s.fstep;}
+  else{vidCleared={cal:VID.cal.slice(),step:VID.step,fall:{...VID.fall},fstep:VID.fstep};VID.cal=[null,null,null,null];VID.step=0;VID.fall={top:null,bot:null,hit:null};VID.fstep=0;}
+  vidSyncClearBtn();vidSyncSteps();vidDrawPreview();vidSaveCal();
+};
+vdlg.addEventListener('keydown',e=>{if(vidCleared&&(e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('vCalReset').click();}});
 $('vPreset').onchange=e=>{const r=VPRESETS[e.target.value];if(r){$('vLo').value=r[0];$('vHi').value=r[1];}vidSyncRangeUI();vidDrawPreview();vidSaveCal();};
 for(const id of ['vLo','vHi'])$(id).addEventListener('input',()=>{$('vPreset').value='custom';vidSyncRangeUI();vidDrawPreview();vidSaveCal();});
 $('vStartNow').onclick=()=>{$('vStart').value=Math.round(PV.currentTime*10)/10;};
@@ -4048,7 +4853,7 @@ function bindFloat(rg,nm,fn,dec=2){
   return v=>{rg.value=v;nm.value=f(v);};
 }
 const setLRUI=bindFloat($('vLRm'),$('vLRmN'),()=>{vidDrawPreview();vidOptsSoon();});
-const setSpreadUI=bindFloat($('vSpread'),$('vSpreadN'),()=>{vidDrawPreview();vidOptsSoon();},3);
+const setSpreadUI=bindFloat($('vSpread'),$('vSpreadN'),()=>{vidDrawPreview();vidOptsSoon();},4);
 
 /* ---- sampling frames ---- */
 let vidLastUI=0;
@@ -4094,7 +4899,7 @@ function vidPlaySample(o){
       }
       const minGap=.9*Math.max(native||0,1/fps);
       if(mt>=t0-.001&&mt-last>=minGap){
-        const out=new Uint8Array(N*3);grab(v,out,0);times.push(mt);cols.push(out);last=mt;
+        times.push(mt);cols.push(grab(v));last=mt;
         const step=Math.max(native||0,1/fps),exp=Math.max(1,Math.round((mt-times[0])/step)+1);
         vidTick(clamp((mt-t0)/(t1-t0),0,1),began,rate.toFixed(1)+'× · '+Math.min(100,Math.round(times.length/exp*100))+'% of frames');
       }
@@ -4124,6 +4929,49 @@ function mp4Description(mp4,track){
   return undefined;
 }
 const vidSleep=ms=>new Promise(r=>setTimeout(r,ms));
+// About n frames spread over t0..t1, decoded straight from the MP4 file, each passed to onFrame (and closed after).
+// Reaching an arbitrary moment means decoding from the keyframe before it, often seconds of video, so the frames are
+// taken right after the keyframes instead: from each keyframe in the range, a few frames a third of a second apart.
+// Times count from the file's first frame, as when the whole file is decoded.
+async function vidDecodeSpread(file,t0,t1,n,onFrame){
+  if(!file)throw new Error('the original file is not available');
+  if(!(window.VideoDecoder&&window.EncodedVideoChunk))throw new Error('this browser cannot decode video directly');
+  await loadMp4box();
+  const mp4=MP4Box.createFile();let info=null,fail=null;
+  mp4.onReady=i=>{info=i;};mp4.onError=()=>{fail=new Error('the file is not a readable MP4');};
+  for(let off=0,guard=0;!info&&!fail&&off<file.size&&guard<4000;guard++){
+    const buf=await file.slice(off,Math.min(file.size,off+(8<<20))).arrayBuffer();buf.fileStart=off;
+    const nx=mp4.appendBuffer(buf);off=(typeof nx==='number'&&nx>off)?nx:off+(8<<20);
+  }
+  const track=info&&info.videoTracks&&info.videoTracks[0];if(fail||!track)throw fail||new Error('no video track');
+  const cfg={codec:track.codec,codedWidth:track.video.width,codedHeight:track.video.height},desc=mp4Description(mp4,track);if(desc)cfg.description=desc;
+  if(!(await VideoDecoder.isConfigSupported(cfg)).supported)throw new Error('this browser cannot decode '+track.codec+' directly');
+  const S=mp4.getTrackSamplesInfo(track.id),sec=s=>s.cts/s.timescale;let base=1e9;for(const s of S)base=Math.min(base,sec(s));
+  const keys=[];S.forEach((s,i)=>{if(s.is_sync)keys.push(i);});
+  // the keyframe groups that reach into the range
+  const groups=[];
+  keys.forEach((k,g)=>{const a=sec(S[k])-base,b=g+1<keys.length?sec(S[keys[g+1]])-base:1e9;if(b>t0&&a<t1)groups.push({k,end:g+1<keys.length?keys[g+1]:S.length,a:Math.max(a,t0),b:Math.min(b,t1)});});
+  if(!groups.length)throw new Error('no keyframes in the range');
+  const per=Math.ceil(n/groups.length);
+  let want=[],got=0;
+  const dec=new VideoDecoder({output:fr=>{try{const t=fr.timestamp/1e6-base;if(want.length&&t>=want[0]-.001&&got<n){while(want.length&&t>=want[0]-.001)want.shift();onFrame(fr);got++;}}finally{fr.close();}},error:e=>{fail=fail||e;}});
+  dec.configure(cfg);
+  for(const gr of groups){
+    if(VID.cancel)break;
+    const step=Math.min(1/3,(gr.b-gr.a)/per);want=[];for(let m=0;m<per;m++)want.push(gr.a+m*step);
+    const last=want[want.length-1]+.2;let e=gr.k;while(e<gr.end&&S[e].dts/S[e].timescale-base<=last)e++;
+    if(e===gr.k)e=gr.k+1;
+    // the samples of this stretch lie together in the file: one read
+    let lo=Infinity,hi=0;for(let i=gr.k;i<e;i++){lo=Math.min(lo,S[i].offset);hi=Math.max(hi,S[i].offset+S[i].size);}
+    const bytes=new Uint8Array(await file.slice(lo,hi).arrayBuffer());
+    for(let i=gr.k;i<e;i++){const s=S[i];dec.decode(new EncodedVideoChunk({type:i===gr.k?'key':'delta',timestamp:Math.round(s.cts*1e6/s.timescale),duration:Math.round(s.duration*1e6/s.timescale),data:bytes.subarray(s.offset-lo,s.offset-lo+s.size)}));}
+    await dec.flush();if(fail)break;
+  }
+  try{dec.close();}catch(e){}
+  if(VID.cancel)throw new Error('cancelled');
+  if(fail)throw fail;
+  return got;
+}
 async function vidDecodeSample(o){
   const {file,t0,t1,fps,N,grab,began}=o;
   if(!file)throw new Error('the original file is not available');
@@ -4148,30 +4996,39 @@ async function vidDecodeSample(o){
   const desc=mp4Description(mp4,track);if(desc)cfg.description=desc;
   const sup=await VideoDecoder.isConfigSupported(cfg);
   if(!sup.supported)throw new Error('this browser cannot decode '+track.codec+' directly');
+  // Times count from the file's first frame (from its index), and decoding starts at the keyframe before t0 rather than
+  // at the start of the file.
+  let baseUs=null;try{for(const s of mp4.getTrackSamplesInfo(track.id)){const u=Math.round(s.cts*1e6/s.timescale);if(baseUs==null||u<baseUs)baseUs=u;}}catch(e){}
+  // pool: frames handed to workers that read and analyze them (see vidFallPool); otherwise grab does it here
+  const pool=o.pool;
   const onFrame=frame=>{
+    let handed=false;
     try{
       if(stop)return;
-      if(firstTs==null)firstTs=frame.timestamp;
+      if(firstTs==null)firstTs=baseUs!=null?baseUs:frame.timestamp;
       const mt=(frame.timestamp-firstTs)/1e6;
       if(mt>=t1){stop=true;return;}
       if(mt<t0-.001)return;
       if(prevT!=null&&mt>prevT)deltas.push(mt-prevT);
       prevT=mt;
       if(mt-last>=.9/fps){
-        const out=new Uint8Array(N*3);grab(frame,out,0);times.push(mt);cols.push(out);last=mt;
+        times.push(mt);last=mt;
+        if(!pool)cols.push(grab(frame));
         const el=(performance.now()-began)/1000;
         VID.src=frame;try{vidTick(clamp((mt-t0)/(t1-t0),0,1),began,'reading the file directly · '+Math.round(times.length/Math.max(.1,el))+' frames/s');}finally{VID.src=null;}
+        if(pool){cols.push(null);pool.post(frame,times.length-1);handed=true;}
       }
-    }finally{frame.close();}
+    }finally{if(!handed)frame.close();}
   };
   decoder=new VideoDecoder({output:onFrame,error:e=>{fail=fail||new Error('decoding failed: '+e.message);}});
   decoder.configure(cfg);
   mp4.setExtractionOptions(track.id,null,{nbSamples:300});
-  const sk=mp4.seek(0,true);if(sk&&typeof sk.offset==='number')offset=sk.offset;
+  const sk=mp4.seek(baseUs!=null?Math.max(0,t0+baseUs/1e6):0,true);if(sk&&typeof sk.offset==='number')offset=sk.offset;
   mp4.start();
   const drain=async()=>{
     while(queue.length&&!stop&&!fail&&!VID.cancel){
-      if(decoder.decodeQueueSize>12){await vidSleep(1);continue;}
+      if(pool&&pool.failed())fail=pool.failed();
+      if(decoder.decodeQueueSize>12||(pool&&pool.busy())){await vidSleep(1);continue;}
       const s=queue.shift();lastNum=s.number;
       decoder.decode(new EncodedVideoChunk({type:s.is_sync?'key':'delta',timestamp:Math.round(s.cts*1e6/s.timescale),duration:Math.round(s.duration*1e6/s.timescale),data:s.data}));
     }
@@ -4183,23 +5040,41 @@ async function vidDecodeSample(o){
   await drain();
   if(!VID.cancel&&!fail&&!stop){try{await decoder.flush();}catch(e){fail=fail||new Error('decoding failed: '+e.message);}}
   try{decoder.close();}catch(e){}
+  if(pool&&!fail&&!VID.cancel){try{const res=await pool.finish();res.forEach((s,i)=>{cols[i]=s;});}catch(e){fail=e;}}
   if(fail)throw fail;
   if(VID.cancel)throw new Error('cancelled');
   if(times.length<2)throw new Error('no frames could be read');
   deltas.sort((a,b)=>a-b);const native=deltas.length?deltas[deltas.length>>1]:1/fps,step=Math.max(native,1/fps),span=times[times.length-1]-times[0],expected=Math.max(times.length,Math.round(span/step)+1);
   return{times,cols,stats:{frames:times.length,expected,coverage:Math.min(1,times.length/expected),avgRate:null,native,secs:(performance.now()-began)/1000,direct:true}};
 }
-function vidMakeGrab(map){
-  const vw=VID.vw,vh=VID.vh,oc=document.createElement('canvas'),og=oc.getContext('2d',{willReadFrequently:true});
-  let grab;
+// Where the keys are read on a frame (plain data, so the background threads can read them too), and the reading itself:
+// og is a canvas of K.w × K.h. With prof, the black keys are also read higher and lower on the key (see vidKeysGlow),
+// and a frame's reading holds the marked height, then the higher, then the lower one.
+function vidKeySpec(map,prof){
+  const vw=VID.vw,vh=VID.vh,pick=mp=>mp.map(k=>({x:k.x,y:k.y,r:k.r,black:k.black}));
   if(VID.persp){
-    const bb=vidBBox(map,vw,vh);oc.width=bb.bw;oc.height=bb.bh;
-    grab=(src,out,off)=>{og.drawImage(src,bb.bx,bb.by,bb.bw,bb.bh,0,0,bb.bw,bb.bh);vidSamplePoints(og.getImageData(0,0,bb.bw,bb.bh).data,bb.bw,bb.bh,map,bb.bx,bb.by,out,off);};
-  }else{
-    const yw=clamp(Math.round(VID.cal[2]),1,vh-2),yb=clamp(Math.round(VID.cal[3]),1,vh-2);oc.width=vw;oc.height=6;
-    grab=(src,out,off)=>{og.drawImage(src,0,yw-1,vw,3,0,0,vw,3);og.drawImage(src,0,yb-1,vw,3,0,3,vw,3);vidSampleStrip(og.getImageData(0,0,vw,6).data,map,vw,out,off);};
+    const maps=[map];
+    if(prof){const {lo,hi}=vidRange(),vW=clamp(+$('vHW').value||85,50,98)/100,vB=clamp(+$('vHB').value||33,5,60)/100;for(const v of [vB*.5,Math.min(.95,vB*1.5)])maps.push(vidSpread(vidKeyMapQuad(lo,hi,VID.cal,vW,v,vidLR()),vidSpreadK()));}
+    const bb=vidBBox(maps.flat(),vw,vh);return{persp:true,bb,map:pick(map),maps:maps.map(pick),vw,w:bb.bw,h:bb.bh};
   }
-  return grab;
+  const yw=clamp(Math.round(VID.cal[2]),1,vh-2),yb=clamp(Math.round(VID.cal[3]),1,vh-2),d=Math.max(2,Math.round(.25*Math.abs(yw-yb)));
+  return{persp:false,yw,yb,rows:prof?[yw,yb,clamp(yb-d,1,vh-2),clamp(yb+d,1,vh-2)]:[yw,yb],map:pick(map),vw,w:vw,h:prof?12:6};
+}
+function vidKeyRead(K,og,src){
+  const N=K.map.length;
+  if(K.persp){
+    const bb=K.bb,out=new Uint8Array(N*3*K.maps.length);og.drawImage(src,bb.bx,bb.by,bb.bw,bb.bh,0,0,bb.bw,bb.bh);
+    const d=og.getImageData(0,0,bb.bw,bb.bh).data;K.maps.forEach((mp,k)=>vidSamplePoints(d,bb.bw,bb.bh,mp,bb.bx,bb.by,out,k*N*3));return out;
+  }
+  const out=new Uint8Array(N*3*(K.rows.length-1));K.rows.forEach((y,k)=>og.drawImage(src,0,y-1,K.vw,3,0,k*3,K.vw,3));
+  const d=og.getImageData(0,0,K.vw,K.rows.length*3).data;vidSampleStrip(d,K.map,K.vw,out,0);
+  for(let k=2;k<K.rows.length;k++)vidSampleStrip(d,K.map,K.vw,out,(k-1)*N*3,k*3,k*3);
+  return out;
+}
+function vidMakeGrab(map,prof){
+  const K=vidKeySpec(map,prof),oc=document.createElement('canvas');oc.width=K.w;oc.height=K.h;
+  const og=oc.getContext('2d',{willReadFrequently:true});
+  return src=>vidKeyRead(K,og,src);
 }
 async function vidAnalyze(){
   if(VID.running||!VID.vw)return;
@@ -4210,31 +5085,70 @@ async function vidAnalyze(){
   const t0=clamp(+$('vStart').value||0,0,dur),t1=clamp(+$('vEnd').value||dur,0,dur);
   if(t1<=t0+.1){toast('The end time must be after the start time.');return;}
   if((t1-t0)*Math.max(fps,60)>90000){toast('That range is too long. Pick a shorter range or fewer samples per second.');return;}
-  const grab=vidMakeGrab(map);
-  const resume=PV.currentTime,began=performance.now();let times=null,cols=null,F=0,stats=null;
+  const fall=vidSrc()==='fall',G=fall?vidFallGeom(map):null;
+  if(fall&&!G){toast('Mark the scan area first (step 2).');return;}
+  let grab=fall?null:vidMakeGrab(map,true),fd=null,pool=null;
+  // Notes are seen in the scan area before they land, so for the notes landing at the start of the range the frames
+  // from a little earlier are read too: as long as the slowest usual notes (150 pixels a second) take to fall from the
+  // top of the scan area to the keys.
+  let pre=0;if(fall){for(let i=0;i<N;i++)pre=Math.max(pre,Math.abs(G.sK[i]-G.sA[i]));pre=clamp(pre/150,.5,4);}
+  const rs=Math.max(0,t0-pre);
+  const resume=PV.currentTime,began=performance.now();let times=null,cols=null,prof=null,F=0,stats=null;
   PV.pause();v.pause();VID.running=true;VID.cancel=false;
   $('vAnalyze').disabled=true;$('vCancel').hidden=false;$('vProg').hidden=false;$('vProg').value=0;
   try{
+    if(fall){
+      // the background of the scan area first, from frames spread over the range
+      // the keys are read too: whether a key lights up settles which of two neighbors a note belongs to
+      vidFallKeys(G,map);
+      const read=vidFallReader(G);
+      const bg=await vidFallLearnBg(G,read,map,t0,t1,f=>{$('vProg').value=f*100;$('vHint').textContent='Learning the background of the scan area… '+Math.round(f*100)+'%';},mode==='direct');
+      grab=src=>{const d=read(src);return{s:vidFallFrame(G,bg,vidFallView(G,d)),k:vidFallKeyRead(G,d)};};
+      // reading the file directly: frames are read and analyzed on background threads while decoding goes on
+      if(mode==='direct')pool=vidFallPool(G,bg,clamp((navigator.hardwareConcurrency||4)-1,1,4));
+    }
     let r=null,m2=mode;
     if(m2==='direct'){
-      try{r=await vidDecodeSample({file:VID.file,t0,t1,fps,N,grab,began});}
-      catch(e){if(VID.cancel)throw e;toast('Reading the file directly is not possible here ('+e.message+'). Playing the video instead.');m2='auto';}
+      try{
+        try{r=await vidDecodeSample({file:VID.file,t0:rs,t1,fps,N,grab,began,pool});}
+        // background threads that failed: the same again on this page
+        catch(e){if(VID.cancel||!pool||!pool.failed())throw e;pool.close();pool=null;r=await vidDecodeSample({file:VID.file,t0:rs,t1,fps,N,grab,began});}
+      }catch(e){if(VID.cancel)throw e;toast('Reading the file directly is not possible here ('+e.message+'). Playing the video instead.');m2='auto';}
     }
     if(!r&&m2==='seek'){
-      const n=Math.floor((t1-t0)*fps),tt=[],cc=[];
-      for(let f=0;f<n;f++){if(VID.cancel)break;await vidSeek(t0+f/fps);const out=new Uint8Array(N*3);grab(v,out,0);tt.push(t0+f/fps);cc.push(out);vidTick(f/n,began,'frame by frame');}
+      const n=Math.floor((t1-rs)*fps),tt=[],cc=[];
+      for(let f=0;f<n;f++){if(VID.cancel)break;await vidSeek(rs+f/fps);tt.push(rs+f/fps);cc.push(grab(v));vidTick(f/n,began,'frame by frame');}
       r={times:tt,cols:cc,stats:{frames:n,expected:n,coverage:1,avgRate:null,native:null,secs:(performance.now()-began)/1000}};
     }else if(!r){
-      r=await vidPlaySample({v,t0,t1,fps,mode:m2,N,grab,began});
+      r=await vidPlaySample({v,t0:rs,t1,fps,mode:m2,N,grab,began});
     }
     if(!VID.cancel){
       F=r.times.length;if(F<2)throw new Error('No frames could be read. Try the Exact speed.');
-      times=Float64Array.from(r.times);cols=new Uint8Array(F*N*3);r.cols.forEach((c,i)=>cols.set(c,i*N*3));stats=r.stats;
+      times=Float64Array.from(r.times);stats=r.stats;
+      if(fall){
+        // every frame's note stretches in one block, with where each frame's part begins
+        let tot=0;for(const c of r.cols)tot+=c.s.length;
+        const segs=new Float32Array(tot),off=new Uint32Array(F+1),kb=new Uint8Array(F*N*3);let q=0;
+        r.cols.forEach((c,i)=>{off[i]=q;segs.set(c.s,q);q+=c.s.length;kb.set(c.k,i*N*3);});off[F]=q;
+        let band=0;for(let i=0;i<N;i++)band=Math.max(band,Math.abs(G.sB[i]-G.sA[i]));
+        const sp=vidFallSpeed(segs,off,times,F,band);
+        if(!sp)throw new Error('the notes do not seem to move through the scan area. Check that it sits where the notes fall, above the keys.');
+        // a speed that changes along the way has to keep its direction up to the keys
+        if(sp.a){for(let i=0;i<N;i++)for(const s of [G.sA[i],G.sB[i],G.sK[i]])if((sp.v0+sp.a*s)*sp.v0<=0)sp.a=0;}
+        fd={segs,off,times,F,N,sK:G.sK,sA:G.sA,sB:G.sB,p:map.map(m=>m.p),black:map.map(m=>m.black),v0:sp.v0,a:sp.a,band,rng:[t0,t1],kb};
+        cols=segs;
+      }else{
+        // the colors at the marked heights, and the black keys higher and lower on the key (for vidKeysGlow)
+        cols=new Uint8Array(F*N*3);prof=[new Uint8Array(F*N*3),new Uint8Array(F*N*3)];
+        r.cols.forEach((c,i)=>{cols.set(c.subarray(0,N*3),i*N*3);if(c.length>=N*9){prof[0].set(c.subarray(N*3,N*6),i*N*3);prof[1].set(c.subarray(N*6,N*9),i*N*3);}});
+      }
     }
   }catch(err){if(err.message!=='cancelled')toast('Analysis stopped: '+err.message);VID.cancel=true;}
+  if(pool)pool.close();
   VID.running=false;v.playbackRate=1;$('vAnalyze').disabled=false;$('vCancel').hidden=true;$('vProg').hidden=true;
   PV.currentTime=resume;vidDrawPreview();vidSyncSteps();
   if(VID.cancel||!cols){if(VID.cancel)toast('Analysis cancelled');return;}
+  VID.kind=fall?'fall':'keys';VID.fallData=fd;VID.prof=prof;
   VID.samples=cols;VID.times=times;VID.F=F;VID.t0=t0;VID.map=map;VID.stats=stats;vidSaveOpts();vidRedetect();vidSetTab('res');
   toast('Analysis took '+Math.round((performance.now()-began)/1000)+' s');
 }
@@ -4263,8 +5177,39 @@ function vidFindKeyboard(img){
   if(wtop-top<Math.max(3,H*.01))return null;
   // count the black keys (each one starts a dark stretch) halfway down the black-key rows
   let blacks=0;{const r=Math.round(top+.4*(wtop-top));let t=0,prev=1;for(let x=xL;x<xR;x++){const br=L[r*W+x]>=TH?1:0;if(prev&&!br)t++;prev=br;}blacks=t;}
+  // the black keys are read near their middle: some videos fade a lit black key out quickly toward its bottom
   const wl=wbot-wtop;
-  return{xL,xR,top,wtop,wbot,yW:Math.round(wtop+.7*wl),yB:Math.round(top+.8*(wtop-top)),blacks};
+  return{xL,xR,top,wtop,wbot,yW:Math.round(wtop+.7*wl),yB:Math.round(top+.5*(wtop-top)),blacks,keys:vidKeyNames(L,W,xL,xR,top,wtop,wbot)};
+}
+// Which keys a keyboard shows, also when it is cut off at any key: the white keys are counted from the thin dark lines
+// between them, and their names follow from where the black keys sit (two, then three, in every octave). The octave
+// is the one that puts the middle of the keyboard nearest middle C, which is where every usual size sits.
+// Returns {lo,hi,whites} or null when the pattern is unclear.
+function vidKeyNames(L,W,xL,xR,top,wtop,wbot){
+  const ry=Math.round(wtop+.6*(wbot-wtop)),by=Math.round(top+.5*(wtop-top));
+  // the lines between white keys: narrow dips in brightness
+  const lines=[];
+  for(let x=xL+3;x<xR-3;x++){const v=L[ry*W+x],a=L[ry*W+x-3],b=L[ry*W+x+3];if(v<a-30&&v<b-30&&v<=L[ry*W+x-1]&&v<=L[ry*W+x+1]&&(!lines.length||x-lines[lines.length-1]>3))lines.push(x);}
+  if(lines.length<6)return null;
+  const sp=[];for(let i=1;i<lines.length;i++)sp.push(lines[i]-lines[i-1]);sp.sort((a,b)=>a-b);
+  // the key width to a fraction of a pixel (small videos have keys only a dozen pixels wide): a straight line through
+  // every line's position against its key count from the first
+  const w0=sp[sp.length>>1];let sx=0,sy=0,sxx=0,sxy=0,i=0;
+  // counted from line to line (a gap twice as wide is a line that was missed), so rounding does not add up
+  lines.forEach((x,j)=>{if(j)i+=Math.max(1,Math.round((x-lines[j-1])/w0));sx+=i;sy+=x;sxx+=i*i;sxy+=i*x;});
+  const m=lines.length,den=m*sxx-sx*sx,w=den>0?(m*sxy-sx*sy)/den:w0,n=Math.round((xR-xL)/w);if(n<7||n>60)return null;
+  const kw=(xR-xL)/n;
+  // black keys: dark stretches at least a third of a white key wide, halfway down the black keys
+  const bc=[];for(let x=xL,s=-1;x<=xR;x++){const d=x<xR&&L[by*W+x]<100;if(d&&s<0)s=x;if(!d&&s>=0){if(x-s>=kw*.3)bc.push((s+x)/2);s=-1;}}
+  const has=[];for(let k=1;k<n;k++){const xb=xL+k*kw;has.push(bc.some(c=>Math.abs(c-xb)<kw*.35)?1:0);}
+  // black key after each white key, from C: C# D# - F# G# A# -
+  const P=[1,1,0,1,1,1,0];let best=-1,bs=-1;
+  for(let s=0;s<7;s++){let sc=0;for(let k=0;k<has.length;k++)if(has[k]===P[(s+k)%7])sc++;if(sc>bs){bs=sc;best=s;}}
+  if(bs<.9*has.length)return null;
+  const WS=[0,2,4,5,7,9,11],span=k=>{let st=0;for(let j=0;j<k;j++){const l=(best+j)%7;st+=l===2||l===6?1:2;}return st;};
+  let lo=null,bd=1e9;
+  for(let o=-1;o<=9;o++){const l=12*(o+1)+WS[best],h=l+span(n-1);if(l<0||h>127)continue;const d=Math.abs((l+h)/2-63);if(d<bd){bd=d;lo=l;}}
+  return lo==null?null:{lo,hi:lo+span(n-1),whites:n,lines};
 }
 async function vidAutoKeyboard(quiet){
   if(!VID.vw||VID.running)return false;
@@ -4281,17 +5226,46 @@ async function vidAutoKeyboard(quiet){
   const k=found,X=x=>Math.round(x/sc),Y=y=>Math.round(y/sc);
   if(VID.persp)VID.cal=[{x:X(k.xL),y:Y(k.top)},{x:X(k.xR),y:Y(k.top)},{x:X(k.xR),y:Y(k.wbot)},{x:X(k.xL),y:Y(k.wbot)}];
   else VID.cal=[X(k.xL),X(k.xR),Y(k.yW),Y(k.yB)];
+  VID.kbTop=Y(k.top);
   let size='';
-  for(const key in VPRESETS){const r=VPRESETS[key];let bl=0;for(let q=r[0];q<=r[1];q++)if(isBlack(q))bl++;if(Math.abs(bl-k.blacks)>1)continue;$('vPreset').value=key;if(r){$('vLo').value=r[0];$('vHi').value=r[1];size=' ('+key+' keys)';break;}}
-  vidSyncRangeUI();VID.step=4;vidSyncSteps();vidDrawPreview();vidSaveCal();
+  if(k.keys){
+    const {lo,hi}=k.keys;$('vLo').value=lo;$('vHi').value=hi;
+    $('vPreset').value=Object.keys(VPRESETS).find(key=>VPRESETS[key][0]===lo&&VPRESETS[key][1]===hi)||'custom';
+    size=' ('+(hi-lo+1)+' keys, '+noteName(lo)+' to '+noteName(hi)+')';
+  }
+  else for(const key in VPRESETS){const r=VPRESETS[key];let bl=0;for(let q=r[0];q<=r[1];q++)if(isBlack(q))bl++;if(Math.abs(bl-k.blacks)>1)continue;$('vPreset').value=key;if(r){$('vLo').value=r[0];$('vHi').value=r[1];size=' ('+key+' keys)';break;}}
+  // the size stays unknown: the full keyboard, not whatever the last video had, and a word to check it
+  if(!size){$('vPreset').value='88';$('vLo').value=21;$('vHi').value=108;size=' (its size is unclear, so 88 keys is set: check the lowest and highest key)';}
+  vidSyncRangeUI();
+  // The horizontal spread that puts the lines between the white keys where the video shows them: each spread is tried,
+  // and the one where the lines sit closest to the marks' white-key edges (median distance) is used.
+  setSpreadUI(1);
+  if(k.keys&&k.keys.lines&&!VID.persp){
+    const m0=vidMap0(),{lo,hi}=vidRange();
+    if(m0&&m0.length>1){
+      const [xL,xR]=VID.cal,k0=KG.x0[lo],span=KG.x1[hi]-k0,lr=vidLR(),mid=(m0[0].x+m0[m0.length-1].x)/2;
+      const edges=[];for(let p=lo+1;p<=hi;p++)if(!isBlack(p))edges.push(xL+(xR-xL)*vidWarp((KG.x0[p]-k0)/span,lr));
+      const seen=k.keys.lines.map(x=>x/sc);
+      const score=K=>{const e=edges.map(x=>mid+(x-mid)*K),d=seen.map(x=>{let b=1e9;for(const y of e)b=Math.min(b,Math.abs(x-y));return b;}).sort((a,b)=>a-b);return d[d.length>>1];};
+      let best=1,bs=score(1);
+      for(let K=.95;K<=1.0501;K+=.0025){const s=score(K);if(s<bs-.05){bs=s;best=Math.round(K*400)/400;}}
+      if(best!==1&&bs<.8*score(1))setSpreadUI(best);
+    }
+  }
+  vidOptsSoon();
+  VID.step=4;vidSyncSteps();vidDrawPreview();vidSaveCal();
+  if(vidSrc()==='fall'&&vidFallVals().slice(0,vidFallSteps()).some(v=>v==null))vidAutoBand(true);
   toast('Found the keyboard'+size+'. Check that the dots sit on the keys.');
   return true;
 }
 $('vAuto').onclick=()=>vidAutoKeyboard(false);
 
 /* ---- finding where the music starts and ends ---- */
-// Learns each key's resting color from a few frames spread over the video, then searches for the first lit keys from the start
-// and the last from the end, one frame per second. Fades and flashes of the whole screen are removed the same way as in the analysis.
+// Learns each key's resting color from a few frames spread over the video (straight from the MP4 file when it can be
+// read, else by seeking), then searches for the first lit keys from the start and the last from the end, one frame per
+// second, and narrows both down to a quarter of a second. Fades and flashes of the whole screen are removed the same
+// way as in the analysis, and a frame where the whole keyboard changed a lot (a title card or picture over it, a fade)
+// is not music.
 async function vidScanRange(){
   if(VID.running||!VID.vw)return;
   const map=vidMap();if(!map){toast('Mark the keyboard first.');return;}
@@ -4300,22 +5274,24 @@ async function vidScanRange(){
   PV.pause();v.pause();VID.running=true;VID.cancel=false;
   $('vAnalyze').disabled=true;$('vScan').disabled=true;$('vCancel').hidden=false;$('vProg').hidden=false;$('vProg').value=0;
   const began=performance.now();let res=null;
-  const frame=async t=>{await vidSeek(clamp(t,0,dur-.05),v);const out=new Uint8Array(N*3);grab(v,out,0);return out;};
+  const frame=async t=>{await vidSeek(clamp(t,0,dur-.05),v);return grab(v);};
   try{
-    const nb=clamp(Math.round(dur/3),20,30),cols=new Uint8Array(nb*N*3);
-    for(let k=0;k<nb;k++){if(VID.cancel)throw new Error('cancelled');cols.set(await frame((k+.5)/nb*dur),k*N*3);$('vProg').value=k/nb*30;$('vHint').textContent='Learning the key colors…';}
+    const nb=clamp(Math.round(dur/3),20,30),cols=new Uint8Array(nb*N*3);let k=0;
+    $('vHint').textContent='Learning the key colors…';
+    if($('vSpeed').value==='direct')try{await vidDecodeSpread(VID.file,0,dur,nb,fr=>{if(k<nb){cols.set(grab(fr),k*N*3);k++;$('vProg').value=k/nb*30;}});}catch(e){if(VID.cancel)throw e;k=0;}
+    for(;k<nb;k++){if(VID.cancel)throw new Error('cancelled');cols.set(await frame((k+.5)/nb*dur),k*N*3);$('vProg').value=k/nb*30;}
     // leave out frames that are much brighter or darker overall than usual (fades, flashes), so they do not become the "resting" color
     const lum=[];for(let k=0;k<nb;k++){let q=0;for(let j=0;j<N*3;j++)q+=cols[k*N*3+j];lum.push(q/(N*3));}
     const ml=[...lum].sort((a,b)=>a-b)[nb>>1],keep=[];lum.forEach((l,k)=>{if(Math.abs(l-ml)<=Math.max(12,ml*.12))keep.push(k);});
     const kc=new Uint8Array(keep.length*N*3);keep.forEach((k,j)=>kc.set(cols.subarray(k*N*3,(k+1)*N*3),j*N*3));
-    const bg=vidMedBg(kc,keep.length,N),grp=vidGroups(map),scr=new Float32Array(N),row=new Float32Array(N);
+    const bg=vidMedBg(kc,keep.length,N,map),grp=vidGroups(map),scr=new Float32Array(N),row=new Float32Array(N);
     const thr=140-1.2*(+$('vSens').value),mk=Math.max(0,Math.round(+$('vMaxKeys').value||0)),cache=new Map();
     const lit=async t=>{
-      t=Math.round(t);if(cache.has(t))return cache.get(t);
+      t=Math.round(t*4)/4;if(cache.has(t))return cache.get(t);
       if(VID.cancel)throw new Error('cancelled');
-      const out=await frame(t);vidFrameDist(out,0,N,map,bg,grp,true,scr,row);
+      const out=await frame(t),big=vidFrameDist(out,0,N,map,bg,grp,true,scr,row);
       let c=0;for(let i=0;i<N;i++)if(row[i]>=thr)c++;
-      const ok=c>=1&&(!mk||c<=mk);cache.set(t,ok);return ok;
+      const ok=big<50&&c>=1&&(!mk||c<=mk);cache.set(t,ok);return ok;
     };
     // a hit counts when another lit frame follows within 3 seconds, so a stray flicker does not
     const hit=async(t,dir)=>{if(!await lit(t))return false;for(let k=1;k<=3;k++){const u=t+dir*k;if(u<0||u>dur)break;if(await lit(u))return true;}return false;};
@@ -4324,6 +5300,10 @@ async function vidScanRange(){
     if(first>=0){
       for(let t=Math.floor(dur-.5);t>=first;t--){$('vProg').value=65+(dur-t)/dur*35;$('vHint').textContent='Looking for the last notes… '+fmtT(t);if(await hit(t,-1)){last=t;break;}}
       if(last<0)last=first;
+      // to a quarter of a second: the earliest lit moment in the second before, the latest in the second after
+      for(let u=first-.25;u>first-1&&u>=0;u-=.25){if(!await lit(u))break;first=u;}
+      for(let u=last+.25;u<last+1&&u<dur;u+=.25){if(!await lit(u))break;last=u;}
+      // room on both sides: a last chord can fade out with the video, so it no longer counts as lit
       res={s:Math.max(0,first-1.5),e:Math.min(dur,last+3)};
     }
   }catch(e){if(e.message!=='cancelled')toast('Scan stopped: '+e.message);VID.cancel=true;}
@@ -4357,21 +5337,22 @@ function vidWkFail(){
 function vidWorker(){
   if(!vidWkOk)return null;if(vidWk)return vidWk;
   try{
-    const src='const VID_CACHE=new WeakMap();'+vidFade.toString()+';'+vidRetrig.toString()+';'+vidFadedGaps.toString()+';'+vidMedBg.toString()+';'+vidGroups.toString()+';'+vidFrameDist.toString()+';'+vidBase.toString()+';'+vidDetect.toString()+
-      ';let cur=null;onmessage=function(e){var d=e.data;if(d.type==="set"){cur=d;return;}try{postMessage({req:d.req,notes:vidDetect(cur.samples,cur.times,cur.F,cur.map,d.o)});}catch(err){postMessage({req:d.req,error:String(err)});}};';
+    const src='const VID_CACHE=new WeakMap();'+vidFade.toString()+';'+vidRetrig.toString()+';'+vidFadedGaps.toString()+';'+vidMedBg.toString()+';'+vidGroups.toString()+';'+vidFrameDist.toString()+';'+vidBase.toString()+';'+vidDetect.toString()+';'+vidKeysGlow.toString()+';'+vidDetectFall.toString()+';'+vidKeyWitness.toString()+
+      ';let cur=null;onmessage=function(e){var d=e.data;if(d.type==="set"){cur=d;return;}try{var r=cur.kind==="fall"?vidDetectFall(cur.d,d.o):vidDetect(cur.samples,cur.times,cur.F,cur.map,d.o,cur.prof);postMessage({req:d.req,notes:r,kw:r.kw});}catch(err){postMessage({req:d.req,error:String(err)});}};';
     const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
     const w=new Worker(url);
-    w.onmessage=e=>{vidWkAlive=true;const fn=vidPend.get(e.data.req);if(fn){vidPend.delete(e.data.req);fn(e.data.error?null:e.data.notes);}};
+    // what the keys below did (vidKeyWitness) travels beside the notes and is put back on them
+    w.onmessage=e=>{vidWkAlive=true;const fn=vidPend.get(e.data.req);if(fn){vidPend.delete(e.data.req);fn(e.data.error?null:Object.assign(e.data.notes,{kw:e.data.kw}));}};
     w.onerror=()=>vidWkFail();
     vidWk=w;return w;
   }catch(e){vidWkOk=false;return null;}
 }
 function vidDetectAsync(o){
-  const sync=()=>vidDetect(VID.samples,VID.times,VID.F,VID.map,o);
+  const sync=()=>VID.kind==='fall'?vidDetectFall(VID.fallData,o):vidDetect(VID.samples,VID.times,VID.F,VID.map,o,VID.prof);
   return new Promise(res=>{
     const w=vidWorker();if(!w){res(sync());return;}
     try{
-      if(vidWkSet!==VID.samples){w.postMessage({type:'set',samples:VID.samples,times:VID.times,F:VID.F,map:VID.map.map(m=>({p:m.p,black:m.black}))});vidWkSet=VID.samples;}
+      if(vidWkSet!==VID.samples){w.postMessage(VID.kind==='fall'?{type:'set',kind:'fall',d:VID.fallData}:{type:'set',samples:VID.samples,times:VID.times,F:VID.F,map:VID.map.map(m=>({p:m.p,black:m.black})),prof:VID.prof});vidWkSet=VID.samples;}
       const req=++vidReq;let timer=0;
       vidPend.set(req,notes=>{clearTimeout(timer);res(notes||sync());});
       w.postMessage({type:'detect',req,o});
@@ -4403,6 +5384,12 @@ async function vidRedetect(){
   });
   const total=VID.notes.length,st=VID.stats;let info='';
   if(st)info=' Captured '+st.frames+' frames ('+Math.round(st.coverage*100)+'% of the '+st.expected+' expected)'+(st.direct?', read directly from the file':st.avgRate?', average speed '+st.avgRate.toFixed(1)+'×':'')+', '+Math.round(st.secs)+' s.'+(st.coverage<.9?' Some short notes may be missing. Try Auto speed or a slower one.':'');
+  const fd=VID.kind==='fall'&&VID.fallData;
+  if(fd){const sp=Math.abs(fd.v0),span=fd.times[fd.F-1]-fd.times[0],seen=span>0?fd.band/sp*(fd.F-1)/span:0;info+=' The notes move '+(fd.v0>0?'down':'up')+' at '+Math.round(sp)+' pixels a second'+(fd.a?(fd.a*fd.v0>0?', faster':', slower')+' closer to the keys':'')+', so each note edge was seen in about '+Math.round(seen)+' frames.';
+    // whether the keys below could settle notes beside a neighbor's (vidKeyWitness)
+    const kw=notes.kw,pl=(n,w)=>n+' note'+(n===1?'':'s')+' '+w;
+    if(kw==='unlit')info+=' The keys did not light up clearly as the notes landed, so they were not used to check notes beside each other. Check that the dots sit on the keys.';
+    else if(kw)info+=' The keys were used to check notes beside each other'+(kw.drop||kw.cut?': '+[kw.drop?pl(kw.drop,'left out'):'',kw.cut?pl(kw.cut,'shortened'):''].filter(Boolean).join(', '):'')+'.';}
   $('vStats').textContent=(total?total+' notes found in '+VID.clusters.length+' color group'+(VID.clusters.length>1?'s':'')+'. Adjust the settings and the result updates.':'No notes found. Try a higher sensitivity, or check that the dots sit on the keys.')+info;
   $('vImport').disabled=!total;vidSyncRes();vidDrawResult();
   $('vHint').textContent=total?'Done. Review the result below, then import.':'No notes found.';
@@ -4414,7 +5401,7 @@ function vidDrawResult(){
     g.fillStyle=C.dim||'#999';g.font='16px Figtree,system-ui,sans-serif';g.textAlign='center';g.textBaseline='middle';
     g.fillText(VID.samples?'No notes found. Try a higher sensitivity.':'Result preview will go here...',W/2,H/2);g.textAlign='left';return;
   }
-  const lo=VID.map[0].p,hi=VID.map[VID.map.length-1].p,rows=hi-lo+1,rh=H/rows,tA=VID.times[0],T=Math.max(.001,VID.times[VID.F-1]-tA);
+  const lo=VID.map[0].p,hi=VID.map[VID.map.length-1].p,rows=hi-lo+1,rh=H/rows,tA=VID.kind==='fall'?VID.t0:VID.times[0],T=Math.max(.001,VID.times[VID.F-1]-tA);
   for(const cl of VID.clusters){g.fillStyle=`hsl(${Math.round(cl.h)} ${cl.neutral?0:70}% 55%)`;for(const n of cl.notes){g.fillRect((n.t0-tA)/T*W,(hi-n.p)*rh,Math.max(1.5,(n.t1-n.t0)/T*W),Math.max(1.5,rh));}}
 }
 let vidTimer=0;const vidSoon=()=>{clearTimeout(vidTimer);vidTimer=setTimeout(vidRedetect,180);vidMinHint();vidOptsSoon();};
@@ -4529,7 +5516,7 @@ async function renderSong(onProgress){
     for(let i=lowerBound(a);i<flat.length&&flat[i].s<b;i++){
       const {n,tr}=flat[i];if(!audible(tr))continue;
       const t=secAt(n.s),end=secAt(sustainEnd(tr,n.s+n.d));
-      const h=startVoice(tr,n.p,n.v,t,{pan:n.pan??tr.pan,rev:n.rev??tr.rev,muf:n.muf??tr.muf},A);
+      const pv=playVals(tr,n),h=startVoice(tr,n.p,pv.v,t,pv,A);
       if(h)h.release(t+(end-t));
     }
   };
@@ -4573,10 +5560,10 @@ $('bWav').onclick=exportWav;
 const STAGE={on:false,timer:0,api:false,y:0};
 const FX={last:null,ripples:[]};
 function stageShowBar(){
-  document.body.classList.remove('hide-bar');clearTimeout(STAGE.timer);if(!STAGE.on)return;
+  if(document.body.classList.contains('hide-bar')){document.body.classList.remove('hide-bar');redraw();}clearTimeout(STAGE.timer);if(!STAGE.on)return;
   STAGE.timer=setTimeout(()=>{
     const top=$('top'),ob=document.querySelector('.opts'),ae=document.activeElement,busy=top.matches(':hover')||(ob&&ob.matches(':hover'))||document.querySelector('dialog[open]')||!$('toolsPanel').hidden||(ae&&top.contains(ae)&&/INPUT|SELECT/.test(ae.tagName));
-    if(busy)stageShowBar();else document.body.classList.add('hide-bar');
+    if(busy)stageShowBar();else{document.body.classList.add('hide-bar');redraw();}
   },STAGE.y>($('top').offsetHeight||120)+30?450:1100);
 }
 async function setStage(on){
@@ -4895,8 +5882,12 @@ function mergeLayers(target,sources,keep){
       for(const n of s.notes){
         const c={...n,id:nextId++};
         if(keep){
-          for(const k of ['pan','rev','muf'])if(c[k]==null&&s[k]!==target[k])c[k]=s[k];
-          if(s.vol!==target.vol&&target.vol>0)c.v=clamp(Math.round((c.v??100)*s.vol/target.vol),1,127);
+          // what the note played with in its own layer, as its own values in the target layer
+          const pv=playVals(s,{...c,v:c.v??100}),inv=(x,m)=>m>0?x*100/m:x;
+          const want={pan:pv.pan-(target.mxPan??0),rev:inv(pv.rev,target.mxRev??100),muf:inv(pv.muf,target.mxMuf??100)};
+          for(const k of ['pan','rev','muf']){const w=clamp(Math.round(want[k]),0,127);if(c[k]!=null||w!==target[k])c[k]=w;}
+          let v=inv(pv.v,target.mxV??100);if(s.vol!==target.vol&&target.vol>0)v=v*s.vol/target.vol;
+          c.v=clamp(Math.round(v),1,127);
         }
         target.notes.push(c);
       }
@@ -4968,7 +5959,9 @@ $('tracks').addEventListener('contextmenu',e=>{
   },true);
   document.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;},true);
   document.addEventListener('pointerout',e=>{if(cur&&(!e.relatedTarget||!cur.contains(e.relatedTarget)))hide();},true);
-  for(const ev of ['pointerdown','keydown','wheel','scroll','blur'])window.addEventListener(ev,hide,true);
+  for(const ev of ['pointerdown','keydown','wheel','blur'])window.addEventListener(ev,hide,true);
+  // only a scroll that moves the element takes the hint away, not the notes following the playhead
+  window.addEventListener('scroll',e=>{const t=e.target;if(cur&&(t===document||!t.contains||t.contains(cur)))hide();},true);
 })();
 
 /* ================= Steppers: up/down buttons for the number box under the mouse ================= */
@@ -5011,7 +6004,9 @@ $('tracks').addEventListener('contextmenu',e=>{
     };
     window.addEventListener('pointerup',end,true);box.addEventListener('pointerleave',end);
   });
-  for(const ev of ['wheel','scroll','resize'])window.addEventListener(ev,()=>{if(cur)hide();},true);
+  for(const ev of ['wheel','resize'])window.addEventListener(ev,()=>{if(cur)hide();},true);
+  // only a scroll that moves the box takes them away, not the notes following the playhead
+  window.addEventListener('scroll',e=>{const t=e.target;if(cur&&(t===document||!t.contains||t.contains(cur)))hide();},true);
 })();
 
 /* ================= Color picker: the site's own pop-up for every color box ================= */
