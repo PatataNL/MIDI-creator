@@ -34,11 +34,13 @@ It is a single web page. There is nothing to install, no account and no server: 
 - **Layers** with their own instrument (all 128 General MIDI instruments plus drums), colour, volume, pan, reverb and muffle. You can hide, lock, mute, solo, merge and reorder them.
 - **Per-note values.** Velocity, pan, reverb and muffle are edited in the Values sidebar or the note info bar. There is also a sustain pedal lane.
 - **Two kinds of layer sliders.** One sets the values new notes start with. The other changes the whole layer as it plays, without touching the notes.
+- **Tempo and time-signature changes** anywhere in the song.
+- **Split piano parts into two hands** automatically.
 - **Fancy playback.** Realistic piano, electric piano, guitars, basses, harp, mallets and drums, calculated on your device.
 - **Play and record** with your computer keyboard or a connected MIDI keyboard.
-- **Notes from a video.** Turn a falling-notes piano tutorial video into notes, by reading the lit keys or the falling notes themselves.
+- **Notes from a video.** Turn a falling-notes piano tutorial video into notes, by reading the lit keys or the falling notes themselves. You can then check the result over the video, with doubtful notes pointed out, and fix it by hand.
 - **Opens** MIDI files, MusicXML sheet music (`.musicxml`, `.mxl`) and its own project files.
-- **Saves** as MIDI, as a project file, or as a WAV recording. It can also open the song in the Keys piano practice app.
+- **Saves** as MIDI, as MusicXML sheet music, as a project file, or as a WAV recording. It can also open the song in the Keys piano practice app.
 - **Bookmarks**, loops, tabs for several projects at once, a full undo history, auto-save, light and dark themes and full-screen playback.
 
 ---
@@ -49,7 +51,7 @@ It is a single web page. There is nothing to install, no account and no server: 
 2. Open `index.html` in a modern browser: Chrome, Edge, Firefox or Safari. Chrome or Edge are recommended for the video import.
 3. Click above the keyboard to place a note, then press **Space** to hear it.
 
-That's all. Your work is auto-saved in the browser, so it's still there when you come back. You can turn this off in Settings. To keep a song for good, or to move it to another computer, use **Save project** or **Save MIDI**.
+That's all. Your work is auto-saved in the browser's database, so it's still there when you come back, even for very large projects. You can turn this off in Settings. To keep a song for good, or to move it to another computer, use **Save project** or **Save MIDI**.
 
 **Internet:** the app works offline, with one exception. Reading video files directly (the fastest video speed) loads a small MP4 reader library from a CDN the first time.
 
@@ -62,7 +64,7 @@ From top to bottom:
 | Area | What it does |
 |---|---|
 | **Top bar** | Undo/redo; New, Open… and From video…; the four tools (Draw, Select, Erase, Look); Connect MIDI and the input picker; output level meter; full screen; light/dark mode; Settings. |
-| **Second bar** | Save MIDI, Save project, Export WAV, Open in Keys (and copy a Keys link). The transport: back to start, play/pause, stop, record. Then Loop, Metronome, Fancy, the position readout (bar.beat.tick and time), BPM and time signature. |
+| **Second bar** | Save MIDI, Save score, Save project, Export WAV, Open in Keys (and copy a Keys link). The transport: back to start, play/pause, stop, record. Then Loop, Metronome, Fancy, the position readout (bar.beat.tick and time), BPM and time signature. |
 | **Tabs** | One tab per open project. The arrow at the far right of the second bar hides or shows the tab bar. |
 | **Layer panel** (left) | Your layers, the Show all / Only this buttons, the opacity of other layers, and at the bottom the master volume, reverb mix and reverb space. |
 | **Options row** | Grid, Fine grid, Scale highlight, Time and Key width zoom, Fit keys, Fit notes, Note tools, Follow and the computer-keyboard octave. |
@@ -92,7 +94,8 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 - **Move** a note by dragging its middle. Drag to the side to change pitch, up or down to change time. All selected notes move together.
 - **Stretch** a note by dragging near its top or bottom edge. The grab area is set by *Stretch handle size* in Settings.
 - **Copy** while moving by holding **Ctrl** (⌘ on Mac) as you start the drag.
-- **Shift+click** a note to add it to or remove it from the selection.
+- **Shift+click** a note to add it to or remove it from the selection, also in another layer.
+- **Click the same spot again** to pick the next note stacked there. It goes through the selected layer's notes first, then those of other layers you can click (while *Other layers* is above 0).
 - **Right-click**, or **double-click**, a note to delete it.
 - **Alt** while placing, moving or stretching snaps to the fine grid instead of the main grid. For a moved or stretched note it's the other way round: it uses the fine grid, and Alt snaps to the main grid.
 - **Click a key** on the keyboard to hear it.
@@ -110,11 +113,23 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 
 ### Keyboard editing
 
-- **Arrow left/right** move the selected notes in time by the fine grid. With **Shift**, by the main grid.
-- **Arrow up/down** move them by a semitone. With **Shift**, by an octave.
+- **Arrow left/right** move the selected notes down or up by a semitone. With **Shift**, by an octave.
+- **Arrow up/down** move them later or earlier by the fine grid. With **Shift**, by the main grid.
 - **Delete** or **Backspace** deletes them.
 - **Ctrl+C / X / V** copy, cut and paste. Pasting puts the notes at the playhead.
 - **Ctrl+D** duplicates the selection, and **Ctrl+A** selects all notes in the layer.
+- **Ctrl+E** splits the selected notes in two where the playhead crosses them (with nothing selected, the layer's notes). **Ctrl+J** joins the selected notes on the same key into one; with one note selected, it joins the next note on that key.
+
+### Selecting across layers
+
+A selection can hold notes from several layers. Deleting, moving, duplicating and pasting keep each note in its own layer.
+
+- **Shift+click a key** on the keyboard to select every note on that key, in every layer you can edit.
+- **Shift+drag along the time ruler** to select every note starting in that stretch, in every layer. A Shift+click on the ruler selects the bar.
+- **Ctrl+Shift+A** selects every note in every layer.
+- Hold **Ctrl** as well to add to the selection instead of replacing it.
+
+Copied notes from several layers are pasted back into their own layers; notes from one layer go into the selected layer.
 
 ### Note info bar
 
@@ -125,6 +140,8 @@ With notes selected, the bar under the roll shows their **pitch, start, length, 
 **Note tools** opens a small panel that works on the selected notes, or on the whole layer when nothing is selected:
 
 - **Snap to grid:** moves each note's start to the nearest grid line.
+- **Select across layers:** **All layers**, or **Same keys** (every note, in every layer, on a key the selection is on).
+- **Split and join:** **Split at playhead** and **Join**, the same as Ctrl+E and Ctrl+J.
 - **Transpose** by any number of semitones (±1 and ±12 buttons included).
 - **Swing:** delays every second grid step. 50% is straight; about 67% feels like triplets.
 - **Humanize:** small random changes to timing and velocity.
@@ -140,7 +157,7 @@ Each layer is a card in the layer panel. Click a card to select that layer: new 
 - **Buttons:** hide/show, lock (locked layers can't be edited or clicked), mute, solo, move up/down, delete, and **⋯** for more.
 - **Instrument:** any General MIDI instrument, grouped by family, or drums.
 - **Sliders**, in two sets. Switch between them with the button on the right of the Color row.
-  - **New notes:** Velocity, Pan, Reverb and Muffle that notes you draw or record in this layer start with. Existing notes are never changed. Playing on your keyboard also uses these.
+  - **New notes:** the layer's Volume, then the Velocity, Pan, Reverb and Muffle that notes you draw or record in this layer start with. Existing notes are never changed. Playing on your keyboard also uses these.
   - **Whole layer:** Volume, Pan (moves every note left or right), and Velocity %, Reverb % and Muffle % (a share of each note's own value; 100 = unchanged). These change how the whole layer sounds, in playback, in WAV and MIDI export and when merging. The notes' own values stay as they are.
 
   Other layers show the first two sliders of whichever set is on.
@@ -155,6 +172,7 @@ Above the layers:
 The **⋯** menu, or a right-click on a card, has:
 
 - **Duplicate layer**, **Copy layer** and **Paste layer below**. A copied layer can also be pasted into another tab.
+- **Split into right and left hand:** divides a piano layer the way a pianist would play it, into "… – right hand" (keeping the colour) and "… – left hand" (a contrasting colour). It works on the whole piece at once: each hand can only stretch so far, chords struck together stay together, and each hand stays near where it has been playing. On a test set of 29 piano scores, about 96% of notes land in the hand they're written for. Ctrl+Z undoes it.
 - **Merge with the layer below** and **Merge layers…**. The merged notes move into one layer. With "Keep how each layer sounds", each note keeps its volume, pan, reverb and muffle.
 - **Delete layer** (optionally with a confirmation; Ctrl+click on the delete button skips it).
 
@@ -179,7 +197,15 @@ The **Undo history** tab lists every change. Click any step to jump back or forw
 
 - **Space** plays and pauses. **Home** goes back to the start. **Stop** returns to where playback began, or to the loop start (see Settings).
 - **Metronome** clicks on every beat, louder on the first beat of a bar. Its volume is in Settings.
-- **BPM** and the **time signature** (4/4, 3/4, 2/4, 5/4, 6/8, 7/8, 12/8, 3/8) are in the second bar.
+- **BPM** and the **time signature** in the second bar show the ones in effect at the playhead. Typing a new BPM speeds up or slows down the whole song, keeping any tempo changes in proportion. Choosing a time signature changes the one in effect there.
+
+### Tempo and time-signature changes
+
+**Right-click the time ruler** where a change should start, then choose:
+- **Change the tempo from bar … beat …** (it starts on that beat);
+- **Change the time signature from bar …** (it starts at the start of that bar; any number of beats from 1 to 32, over 1, 2, 4, 8, 16 or 32).
+
+Each change shows as a tag just under its moment on the roll: "♩ = 90" or "3/4". **Click a tag** to change or remove it. Bar numbers, the grid, the metronome, the position readout, bookmarks, MIDI and MusicXML all follow the changes.
 - **Fancy playback** swaps the standard synthesizer for realistic instruments: piano, electric piano, guitars, basses, harp, mallets and drums. The first time, they are calculated on your device, which takes a few seconds. *Piano tweaks* in Settings adjust the Fancy piano's brightness, low-note balance, bass and hammer knock.
 - **Master** volume (type up to 300 for extra loudness), **Reverb mix** and **Reverb space** (small room, hall, cathedral) are at the bottom of the layer panel.
 
@@ -291,7 +317,32 @@ The settings update the result live:
 | *Advanced detection* | Ignore whole-screen fades and flashes; discard moments where too many keys start at once; ignore very short flashes; join short gaps; a minimum note length; how different two colours may be and still be one layer. |
 | *Advanced timing* | Velocity of the notes, start at the first note, shift all notes or only black-key notes earlier or later, shorten white or black notes. |
 
+**Split each color into right and left hand** is for videos that use one colour for both hands: each colour group becomes a right-hand and a left-hand layer (see *Split into right and left hand* under Layers).
+
 **Put notes** on new layers in this project, or in a new tab, and press **Import notes**.
+
+### Checking and fixing the result
+
+Before importing, you can check the result against the video:
+
+- **Show the notes on the video** draws what was found over the video, as you play it or jump around.
+  - Each sounding key gets a bar.
+  - In falling-notes mode, every note also gets an outline as it falls, with ticks at its start and end.
+  - Outlines use a colour opposite the note's own, so they stand out on the video.
+- **Play them along** plays the found notes while the video plays, so wrong or missing notes are easy to hear.
+- **Next to check** jumps to each note worth a second look, outlined in red on the video and in the preview, with the reason under it. These are:
+  - notes the keyboard or glow check shortened, or left out when it was a close call;
+  - a black key and the white key beside it starting together;
+  - one key struck twice in a row where one part is only a sliver.
+
+  Notes that were left out are drawn dashed.
+- **The result preview** under the video can be edited:
+  - Click a note to select it; the video jumps there.
+  - Drag a note's left or right end to change its start or end.
+  - Press **Delete** (or the **Delete note** button) to remove it.
+  - The wheel zooms, dragging empty space pans, and a double-click shows the whole result again.
+  - On the Result tab you can also click a note's outline on the video to select it, and in falling-notes mode drag its top (end) or bottom (start) edge.
+  - **Ctrl+Z** takes back the last change. Your changes stay when you adjust the settings above and the notes are found again.
 
 ### Tips for good results
 
@@ -322,8 +373,18 @@ The settings update the result live:
 | Button | Gives you |
 |---|---|
 | **Save MIDI** (Ctrl+S) | A standard MIDI file that works in any music program. Layer volume, pan, reverb, muffle, the pedal, bookmarks and layer colours are included; whole-layer slider values are applied to the notes. |
-| **Save project** | A `.json` file with everything: every layer and note value, both slider sets, colours, bookmarks, tempo and time signature. Use this to keep working later. |
+| **Save score** | Sheet music (MusicXML) for MuseScore, Finale, Sibelius and other notation programs. See below. |
+| **Save project** | A `.json` file with everything: every layer and note value, both slider sets, colours, bookmarks, tempos and time signatures. Use this to keep working later. |
 | **Export WAV** | An audio recording of the song, with Fancy playback when it's on. |
+
+### Sheet music (MusicXML)
+
+**Save score** writes one part per layer:
+- Two layers named "… – right hand" and "… – left hand" with the same instrument become one piano part on a grand staff, and split back into those two layers when you open the file here.
+- Notes are written on a grid of 32nd notes and tied over bar lines. Notes struck together share a stem; other overlapping notes go into separate voices. Triplets are rounded to the nearest 32nd.
+- The key signature is guessed from the notes, and sharps or flats follow it.
+- Tempo and time-signature changes, bookmarks (as rehearsal marks), the sustain pedal, drums, and each layer's instrument, volume and pan are included.
+- Opening a score saved by MIDI-Creator keeps every note's velocity exactly.
 
 ### Keys
 
@@ -367,12 +428,15 @@ The gear button opens Settings. The search box at the top finds any setting.
 | 5 | Full-screen playback (Esc also leaves it) |
 | Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y | Undo, redo |
 | Ctrl+A | Select all notes in the layer |
+| Ctrl+Shift+A | Select every note in every layer |
 | Ctrl+C / Ctrl+X / Ctrl+V | Copy / cut / paste at the playhead |
 | Ctrl+D | Duplicate the selection |
+| Ctrl+E | Split the selected notes at the playhead |
+| Ctrl+J | Join the selected notes on the same key |
 | Ctrl+S | Save MIDI |
 | Delete / Backspace | Delete the selected notes |
-| Arrow left / right | Move the selection in time (Shift: by the main grid) |
-| Arrow up / down | Move the selection by a semitone (Shift: an octave) |
+| Arrow left / right | Move the selection down / up by a semitone (Shift: an octave) |
+| Arrow up / down | Move the selection later / earlier (Shift: by the main grid) |
 | Esc | Clear the selection |
 | B | Add a bookmark at the playhead |
 | , and . | Previous / next bookmark |
@@ -420,6 +484,7 @@ A project is JSON:
   "name": "My song",
   "tempos": [{ "tick": 0, "bpm": 120 }],
   "ts": { "n": 4, "d": 4 },
+  "sigs": [{ "tick": 7680, "n": 3, "d": 4 }],
   "marks": [{ "tick": 1920, "name": "Chorus", "color": "#60a5fa" }],
   "tracks": [{
     "name": "Piano", "program": 0, "drum": false,
@@ -431,7 +496,7 @@ A project is JSON:
 }
 ```
 
-- Times are in ticks, at **480 ticks per quarter note**.
+- Times are in ticks, at **480 ticks per quarter note**. `tempos` lists the tempo changes; `ts` is the time signature at the start and `sigs` the changes after it, each at the start of a bar.
 - Notes have start `s`, length `d`, pitch `p` (MIDI note number) and velocity `v`. They may also have their own `pan`, `rev` and `muf`; when missing, the layer's values count.
 - A layer may also hold:
   - its new-note values: `nvV`, `nvPan`, `nvRev`, `nvMuf`;
@@ -447,6 +512,14 @@ Saved MIDI files stay fully standard. Two extras ride along in ways other progra
 
 [`docs/keys-bookmarks.js`](docs/keys-bookmarks.js) shows how another app (Keys) reads the bookmarks, from the share link or from the MIDI file.
 
+### Tests
+
+Open `index.html#test` (or [`tests/index.html`](tests/index.html)) to run the test suite inside the app.
+- **Built-in tests** need no files and take a few seconds. They cover a synthetic falling-notes video, file round trips, time signatures, tempo changes, selection, split/join, hands and the layer sliders.
+- **Video tests** check the video import note by note against recorded results on six real tutorials, which you supply yourself.
+
+See [`tests/README.md`](tests/README.md).
+
 ### Contributing
 
-Work happens on the `beta` branch and reaches `main` through pull requests.
+Work happens on the `beta` branch and reaches `main` through pull requests. Run the built-in tests before opening one, and the video tests after changing the video import.
