@@ -67,7 +67,7 @@ From top to bottom:
 | **Second bar** | The four tools (Draw, Select, Erase, Look). In the middle the transport: back to start, play/pause, stop, record, then Loop, Metronome, the position readout (bar.beat.tick and time), BPM and time signature. On the right Grid, Fine grid and Scale highlight. |
 | **Tabs** | One tab per open project. The arrow at the far right of the second bar hides or shows the tab bar. |
 | **Layer panel** (left) | Your layers, the Show all / Only this buttons, the opacity of other layers, and at the bottom the master volume, reverb mix, reverb space and the Sound menu (Standard or Fancy). |
-| **Note toolbar** | On the left, buttons for the notes: select across layers, select tools, snap, split and join (where you click), legato, swing, humanize, transpose, clean up, duplicate, delete and loop selection. On the right, the computer-keyboard octave, Follow and Zoom. |
+| **Note toolbar** | On the left, buttons for the notes: select across layers, select tools, snap, split and join (where you click), legato, swing, humanize, transpose, clean up, duplicate, delete and loop selection. On the right, the computer-keyboard octave (⌨ ‹ C4 ›), Follow and Zoom. |
 | **Piano roll** | Time runs upward: the playhead line moves up through the notes toward the keyboard at the bottom. The time ruler is on the left. |
 | **Playback bar** | A song-wide progress bar with bookmarks and the loop region. Drag it to look through the song, let go to jump there. |
 | **Note info bar** | Pitch, start, length, velocity, pan, reverb and muffle of the selected note(s). |
@@ -141,7 +141,7 @@ The buttons above the roll work on the selected notes, in whichever layers they 
 | Split | Ctrl+E at the playhead | Click it, then click where to cut: with notes selected, every selected note crossing that height is cut there (on the fine grid; hold Alt for the main grid); otherwise the note you click. It stays on until you click it again or press Esc. A dashed line shows the cut before you click. **Ctrl+E** splits at the playhead instead. |
 | Join | Ctrl+J for the selection | Click it, then click where two notes on one key meet (or between a note and the next one on its key) to make them one. With notes selected, it joins at that height on every key that has selected notes. It stays on until you click it again or press Esc; an outline shows what will be joined. **Ctrl+J** joins all the selected notes on each key. |
 | Legato | | Each note runs up to the next one in its layer: **lengthen only**, **lengthen or shorten**, or **with a small gap** (the fine grid). |
-| Swing | | Moves the notes on every second step of the Grid later: **light** (55%), **medium** (60%), **triplet feel** (67%) or **hard** (72%). **Straighten** takes swing back out. |
+| Swing | | A panel: the **amount** (a slider from 50%, straight, to 75%, with **Light**, **Medium**, **Triplet** and **Hard** presets) and **which grid** swings (1/8, 1/16 or 1/32). **Apply** stretches the first step of every pair and shortens the second, so the off-beat notes come later and notes in between keep their order. Applying again sets the new amount from straight, and **Straighten** puts the notes back exactly. The panel stays open to try amounts. |
 | Humanize | | Small random changes to timing and velocity: **a little**, **some**, **a lot**, or **timing only** / **velocity only**. |
 | Transpose | | A semitone or an octave up or down. |
 | Clean up | | **Fix overlapping notes** (a note that runs into the next one on its key ends there) or **Remove duplicate notes** (of notes starting together on one key, the longest stays). Handy after an import. |
@@ -230,7 +230,7 @@ Each change shows as a tag just under its moment on the roll: "♩ = 90" or "3/4
 
 ### Your computer keyboard as a piano
 
-The letter rows play one and a half octaves. **A S D F G H J K L ; '** are the white keys and **W E T Y U O P** the black keys. **Z** and **X** move the octave down and up. The current octave is shown in the options row.
+The letter rows play one and a half octaves. **A S D F G H J K L ; '** are the white keys and **W E T Y U O P** the black keys. **Z** and **X** move the octave down and up. The octave is shown at the right of the note toolbar as **⌨ ‹ C4 ›** (A plays that C); its arrows do the same as Z and X.
 
 ### A MIDI keyboard
 
