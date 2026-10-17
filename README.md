@@ -63,11 +63,11 @@ From top to bottom:
 
 | Area | What it does |
 |---|---|
-| **Top bar** | Undo/redo; New, Open… and From video…; the four tools (Draw, Select, Erase, Look); Connect MIDI and the input picker; output level meter; full screen; light/dark mode; Settings. |
-| **Second bar** | Save MIDI, Save score, Save project, Export WAV, Open in Keys (and copy a Keys link). The transport: back to start, play/pause, stop, record. Then Loop, Metronome, Fancy, the position readout (bar.beat.tick and time), BPM and time signature. |
+| **Top bar** | Undo/redo; New, Open… and From video…; Save MIDI, Save score, Save project, Export WAV, Open in Keys (and copy a Keys link); Connect MIDI and the input picker; output level meter; full screen; light/dark mode; Settings. |
+| **Second bar** | The four tools (Draw, Select, Erase, Look). In the middle the transport: back to start, play/pause, stop, record, then Loop, Metronome, the position readout (bar.beat.tick and time), BPM and time signature. On the right Grid, Fine grid and Scale highlight. |
 | **Tabs** | One tab per open project. The arrow at the far right of the second bar hides or shows the tab bar. |
-| **Layer panel** (left) | Your layers, the Show all / Only this buttons, the opacity of other layers, and at the bottom the master volume, reverb mix and reverb space. |
-| **Options row** | Grid, Fine grid, Scale highlight, Time and Key width zoom, Fit keys, Fit notes, Note tools, Follow and the computer-keyboard octave. |
+| **Layer panel** (left) | Your layers, the Show all / Only this buttons, the opacity of other layers, and at the bottom the master volume, reverb mix, reverb space and the Sound menu (Standard or Fancy). |
+| **Note toolbar** | On the left, buttons for the notes: select across layers, select tools, snap, split and join (where you click), legato, swing, humanize, transpose, clean up, duplicate, delete and loop selection. On the right, the computer-keyboard octave, Follow and Zoom. |
 | **Piano roll** | Time runs upward: the playhead line moves up through the notes toward the keyboard at the bottom. The time ruler is on the left. |
 | **Playback bar** | A song-wide progress bar with bookmarks and the loop region. Drag it to look through the song, let go to jump there. |
 | **Note info bar** | Pitch, start, length, velocity, pan, reverb and muffle of the selected note(s). |
@@ -85,7 +85,7 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 | Tool | Key | Use |
 |---|---|---|
 | **Draw** | 1 | Click to place a note on the grid; drag to stretch it right away. Click an existing note to select and move it. |
-| **Select** | 2 | Drag a box to select notes. Shift adds to the selection. |
+| **Select** | 2 | Drag a box to select notes. Hold Ctrl to add to the selection. (With any tool, holding Shift selects too.) |
 | **Erase** | 3 | Click or drag over notes to delete them. |
 | **Look** | 4 | Drag to scroll around. Handy on touch screens. |
 
@@ -93,8 +93,9 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 
 - **Move** a note by dragging its middle. Drag to the side to change pitch, up or down to change time. All selected notes move together.
 - **Stretch** a note by dragging near its top or bottom edge. The grab area is set by *Stretch handle size* in Settings.
-- **Copy** while moving by holding **Ctrl** (⌘ on Mac) as you start the drag.
-- **Shift+click** a note to add it to or remove it from the selection, also in another layer.
+- **Copy** while moving by holding **Ctrl** (⌘ on Mac) as you start the drag. Drop the copy back exactly where it started and it is gone again, with nothing left to undo.
+- **Shift** selects with any tool: Shift+drag draws a selection box (also in Draw mode), Shift+click selects the note there.
+- **Ctrl+click** a note to add it to the selection, or take it out if it was already in, also in another layer. Ctrl with a selection box adds to what is selected.
 - **Click the same spot again** to pick the next note stacked there. It goes through the selected layer's notes first, then those of other layers you can click (while *Other layers* is above 0).
 - **Right-click**, or **double-click**, a note to delete it.
 - **Alt** while placing, moving or stretching snaps to the fine grid instead of the main grid. For a moved or stretched note it's the other way round: it uses the fine grid, and Alt snaps to the main grid.
@@ -104,12 +105,19 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 
 ### Grid and zoom
 
-- **Grid** sets where new notes start and how long they are: 1/1 to 1/64, plus triplets.
-- **Fine** is the finer snap used when moving and resizing: 1/32, 1/64, 1/128 or a single tick.
+Grid, Fine and Scale are at the right of the second bar. Click a value to pick from the list, or use **‹ ›** to step to a coarser or finer grid (triplets step among triplets).
+
+- **Grid** sets where new notes start and how long they are, and what Snap snaps to: 1/1 to 1/64, plus triplets (1/4T to 1/32T).
+- **Fine** is the snap used when moving and resizing: anything from the Grid value itself down to 1/128 or a single tick (with a triplet Grid, triplets too). Making the Grid finer than Fine brings Fine along.
 - **Scale** highlights the notes of a scale in the roll: major, minor, harmonic minor, dorian, mixolydian, pentatonics, blues and more.
-- **Zoom.** Ctrl+wheel zooms time. Ctrl+Shift+wheel, or the plain wheel over the keyboard, changes the key width. The **Time** and **Key width** buttons do the same.
-- **Fit keys** fits all 88 keys to the window; **Fit notes** zooms to the notes in your song.
-- **Follow** keeps the playhead in view during playback. Scrolling by hand turns it off.
+
+**Zoom**, at the right of the note toolbar:
+
+- **− ↕ +** zooms time (how much of the song is in view). Ctrl+wheel does the same.
+- **− ↔ +** changes the key width. Ctrl+Shift+wheel, or the plain wheel over the keyboard, does the same.
+- **Fit: Piano** fits all 88 keys to the window; **Fit: Notes** zooms to the notes in your song.
+
+**Follow** keeps the playhead in view during playback. Scrolling by hand turns it off.
 
 ### Keyboard editing
 
@@ -117,8 +125,31 @@ Both side panels can be folded away (the arrow buttons) and resized (drag the di
 - **Arrow up/down** move them later or earlier by the fine grid. With **Shift**, by the main grid.
 - **Delete** or **Backspace** deletes them.
 - **Ctrl+C / X / V** copy, cut and paste. Pasting puts the notes at the playhead.
-- **Ctrl+D** duplicates the selection, and **Ctrl+A** selects all notes in the layer.
+- **Ctrl+D** duplicates the selection, and **Ctrl+A** selects all notes in the layer (in every layer while *Select across layers* is on).
 - **Ctrl+E** splits the selected notes in two where the playhead crosses them (with nothing selected, the layer's notes). **Ctrl+J** joins the selected notes on the same key into one; with one note selected, it joins the next note on that key.
+- **Q** snaps note starts to the grid, **Shift+Q** starts and ends (the selected notes, or the whole layer).
+
+### Note toolbar
+
+The buttons above the roll work on the selected notes, in whichever layers they are, or on the whole selected layer when nothing is selected. Hover a button to see what it does.
+
+| Button | Key | What it does |
+|---|---|---|
+| Select across layers | M, or hold Alt | While on, a selection box and Ctrl+A take notes from every shown, unlocked layer. Holding Alt turns it on until you let go; then it goes back to how the button was. |
+| Select tools | | A panel for selecting: **This layer** or **Every layer**, and **Add** to keep what is selected and add to it (so choices combine). Then **All notes**, or, like the selected notes: the **same key**, the **same note in every octave**, the **same key and length**, the **same length**, the **same velocity**, or everything **in the same stretch of time**. Also **Everything not selected** and **Nothing**. It stays open until you click elsewhere or press Esc. |
+| Snap | Q | Snaps note starts to the grid. The arrow beside it also snaps **ends**, **starts and ends** (Shift+Q) or **lengths**. A note never ends up shorter than one grid step. |
+| Split | Ctrl+E at the playhead | Click it, then click where to cut: with notes selected, every selected note crossing that height is cut there (on the fine grid; hold Alt for the main grid); otherwise the note you click. It stays on until you click it again or press Esc. A dashed line shows the cut before you click. **Ctrl+E** splits at the playhead instead. |
+| Join | Ctrl+J for the selection | Click it, then click where two notes on one key meet (or between a note and the next one on its key) to make them one. With notes selected, it joins at that height on every key that has selected notes. It stays on until you click it again or press Esc; an outline shows what will be joined. **Ctrl+J** joins all the selected notes on each key. |
+| Legato | | Each note runs up to the next one in its layer: **lengthen only**, **lengthen or shorten**, or **with a small gap** (the fine grid). |
+| Swing | | Moves the notes on every second step of the Grid later: **light** (55%), **medium** (60%), **triplet feel** (67%) or **hard** (72%). **Straighten** takes swing back out. |
+| Humanize | | Small random changes to timing and velocity: **a little**, **some**, **a lot**, or **timing only** / **velocity only**. |
+| Transpose | | A semitone or an octave up or down. |
+| Clean up | | **Fix overlapping notes** (a note that runs into the next one on its key ends there) or **Remove duplicate notes** (of notes starting together on one key, the longest stays). Handy after an import. |
+| Duplicate | Ctrl+D | Copies the selected notes right after themselves. |
+| Delete | Delete | Deletes the selected notes. |
+| Loop selection | | Sets the loop region around the selected notes, out to the grid, and switches the loop on. |
+
+Duplicate, Delete and Loop selection are dimmed while nothing is selected.
 
 ### Selecting across layers
 
@@ -127,6 +158,7 @@ A selection can hold notes from several layers. Deleting, moving, duplicating an
 - **Shift+click a key** on the keyboard to select every note on that key, in every layer you can edit.
 - **Shift+drag along the time ruler** to select every note starting in that stretch, in every layer. A Shift+click on the ruler selects the bar.
 - **Ctrl+Shift+A** selects every note in every layer.
+- Hold **Alt** to select in every layer while you hold it (a selection box, Ctrl+A), or press **M** (*Select across layers* in the note toolbar) to keep it that way. Letting go of Alt goes back to how the button was.
 - Hold **Ctrl** as well to add to the selection instead of replacing it.
 
 Copied notes from several layers are pasted back into their own layers; notes from one layer go into the selected layer.
@@ -134,34 +166,21 @@ Copied notes from several layers are pasted back into their own layers; notes fr
 ### Note info bar
 
 With notes selected, the bar under the roll shows their **pitch, start, length, velocity, pan, reverb and muffle**, and you can type new values there. A note without its own pan, reverb or muffle uses its layer's. The small reset buttons set a note back to that.
-
-### Note tools
-
-**Note tools** opens a small panel that works on the selected notes, or on the whole layer when nothing is selected:
-
-- **Snap to grid:** moves each note's start to the nearest grid line.
-- **Select across layers:** **All layers**, or **Same keys** (every note, in every layer, on a key the selection is on).
-- **Split and join:** **Split at playhead** and **Join**, the same as Ctrl+E and Ctrl+J.
-- **Transpose** by any number of semitones (±1 and ±12 buttons included).
-- **Swing:** delays every second grid step. 50% is straight; about 67% feels like triplets.
-- **Humanize:** small random changes to timing and velocity.
-- **Legato:** stretches each note to the start of the next one, with an optional gap. "Only lengthen" leaves notes that already overlap alone.
-
 ---
 
 ## Layers
 
 Each layer is a card in the layer panel. Click a card to select that layer: new notes go there, and its card shows all its controls.
 
-- **Name:** click the coloured header and type.
-- **Buttons:** hide/show, lock (locked layers can't be edited or clicked), mute, solo, move up/down, delete, and **⋯** for more.
+- **Header:** the name (click and type), with move up/down, delete, and **⋯** for more.
 - **Instrument:** any General MIDI instrument, grouped by family, or drums.
-- **Sliders**, in two sets. Switch between them with the button on the right of the Color row.
-  - **New notes:** the layer's Volume, then the Velocity, Pan, Reverb and Muffle that notes you draw or record in this layer start with. Existing notes are never changed. Playing on your keyboard also uses these.
-  - **Whole layer:** Volume, Pan (moves every note left or right), and Velocity %, Reverb % and Muffle % (a share of each note's own value; 100 = unchanged). These change how the whole layer sounds, in playback, in WAV and MIDI export and when merging. The notes' own values stay as they are.
+- **Switches:** show/hide, lock (locked layers can't be edited or clicked), mute and solo. Switched on, they light up: hidden and locked in the accent colour, muted in red, solo in yellow. On the other layers they sit beside the instrument.
+- **Sliders**, in two sets. Pick one with **New / All**, to the left of the switches.
+  - **New:** the layer's Volume, then the Velocity, Pan, Reverb and Muffle that notes you draw or record in this layer start with. Existing notes are never changed. Playing on your keyboard also uses these.
+  - **All:** Volume, Pan (moves every note left or right), and Velocity, Reverb and Muffle as a percentage of each note's own value (100 = unchanged). These change how the whole layer sounds, in playback, in WAV and MIDI export and when merging. The notes' own values stay as they are.
 
   Other layers show the first two sliders of whichever set is on.
-- **Color:** a colour box with hex code. It opens the app's colour picker: Hex, RGB, HSL, HSV or OKLCH, a screen eyedropper and recent colours. **More settings** gives white-key and black-key notes their own colours.
+- **Color:** a colour box with its hex code. **More colors ▾**, at the right of that row, gives white-key and black-key notes their own colours. The box opens the app's colour picker: Hex, RGB, HSL, HSV or OKLCH, a screen eyedropper and recent colours. In a slim layer panel the hex code is left out; the picker shows it.
 
 Above the layers:
 
@@ -196,7 +215,7 @@ The **Undo history** tab lists every change. Click any step to jump back or forw
 ## Playing, listening and recording
 
 - **Space** plays and pauses. **Home** goes back to the start. **Stop** returns to where playback began, or to the loop start (see Settings).
-- **Metronome** clicks on every beat, louder on the first beat of a bar. Its volume is in Settings.
+- **Metronome** (the metronome icon) clicks on every beat, louder on the first beat of a bar. Its volume is in Settings.
 - **BPM** and the **time signature** in the second bar show the ones in effect at the playhead. Typing a new BPM speeds up or slows down the whole song, keeping any tempo changes in proportion. Choosing a time signature changes the one in effect there.
 
 ### Tempo and time-signature changes
@@ -206,7 +225,7 @@ The **Undo history** tab lists every change. Click any step to jump back or forw
 - **Change the time signature from bar …** (it starts at the start of that bar; any number of beats from 1 to 32, over 1, 2, 4, 8, 16 or 32).
 
 Each change shows as a tag just under its moment on the roll: "♩ = 90" or "3/4". **Click a tag** to change or remove it. Bar numbers, the grid, the metronome, the position readout, bookmarks, MIDI and MusicXML all follow the changes.
-- **Fancy playback** swaps the standard synthesizer for realistic instruments: piano, electric piano, guitars, basses, harp, mallets and drums. The first time, they are calculated on your device, which takes a few seconds. *Piano tweaks* in Settings adjust the Fancy piano's brightness, low-note balance, bass and hammer knock.
+- **Fancy playback** swaps the standard synthesizer for realistic instruments: piano, electric piano, guitars, basses, harp, mallets and drums. The first time, they are calculated on your device, which takes a few seconds. *Piano tweaks* in Settings adjust the Fancy piano's brightness, low-note balance, bass and hammer knock. Switch it with the **Sound** menu (Standard or Fancy) under the master volume and reverb at the bottom of the layer panel, or in Settings.
 - **Master** volume (type up to 300 for extra loudness), **Reverb mix** and **Reverb space** (small room, hall, cathedral) are at the bottom of the layer panel.
 
 ### Your computer keyboard as a piano
@@ -237,7 +256,7 @@ Press the **record** button. Playback starts if it isn't running already. Everyt
 - Bookmarks show as name tags on the roll and as marks on the progress bar. Click a tag to jump; Shift+click or double-click it to edit.
 - They are saved in projects, written into MIDI files as standard markers, and sent along to Keys.
 
-**Loop:** turn on **Loop**, then drag along the thin strip at the right edge of the time ruler to set the region. Bookmarks can set the loop region for you too.
+**Loop:** turn on **Loop**, then drag along the thin strip at the right edge of the time ruler to set the region. Bookmarks can set the loop region for you too, and so can **Loop selection** in the note toolbar.
 
 ---
 
@@ -286,6 +305,7 @@ The app needs to know where the keys are.
 **Advanced position tuning:**
 
 - the scan area as exact percentages;
+- **Notes move** (falling-notes mode): **Auto**, **Down** or **Up**. Auto measures the direction. It ignores things that only flicker or pulse, such as an animated end screen, and when sparks or glow rising from the keys make it unsure, it picks the direction toward the keys. If the summary says the notes move the wrong way, force the direction. The result updates without analysing the video again.
 - **perspective correction**: mark the four outer corners of a tilted or angled keyboard;
 - **left/right perspective**, for a keyboard filmed slightly from the side.
 
@@ -350,6 +370,7 @@ Before importing, you can check the result against the video:
 - Check the dots after Auto-position, especially at the far left and right.
 - In falling-notes mode, keep the scan area clear of the effects just above the keys, and put the keys line on the top edge of the keys.
 - For more precision, raise **Rows read** and **Samples per second**. The analysis takes longer.
+- If the summary says the notes move up while they fall down (or the other way round), set **Notes move** under *Advanced position tuning*.
 - If a video keeps the keys dark (no lighting), use falling-notes mode. The keyboard check then switches itself off.
 
 ---
@@ -427,8 +448,11 @@ The gear button opens Settings. The search box at the top finds any setting.
 | 1 / 2 / 3 / 4 | Draw / Select / Erase / Look |
 | 5 | Full-screen playback (Esc also leaves it) |
 | Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y | Undo, redo |
-| Ctrl+A | Select all notes in the layer |
+| Ctrl+A | Select all notes in the layer (every layer while *Select across layers* is on) |
 | Ctrl+Shift+A | Select every note in every layer |
+| M | Select across layers on / off |
+| Hold Alt | Select across layers while held (a selection box, Ctrl+A) |
+| Q / Shift+Q | Snap note starts / starts and ends to the grid |
 | Ctrl+C / Ctrl+X / Ctrl+V | Copy / cut / paste at the playhead |
 | Ctrl+D | Duplicate the selection |
 | Ctrl+E | Split the selected notes at the playhead |

@@ -102,6 +102,30 @@ const UNIT=[
       return{ok,detail:`${r.found}/${r.total} found, ${r.extra} extra, start error up to ${r.startMax.toFixed(1)} ms, end error up to ${r.endMax.toFixed(1)} ms`};
     }finally{Object.assign(VID,{vw:keep.vw,vh:keep.vh,persp:keep.persp,cal:keep.cal,step:keep.step,fall:keep.fall,kbTop:keep.kbTop});$('vLo').value=keep.lo;$('vHi').value=keep.hi;$('vSrc').value=keep.src;$('vRows').value=keep.rows;$('vLaneW').value=keep.lane;}
   }],
+  ['Note direction: notes falling toward the keys win over sparks rising and a pulsing screen',async()=>{
+    // six lanes of notes falling at 250 px/s and lanes of short sparks rising at 150 px/s through a 300 px band. With
+    // five lanes of sparks either way could win the vote, and auto takes the way toward the keys; with twenty the sparks
+    // clearly win, and only forcing the direction finds the notes. Pulse: no sparks, but twenty lanes of edges swinging
+    // up and down at 400 px/s (like a glowing end screen), more of them than note edges.
+    const run=(lanes,pulse)=>{
+      let seed=7;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+      const F=90,band=300,times=Float64Array.from({length:F},(_,f)=>f/30),all=[],off=new Uint32Array(F+1);
+      const notes=[...Array(6)].map((_,i)=>{let y=-1500+i*17;return[...Array(16)].map(()=>y+=60+rnd()*140);});
+      const sparks=[...Array(lanes)].map(()=>{let y=band+250;return[...Array(40)].map(()=>y-=25+rnd()*45);});
+      for(let f=0;f<F;f++){
+        off[f]=all.length;const t=times[f];
+        notes.forEach((l,i)=>{for(const y of l){const top=y+250*t,bot=top+40;if(bot>0&&top<band)all.push(i,Math.max(0,top),Math.min(band,bot),(top<0?1:0)|(bot>band?2:0),0,0,0,0);}});
+        sparks.forEach((l,i)=>{for(const y of l){const top=y-150*t;if(top>=0&&top+6<=band)all.push(6+i,top,top+6,0,0,0,0,0);}});
+        if(pulse)for(let i=0;i<20;i++)for(let j=0;j<3;j++){const ph=(t+i*.037+j*.11)%.4,top=40+j*90+(ph<.2?400*ph:400*(.4-ph));all.push(6+i,top,top+20,0,0,0,0,0);}
+      }
+      off[F]=all.length;const segs=Float32Array.from(all);
+      return(force,toward)=>{const r=vidFallSpeed(segs,off,times,F,band,force,toward);return r?Math.round(r.v0):null;};
+    };
+    const few=run(5),many=run(20),pulse=run(0,true),near=(v,w)=>v!=null&&Math.abs(v-w)<=.03*Math.abs(w);
+    const auto=few(0,1),away=few(0,-1),swamped=many(0,1),down=many(1,1),pulsed=pulse(0,1),pulsedUp=pulse(0,-1);
+    return{ok:near(auto,250)&&near(away,-150)&&near(swamped,-150)&&near(down,250)&&near(pulsed,250)&&near(pulsedUp,250),
+      detail:`${auto} px/s with the keys below, ${away} px/s with the keys above; with many more sparks ${swamped} px/s, forced down ${down}; with a pulsing screen ${pulsed} px/s (${pulsedUp} with the keys above)`};
+  }],
   ['MIDI file: written and read back the same',async()=>{
     const sg=sampleSong(),bytes=writeMidi(sg),r=parseMidi(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
     const all=g=>g.flatMap(x=>x.notes);const a=eqNotes(sg.tracks.flatMap(t=>t.notes),all(r.groups),n=>n.p+'@'+n.s+'+'+n.d);

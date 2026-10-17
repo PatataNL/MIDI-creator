@@ -11,6 +11,7 @@ While the tests run, auto-save is switched off and your saved video settings are
 | Test | What it checks |
 |---|---|
 | Synthetic falling-notes video | A video drawn on the fly has 16 known notes with glow, outlines, labels and sparks. The falling-notes reader must find every one, with no extras, within 15 ms. |
+| Note direction | Notes falling toward the keys win over sparks rising from them, whichever side the keys are on, and forcing a direction finds the notes even when the sparks clearly win. |
 | MIDI file | A song with layers, drums, the pedal, tempo and time-signature changes and a bookmark is saved as MIDI and read back unchanged. |
 | MusicXML score | The same song is exported as sheet music (with the two hands as one grand staff) and read back unchanged, velocities included. |
 | Project file | The song is saved as a project, slider values included, and read back unchanged. |

@@ -37,14 +37,23 @@ body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px/1.35 
 #app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);height:100%}
 #top{background:var(--panel);border-bottom:1px solid var(--line);min-width:0}
 .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:4px 10px}
-.bar2{display:grid;grid-template-columns:1fr auto 1fr;border-top:1px solid var(--line);padding-top:3px;padding-bottom:3px}
-.bar2 .transport{justify-content:center}
+/* second bar: the tools on the left, the transport in the middle of the window, Grid and Scale on the right (then the
+   tab bar arrow). The side columns never squeeze below their content; when the whole does not fit, see fitBar2. */
+.bar2{display:grid;grid-template-columns:minmax(max-content,1fr) auto minmax(max-content,1fr) auto;border-top:1px solid var(--line);padding-top:3px;padding-bottom:3px}
+.bar2{column-gap:8px}.bar2 .btn.tool{padding-left:10px;padding-right:10px}.bar .btn:not(.ico):not(.tool){padding-left:7px;padding-right:7px}
+/* the light/dark button keeps its label on a wide window; below that the icon says it, so the top row fits a laptop */
+@media (max-width:1499px){#themeLbl{display:none}#bTheme{padding-left:9px;padding-right:9px}}
+.bar2 #bpm{width:52px}.bar2 #scType{max-width:110px;text-align:left}
+.bar2 .transport{justify-content:center}.bar2 .transport,.bar2 .tools,.bar2 .gridgrp{flex-wrap:nowrap}.bar2 .gridgrp{justify-content:flex-end}
+.bar2 .tools{justify-self:start} /* its box hugs the four buttons instead of filling the column */
 .bar2 .tabtog{justify-content:flex-end;margin-left:auto}#bTabs{min-width:30px;padding:4px 6px;color:var(--dim)}#bTabs:hover{color:var(--text)}
 body.tabs-closed .tabbar{display:none}
-/* below this width the three columns no longer fit side by side: the groups wrap onto centered rows instead of squeezing the save buttons into a narrow stack */
-@media (max-width:1240px){.bar2{display:flex;flex-wrap:wrap;justify-content:center}.bar2 .grp:empty{display:none}
+/* on a narrow window the groups wrap onto centered rows instead */
+@media (max-width:1100px){.bar2{display:flex;flex-wrap:wrap;justify-content:center}.bar2 .grp:empty{display:none}
   /* the rows wrap and stay centered; the tab bar chevron keeps to the far right of the bottom row, with side padding so nothing runs under it */
   .bar2{position:relative;padding-left:44px;padding-right:44px}.bar2 .tabtog{position:absolute;right:10px;bottom:6px;margin:0}}
+/* the same on a wider window when the bar still does not fit (a long scale name, a larger font): see fitBar2 */
+.bar2.wrap{display:flex;flex-wrap:wrap;justify-content:center;position:relative;padding-left:44px;padding-right:44px}.bar2.wrap .tabtog{position:absolute;right:10px;bottom:6px;margin:0}
 .brand{font-weight:700;font-size:15px;letter-spacing:.2px;margin-right:2px;white-space:nowrap}
 .grp{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .grp.right{margin-left:auto}
@@ -63,6 +72,8 @@ input[type=number]{width:64px}
 label.f{display:flex;align-items:center;gap:4px;color:var(--dim)}
 .readout{font-variant-numeric:tabular-nums;width:11ch;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:14px;box-sizing:content-box;padding:0 8px;background:var(--roll-bg);border:1px solid var(--line);border-radius:6px;font-weight:600;white-space:nowrap}
 .sep{width:1px;align-self:stretch;background:var(--line)}
+/* a divider between groups of the top bar sits halfway, in the gap the bar already leaves */
+.bar>.sep{margin:4px -7px}
 #main{display:grid;grid-template-columns:var(--sideW,276px) 6px minmax(0,1fr);min-height:0}
 #side{grid-column:1}#splitV{grid-column:2}#work{grid-column:3}
 /* all on the first row: with the panel on the right the columns run backwards, and without this the grid would start a new row for each */
@@ -78,15 +89,42 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .layerbar label.lbrow{color:var(--dim);font-size:12px}.layerbar label.lbrow span{width:78px}
 .layerbar input[type=range]{flex:1;min-width:0;accent-color:var(--accent);margin:0}
 .layerbar output{width:34px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
-.trow.ic{gap:3px}.trow.ic .mini{min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:1px 5px}
+.trow.ic{gap:6px}.trow.ic .ins{flex:1;min-width:0;width:auto;height:26px;padding:1px 4px}
+.trow.ctl{justify-content:space-between;gap:6px}
+/* show, lock, mute and solo: raised buttons in the text color; switched on they light up like a mixer's, in the accent
+   color (hidden, locked), red (muted) or yellow (solo) */
+.tg{display:flex;gap:3px;flex:none}
+.tg .mini{width:28px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:var(--text);
+  background:linear-gradient(color-mix(in srgb,var(--text) 13%,var(--panel2)),color-mix(in srgb,var(--text) 7%,var(--panel2)));
+  border-color:color-mix(in srgb,var(--text) 22%,transparent);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.tg .mini:hover{background:color-mix(in srgb,var(--text) 20%,var(--panel2));border-color:color-mix(in srgb,var(--text) 40%,transparent)}
+.tg .mini.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);box-shadow:none}
+.tg .mini.on[data-a="mute"]{background:#e5484d;border-color:#e5484d;color:#fff}
+.tg .mini.on[data-a="solo"]{background:#f5b700;border-color:#f5b700;color:#1d1a10}
+/* what the sliders set: two choices side by side, the chosen one filled */
+.slseg{display:inline-flex;align-items:center;flex:none;gap:1px;padding:1px;border-radius:6px;border:1px solid var(--line);background:color-mix(in srgb,var(--text) 6%,var(--panel2));min-width:0}
+.slseg button{font:inherit;font-size:11.5px;line-height:18px;border:0;border-radius:5px;padding:1px 7px;background:transparent;color:var(--dim);cursor:pointer;white-space:nowrap}
+.slseg button:hover{color:var(--text);background:color-mix(in srgb,var(--text) 8%,transparent)}
+.slseg button[aria-checked="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.slseg button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* Show all / Only this: as small as the buttons beside it */
+.lbrow .lbseg{padding:1px;border-radius:5px}.lbrow .lbseg button{font-size:11px;line-height:15px;padding:0 6px;border-radius:4px}
+/* move, delete and more: in the header, in its text color */
+.nmrow .la{display:flex;gap:1px;flex:none}
+.nmrow .la .mini{width:24px;height:24px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:transparent;border-color:transparent;color:var(--lt,#fff);opacity:.8;font-size:14px}
+.nmrow .la .mini:hover,.nmrow .la .mini:focus-visible{opacity:1;background:rgba(0,0,0,.2)}
 .trk.hidden{opacity:.7}
 #side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line)}
 #side{container-type:inline-size;container-name:side}
 /* slim sidebar: tighter layer cards, shorter layer buttons with the second group of four on a row of its own */
 @container side (max-width:270px){
-  #tracks{padding:4px 3px}.trk{padding:5px 4px;border-left-width:4px;gap:4px}
-  .trow.ic{flex-wrap:wrap;gap:3px}.trow.ic>span{flex:0 0 100%!important;height:0;margin-top:-3px}
-  .trow.ic .mini{flex:1 1 0;min-width:0;height:18px;padding:0 2px}
+  #tracks{padding:4px 3px}.trk{padding:4px 4px;border-left-width:4px;gap:3px}
+  .nmrow{margin-left:-8px!important;margin-right:-4px!important;margin-top:-4px!important}
+  .nmrow .la .mini{width:20px}
+  .trow.ic{flex-wrap:wrap;justify-content:flex-end;gap:4px}.trow.ic .ins{flex:1 0 100%}.trow.ctl{gap:3px}
+  .tg{gap:2px}.tg .mini{width:22px;height:22px}.tg .mini svg{width:13px;height:13px}.slseg button{padding:1px 4px;font-size:11px}
+  /* the color box alone (its picker has the hex code too), so it fits beside "More colors" */
+  .colrow .hx{display:none}
   .sl label{gap:4px;font-size:11px}#side .sl input[type=range]{flex-basis:112px}.layerbar{padding:6px 4px 5px}.sidefoot{padding:6px 4px}
   /* number boxes stay just wide enough for three digits or a minus sign next to the up/down arrows */
   #side .sl label>input.num,#side .layerbar input.num{padding:2px 15px 2px 2px;box-sizing:border-box;min-width:42px}
@@ -95,13 +133,14 @@ body.side-closed #side,body.side-closed #splitV{display:none}
   .colrow{gap:4px 6px}.colrow .hx{min-width:0;width:68px}
 }
 #tracks{flex:1;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px;min-height:0}
-.trk{--lc:#6366f1;border:1px solid var(--line);border-left:5px solid var(--lc);border-radius:7px;padding:6px 7px;background:var(--panel2);display:flex;flex-direction:column;gap:5px;cursor:pointer}
+.trk{--lc:#6366f1;border:1px solid var(--line);border-left:5px solid var(--lc);border-radius:7px;padding:5px 6px;background:var(--panel2);display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .trk.on{outline:2px solid var(--accent);outline-offset:-1px;background:var(--roll-bg)}
 .trow{display:flex;align-items:center;gap:4px}
 .trow .nm{flex:1;min-width:0;padding:2px 5px;background:transparent;border-color:transparent;font-weight:600}
-.trow .nm:hover,.trow .nm:focus{border-color:var(--line);background:var(--panel)}
 .ins{width:100%}
-.sl{display:flex;flex-direction:column;gap:2px}
+.sl{display:flex;flex-direction:column;gap:1px}
+/* layer card sliders: rows just tall enough for their number boxes */
+#tracks .sl input.num{height:20px;box-sizing:border-box;padding-top:0;padding-bottom:0;font-size:12px}
 /* the label and the number box give way first when the sidebar gets slim; the slider only shrinks as a last resort */
 .sl label{display:flex;align-items:center;gap:6px;color:var(--dim);font-size:12px;min-width:0}
 .sl label>span{flex:0 1000 62px;min-width:46px;overflow:hidden}
@@ -109,12 +148,36 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .sl input[type=range]{flex:1 1 90px;width:auto;min-width:36px;margin:0;accent-color:var(--accent)}
 .sl output{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
 .sidefoot{border-top:1px solid var(--line);padding:8px;display:flex;flex-direction:column;gap:6px}
+/* Reverb space and Sound: the two menus line up at the right, the same width */
+.sidefoot label.f{justify-content:space-between}.sidefoot label.f select{width:118px;min-width:0}
 /* the work area: the notes column (toolbar, notes, playback bar, note info, status line), the splitter, and the Values sidebar
    running the full height beside them. The sidebar shares the rows (subgrid), so its lane lines up with the notes in time. */
 #work{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-rows:auto minmax(0,1fr) auto auto auto;min-width:0;min-height:0}
 .opts{grid-column:1;grid-row:1}#rollwrap{grid-column:1;grid-row:2}#progRow{grid-column:1;grid-row:3}#insp{grid-column:1;grid-row:4}#status{grid-column:1;grid-row:5}#splitL{grid-column:2;grid-row:1/-1}
 .opts{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:5px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
 .opts .btn{line-height:16px} /* whole pixels, so everything below this bar (the roll, the Layers tab) sits on the pixel grid and its text stays sharp */
+/* note actions on the left, the view (octave, Follow, Zoom) on the right; every control 26px tall */
+.acts{display:flex;align-items:center;gap:3px}
+.acts .btn.ico{min-width:30px;padding:4px 6px}.acts svg{width:16px;height:16px}
+.acts .sep{margin:3px 4px}
+#bXsel.held{opacity:.78} /* on only while Alt is held */
+.acts .btnsplit>.more{min-width:0;padding:4px 2px}.acts .more svg,.acts .chev svg{width:11px;height:11px}
+.acts .btn.wide{gap:1px;padding:4px 3px 4px 6px}.acts .chev{display:inline-flex;color:var(--dim)}
+.viewgrp{display:flex;align-items:center;gap:8px;margin-left:auto}
+#octInfo{white-space:nowrap}
+.zoomgrp{display:inline-flex;align-items:center;height:26px;box-sizing:border-box;padding:0 2px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);white-space:nowrap}
+.zoomgrp .zl{color:var(--dim);padding:0 4px}
+.zax,.zfit{display:inline-flex;align-items:center;height:100%;border-left:1px solid var(--line);padding:0 2px}
+.zoomgrp>.zax:first-child{border-left:0}
+/* Grid and Fine: the value opens the full list, the arrows step to a coarser or finer one */
+.zsel{appearance:none;-webkit-appearance:none;font:inherit;color:var(--text);background:transparent;border:0;border-radius:5px;height:20px;padding:0 3px;text-align:center;cursor:pointer}
+.zsel:hover{background:var(--line)}.zsel:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.zsel option{background:var(--panel2);color:var(--text)}
+.zb:disabled{opacity:.35;cursor:default;background:transparent}
+.zi{display:inline-flex;color:var(--dim);margin:0 1px}
+.zb{font:inherit;font-size:15px;line-height:1;color:var(--text);background:transparent;border:0;border-radius:5px;min-width:20px;height:20px;padding:0 3px;cursor:pointer}
+.zb:hover{background:var(--line)}.zb:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.zb.zt{font-size:inherit;padding:0 6px}
 #rollwrap{display:flex;min-height:120px;min-width:0}
 #rollcol{position:relative;flex:1;min-width:0;overflow:hidden}
 #lanepanel{width:var(--laneW,200px);background:var(--roll-bg);min-width:0;grid-column:3;grid-row:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:subgrid}
@@ -182,7 +245,15 @@ input[type=number],input.num[type=number]{padding-right:15px}#insp label.f input
 #tip{position:fixed;z-index:1002;left:0;top:0;max-width:min(300px,90vw);padding:5px 9px;border-radius:7px;background:var(--panel);color:var(--text);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.28);font-size:12px;font-weight:400;line-height:1.35;white-space:normal;text-align:left;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .12s}
 #tip.show{opacity:1;visibility:visible}
 @media (prefers-reduced-motion: reduce){#tip{transition:none}}
-input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}
+/* checkboxes in the site's style: a dark box with a soft border, filled with the accent color and a tick when on
+   (the browser's own unchecked box is a bright white square in dark mode) */
+input[type=checkbox]{-webkit-appearance:none;appearance:none;box-sizing:border-box;flex:none;width:16px;height:16px;margin:0 2px;border:1.5px solid color-mix(in srgb,var(--text) 38%,transparent);border-radius:4px;background:var(--panel2);display:inline-grid;place-content:center;cursor:pointer;vertical-align:middle;transition:background-color .1s,border-color .1s}
+input[type=checkbox]::before{content:'';width:8px;height:4.5px;border:solid var(--accent-ink);border-width:0 0 2px 2px;transform:translateY(-1px) rotate(-45deg) scale(0);transition:transform .1s}
+input[type=checkbox]:hover{border-color:color-mix(in srgb,var(--text) 65%,transparent)}
+input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:checked::before{transform:translateY(-1px) rotate(-45deg) scale(1)}
+input[type=checkbox]:disabled{opacity:.45;cursor:default}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .btn.ico{display:inline-flex;align-items:center;justify-content:center;min-width:38px}
 .btn.ico svg{display:block}
 .btnsplit{display:inline-flex}
@@ -273,17 +344,17 @@ body.side-right #bExpand,#bLaneExpand{left:auto;right:0;transform:none}
 body.side-closed #bExpand,body.lane-closed #bLaneExpand{display:block}
 body.stage #bExpand,body.stage #bLaneExpand{display:none!important}
 body.lane-closed #lanepanel,body.lane-closed #splitL{display:none}
-.ptabs .ptabFold{width:100%;height:24px;margin-bottom:3px;flex:none;color:var(--dim);background:transparent;border-color:transparent}.ptabs .ptabFold:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
+.ptabs .ptabFold{width:100%;min-width:0;height:22px;padding:0;margin-bottom:2px;flex:none;color:var(--dim);background:transparent;border-color:transparent}.ptabs .ptabFold:hover{color:var(--text);background:var(--panel2);border-color:var(--line)}
 @media (max-width:820px){#bExpand{display:block}body.side-open #bExpand{display:none}}
 .ptabs{grid-column:1;grid-row:1/-1}
-.ptabs{display:flex;flex-direction:column;gap:3px;padding:5px 3px;background:var(--panel);border-right:1px solid var(--line);flex:none}
+.ptabs{display:flex;flex-direction:column;gap:3px;padding:4px 2px;background:var(--panel);border-right:1px solid var(--line);flex:none}
 /* with the layer panel on the right, the Values sidebar (bookmark buttons included) mirrors to the left of the notes, tabs facing the notes */
 body.side-right #work{grid-template-columns:auto auto minmax(0,1fr)}
 body.side-right .opts,body.side-right #rollwrap,body.side-right #progRow,body.side-right #insp,body.side-right #status{grid-column:3}
 body.side-right #splitL{grid-column:2}body.side-right #lanepanel{grid-column:1;grid-template-columns:minmax(0,1fr) auto}
 body.side-right .ptabs{grid-column:2}body.side-right .ppanes{grid-column:1}
 body.side-right .ptabs{border-right:0;border-left:1px solid var(--line)}
-.ptab{writing-mode:vertical-rl;transform:rotate(180deg);padding:12px 6px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--dim);font:inherit;font-weight:600;cursor:pointer;line-height:18px}
+.ptab{writing-mode:vertical-rl;transform:rotate(180deg);padding:10px 3px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--dim);font:inherit;font-size:12px;font-weight:600;cursor:pointer;line-height:15px}
 .ptab:hover{color:var(--text);background:var(--panel2)}
 .ptab[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
 .ptab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -318,12 +389,17 @@ body.side-right .ptabs{border-right:0;border-left:1px solid var(--line)}
 #histList .fut button{color:var(--dim);font-style:italic}
 /* the header reaches 2px in under the colored left border and paints those 2px in the border color, so the two meet with no
    gap at the rounded corner (a child cannot be drawn beneath its parent's border, so this is how it looks layered below it) */
-.nmrow{margin:-6px -7px 0 -9px;padding:5px 7px 5px 9px;background:linear-gradient(to right,var(--lc) 2px,var(--lh,#444) 2px);border-radius:4px 6px 0 0}
+.nmrow{margin:-5px -6px 0 -8px;padding:2px 3px 2px 8px;gap:2px;background:linear-gradient(to right,var(--lc) 2px,var(--lh,#444) 2px);border-radius:4px 6px 0 0}
 .trow .nm{color:var(--lt,#fff);font-weight:700}
-.trow .nm:hover,.trow .nm:focus{border-color:color-mix(in srgb,var(--lt,#fff) 50%,transparent);background:rgba(0,0,0,.14)}
-.colrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--dim);font-size:12px}
+/* the name: a soft tint and a dotted underline on hover say it can be typed in; while typing it is a plain field */
+.trow .nm{border-radius:5px;cursor:text;text-decoration:underline dotted transparent;text-underline-offset:3px;transition:background-color .12s,text-decoration-color .12s}
+.trow .nm:hover{border-color:transparent;background:color-mix(in srgb,var(--lt,#fff) 14%,transparent);text-decoration-color:color-mix(in srgb,var(--lt,#fff) 60%,transparent)}
+.trow .nm:focus,.trow .nm:focus-visible{background:var(--panel);color:var(--text);border-color:var(--accent);outline:none;text-decoration-color:transparent;font-weight:600}
+.colrow{display:flex;align-items:center;gap:4px 6px;flex-wrap:wrap;color:var(--dim);font-size:12px}
+.colrow .hx{width:60px;padding:1px 4px;height:22px;box-sizing:border-box}.colrow .cp{height:22px}
+.colrow .advtog{margin-left:auto;white-space:nowrap}
 .colrow label{display:flex;align-items:center;gap:5px}
-.colrow .slmode{margin-left:auto;white-space:nowrap}
+.advcol{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--dim);padding-left:2px}
 input[type=color]{width:26px;height:22px;padding:0;border:1px solid var(--line);border-radius:5px;background:transparent;cursor:pointer}
 input[type=color]::-webkit-color-swatch-wrapper{padding:2px}input[type=color]::-webkit-color-swatch{border:0;border-radius:3px}input[type=color]::-moz-color-swatch{border:0;border-radius:3px}
 input[type=color]:hover{border-color:var(--dim)}input[type=color]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
@@ -354,20 +430,8 @@ body.cpPicking,body.cpPicking *{cursor:crosshair!important}
 .cpRecent{display:flex;align-items:center;gap:6px}.cpRecent:empty{display:none}.cpRecent>span{font-size:10.5px;color:var(--dim);margin-right:2px}.cpRecent .cpS{width:22px;flex:none}
 .cpS{height:20px;padding:0;border:0;border-radius:5px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}.cpS.on{box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--text)}.cpS:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 input.hx{width:72px;font-family:inherit}
-.advcol{font-size:12px;color:var(--dim)}.advcol summary{cursor:pointer;margin:2px 0}
-.advcol .colrow{margin:4px 0 0 2px}
 .addtrk{align-self:stretch;font-size:13px;font-weight:600;padding:9px 12px;border-radius:8px}
 #cv,#lane{cursor:crosshair}
-#toolsPanel{position:fixed;top:132px;right:18px;width:min(380px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.35);z-index:35;padding:10px 14px 12px}
-#toolsPanel[hidden]{display:none}
-#toolsPanel section{border-top:1px solid var(--line);padding:6px 0 4px}
-#toolsPanel h4{margin:4px 0;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--dim)}
-#toolsPanel small{display:block;color:var(--dim);margin-top:2px}
-.tpHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
-.tpScope{color:var(--dim);margin-bottom:4px}
-.tpRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:3px 0}
-.tpRow label{display:flex;align-items:center;gap:6px;color:var(--dim)}
-.tpRow input[type=range]{width:110px;accent-color:var(--accent)}
 body.stage #app{grid-template-rows:minmax(0,1fr)}
 body.stage #top{position:fixed;left:0;right:0;top:0;z-index:40;transition:transform .16s ease}
 body.stage.hide-bar #top{transform:translateY(-105%);pointer-events:none}
@@ -502,6 +566,14 @@ body.stage .tabbar{display:none}
 .ctxmenu button:hover:not(:disabled),.ctxmenu button:focus-visible{background:var(--accent-soft);outline:none}
 .ctxmenu button:disabled{color:var(--dim);opacity:.55;cursor:default}
 .ctxmenu kbd{font:inherit;font-size:11px;color:var(--dim)}
+/* Select tools: where and whether to add on top, then the choices */
+.selpop{min-width:300px}
+.selpop .spHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 6px 6px}
+.selpop .slseg button{display:inline-block;padding:1px 9px;font-size:12px;line-height:18px}
+.selpop .spAdd{display:flex;align-items:center;gap:5px;color:var(--dim);font-size:12px;cursor:pointer}
+.selpop .spSub{font-size:11.5px;color:var(--dim);padding:3px 10px 1px}
+.selpop .spFoot{font-size:11.5px;color:var(--dim);padding:6px 10px 3px;border-top:1px solid var(--line);margin-top:4px}
+.selpop button[data-sel] kbd{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* the small editor for a tempo or time signature change */
 .tmpop{position:fixed;z-index:200;width:250px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.28);padding:10px 12px;display:flex;flex-direction:column;gap:10px;font-size:13px}
 .tmpop .tmHead{display:flex;flex-direction:column;gap:2px}.tmpop .tmHead span{color:var(--dim);font-size:11.5px}
@@ -524,17 +596,20 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     <div class="bar bar1">
       <div class="brand">MIDI-Creator</div>
       <div class="grp"><button class="btn big ico" id="bUndo" title="Undo (Ctrl+Z)" aria-label="Undo" data-icon="undo"></button><button class="btn big ico" id="bRedo" title="Redo (Ctrl+Shift+Z)" aria-label="Redo" data-icon="redo"></button></div>
+      <span class="sep" aria-hidden="true"></span>
       <div class="grp">
         <button class="btn" id="bNew" title="Open a new tab with an empty project">New</button>
         <button class="btn" id="bOpen" title="Open a MIDI file, sheet music (MusicXML: .musicxml or .mxl) or a project .json file in a new tab, or drop one onto the window">Open…</button>
         <button class="btn" id="bVideo" title="Build notes from a falling-notes video file on your computer">From video…</button>
         <input type="file" id="file" accept=".mid,.midi,.json,.musicxml,.mxl,.xml" hidden>
       </div>
-      <div class="grp tools" role="group" aria-label="Tools">
-        <button class="btn tool on" id="tDraw" title="Draw (1): click for a note, drag to stretch it"><span class="ti" data-icon="draw"></span><span>Draw</span></button>
-        <button class="btn tool" id="tSelect" title="Select (2): drag a box to select"><span class="ti" data-icon="select"></span><span>Select</span></button>
-        <button class="btn tool" id="tErase" title="Erase (3): click or drag over notes"><span class="ti" data-icon="erase"></span><span>Erase</span></button>
-        <button class="btn tool" id="tHand" title="Look (4): drag to scroll around, handy on touch screens"><span class="ti" data-icon="look"></span><span>Look</span></button>
+      <span class="sep" aria-hidden="true"></span>
+      <div class="grp">
+        <button class="btn" id="bSaveMid" title="Export as a standard MIDI file (Ctrl+S)">Save MIDI</button>
+        <button class="btn" id="bSaveXml" title="Export as sheet music (MusicXML) for MuseScore, Finale, Sibelius and other notation programs">Save score</button>
+        <button class="btn" id="bSaveProj" title="Save the full project as .json">Save project</button>
+        <button class="btn" id="bWav" title="Render the song to an audio file. Uses Fancy playback when it is switched on.">Export WAV</button>
+        <span class="btnsplit"><button class="btn" id="bKeys" title="Open this song in the Keys piano practice app (new tab)">Open in Keys</button><button class="btn ico" id="bKeysLink" title="Copy a link that opens this song in Keys, to share with others" aria-label="Copy Keys link" data-icon="link"></button></span>
       </div>
       <div class="grp right">
         <button class="btn" id="bMidi" title="Connect a MIDI keyboard">Connect MIDI</button>
@@ -546,12 +621,11 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
       </div>
     </div>
     <div class="bar bar2">
-      <div class="grp">
-        <button class="btn" id="bSaveMid" title="Export as a standard MIDI file (Ctrl+S)">Save MIDI</button>
-        <button class="btn" id="bSaveXml" title="Export as sheet music (MusicXML) for MuseScore, Finale, Sibelius and other notation programs">Save score</button>
-        <button class="btn" id="bSaveProj" title="Save the full project as .json">Save project</button>
-        <button class="btn" id="bWav" title="Render the song to an audio file. Uses Fancy playback when it is switched on.">Export WAV</button>
-        <span class="btnsplit"><button class="btn" id="bKeys" title="Open this song in the Keys piano practice app (new tab)">Open in Keys</button><button class="btn ico" id="bKeysLink" title="Copy a link that opens this song in Keys, to share with others" aria-label="Copy Keys link" data-icon="link"></button></span>
+      <div class="grp tools" role="group" aria-label="Tools">
+        <button class="btn tool on" id="tDraw" title="Draw (1): click for a note, drag to stretch it"><span class="ti" data-icon="draw"></span><span>Draw</span></button>
+        <button class="btn tool" id="tSelect" title="Select (2): drag a box to select"><span class="ti" data-icon="select"></span><span>Select</span></button>
+        <button class="btn tool" id="tErase" title="Erase (3): click or drag over notes"><span class="ti" data-icon="erase"></span><span>Erase</span></button>
+        <button class="btn tool" id="tHand" title="Look (4): drag to scroll around, handy on touch screens"><span class="ti" data-icon="look"></span><span>Look</span></button>
       </div>
       <div class="grp transport">
         <button class="btn big ico" id="bHome" title="Back to start (Home)" aria-label="Back to start" data-icon="home"></button>
@@ -560,12 +634,18 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         <button class="btn big ico rec" id="bRec" title="Record notes you play onto the selected layer while the song plays" aria-label="Record" data-icon="rec"></button>
         <span class="sep"></span>
         <button class="btn" id="bLoop" title="Loop the region marked on the thin strip at the right edge of the time ruler">Loop</button>
-        <button class="btn" id="bMetro" title="Metronome">Metronome</button>
-        <button class="btn" id="bFancy" title="Fancy playback: realistic piano, guitars, bass, mallets and drums, calculated on your device when needed">Fancy</button>
+        <button class="btn ico" id="bMetro" title="Metronome" aria-label="Metronome" data-icon="metro"></button>
         <span class="sep"></span>
         <div class="readout" id="pos"><span id="posM">1.1.000</span><span id="posT">00:00.0</span></div>
         <label class="f">BPM <input type="number" id="bpm" min="20" max="300" step="1" value="120"></label>
         <select id="tsel" title="Time signature"></select>
+      </div>
+      <div class="grp gridgrp">
+        <div class="zoomgrp" role="group" aria-label="Grid">
+          <span class="zax" title="New notes start on this grid, and Snap uses it. T: triplets."><label class="zl" for="gridSel">Grid</label><button class="zb" data-gstep="grid,-1" aria-label="Coarser grid">‹</button><select id="gridSel" class="zsel"></select><button class="zb" data-gstep="grid,1" aria-label="Finer grid">›</button></span>
+          <span class="zax" title="Moving and resizing notes snaps to this finer grid. Hold Alt to snap to the main grid instead."><label class="zl" for="fineSel">Fine</label><button class="zb" data-gstep="fine,-1" aria-label="Coarser fine grid">‹</button><select id="fineSel" class="zsel"></select><button class="zb" data-gstep="fine,1" aria-label="Finer fine grid">›</button></span>
+        </div>
+        <div class="zoomgrp" role="group" aria-label="Scale highlight"><span class="zax" title="Highlight the notes of a scale in the roll"><label class="zl" for="scRoot">Scale</label><select id="scRoot" class="zsel" aria-label="Scale key"></select><select id="scType" class="zsel" aria-label="Scale type"></select></span></div>
       </div>
       <div class="grp tabtog"><button class="btn ico" id="bTabs" aria-expanded="true"></button></div>
     </div>
@@ -574,7 +654,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
   <div id="main">
     <aside id="side">
       <div class="layerbar">
-        <div class="lbrow"><span class="lbt">Layers</span><button class="mini" id="bShowAll" title="Show every layer">Show all</button><button class="mini" id="bOnlyActive" title="Hide every layer except the selected one">Only this</button><button class="mini ico" id="bCollapse" title="Collapse the layer panel" aria-label="Collapse the layer panel" data-icon="chevL"></button></div>
+        <div class="lbrow"><span class="lbt">Layers</span><span class="slseg lbseg" role="radiogroup" aria-label="Which layers to show"><button role="radio" id="bShowAll" aria-checked="false" title="Show every layer">Show all</button><button role="radio" id="bOnlyActive" aria-checked="false" title="Hide every layer except the selected one, and keep following the selected layer">Only this</button></span><button class="mini ico" id="bCollapse" title="Collapse the layer panel" aria-label="Collapse the layer panel" data-icon="chevL"></button></div>
         <label class="lbrow"><span>Other layers</span><input type="range" id="ghostSl" min="0" max="100" value="30"><input type="number" class="num" id="ghostN" min="0" max="100" value="30" aria-label="Other layers opacity value"></label>
       </div>
       <div id="tracks"></div>
@@ -584,20 +664,40 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           <label><span>Reverb mix</span><input type="range" id="mRev" min="0" max="100" value="60"><input type="number" class="num" id="mRevN" min="0" max="100" value="60" aria-label="Reverb mix value"></label>
         </div>
         <label class="f">Reverb space <select id="mSpace"><option value="0.9">Small room</option><option value="2.2" selected>Hall</option><option value="4.5">Cathedral</option></select></label>
+        <label class="f">Sound <select id="sndSel" title="Standard: the General MIDI sounds, light and ready straight away. Fancy: realistic piano, guitars, bass, mallets and drums, calculated on your device when needed (used for WAV export too)."><option value="std">Standard</option><option value="fancy">Fancy</option></select></label>
       </div>
     </aside>
     <div id="splitV" class="split v" role="separator" aria-orientation="vertical" tabindex="0" title="Drag to resize the layer panel (double-click resets)"></div>
     <section id="work">
       <div class="opts">
-        <label class="f">Grid <select id="gridSel" title="New notes start on this grid"></select></label>
-        <label class="f">Fine <select id="fineSel" title="Moving and resizing notes snaps to this finer grid. Hold Alt to snap to the main grid instead."></select></label>
-        <label class="f">Scale <select id="scRoot" title="Highlight the notes of a scale"></select><select id="scType"></select></label>
-        <span class="sep"></span>
-        <span class="f">Time <button class="mini" id="zxo">−</button><button class="mini" id="zxi">+</button></span>
-        <span class="f" title="Horizontal zoom. Ctrl+Shift+wheel, or just the wheel over the keys, also works.">Key width <button class="mini" id="zyo">−</button><button class="mini" id="zyi">+</button></span><button class="btn" id="bFit" title="Fit the 88 piano keys to the window width">Fit keys</button><button class="btn" id="bFitN" title="Zoom the keyboard to the notes in your song">Fit notes</button>
-        <button class="btn" id="bTools" title="Transpose, swing, humanize and legato for the selected notes (or the whole layer)" aria-haspopup="dialog">Note tools</button>
-        <button class="btn on" id="bFollow" title="Scroll with the playhead">Follow</button>
-        <span class="f" id="octInfo" title="Z / X change the octave of the computer-keyboard piano"></span>
+        <!-- what the buttons do to notes: the selected ones, or the whole selected layer when none are selected -->
+        <div class="acts" role="toolbar" aria-label="Note actions">
+          <button class="btn ico" id="bXsel" data-icon="layers" aria-pressed="false" title="Select across layers (M): a selection box and Ctrl+A pick notes in every shown, unlocked layer. Hold Alt to turn it on until you let go." aria-label="Select across layers"></button>
+          <button class="btn ico wide" id="bSelTools" title="Select tools: all notes, the same key or note as the selected ones, the same length or velocity, a stretch of time, or the opposite, in this layer or every layer" aria-label="Select tools" aria-haspopup="dialog"><span data-icon="selAll"></span><span class="chev" data-icon="chevD"></span></button>
+          <span class="sep"></span>
+          <span class="btnsplit"><button class="btn ico" id="bSnap" data-icon="snap" title="Snap note starts to the grid (Q). Selected notes, or the whole layer." aria-label="Snap note starts to the grid"></button><button class="btn ico more" id="bSnapMore" data-icon="chevD" title="More ways to snap: ends, starts and ends, lengths" aria-label="More ways to snap" aria-haspopup="menu"></button></span>
+          <button class="btn ico" id="bSplit" data-icon="split" aria-pressed="false" title="Split where you click: click a note to cut it there, or with notes selected, cut every selected note at that height. Click again or press Esc to stop. Ctrl+E splits at the playhead." aria-label="Split where you click"></button>
+          <button class="btn ico" id="bJoin" data-icon="join" aria-pressed="false" title="Join where you click: click where two notes on one key meet (or a note and the next one on its key) to make them one. With notes selected, it joins at that height on every selected key. Click again or press Esc to stop. Ctrl+J joins the selected notes." aria-label="Join where you click"></button>
+          <button class="btn ico wide" id="bLegato" title="Legato: each note runs up to the next one in its layer. Selected notes, or the whole layer." aria-label="Legato" aria-haspopup="menu"><span data-icon="legato"></span><span class="chev" data-icon="chevD"></span></button>
+          <button class="btn ico wide" id="bSwing" title="Swing: notes on every second step of the Grid move later, from light to a triplet feel, or straight again. Selected notes, or the whole layer." aria-label="Swing" aria-haspopup="menu"><span data-icon="swing"></span><span class="chev" data-icon="chevD"></span></button>
+          <button class="btn ico wide" id="bHuman" title="Humanize: small random changes to timing and velocity, so it sounds less like a machine. Selected notes, or the whole layer." aria-label="Humanize" aria-haspopup="menu"><span data-icon="human"></span><span class="chev" data-icon="chevD"></span></button>
+          <button class="btn ico wide" id="bTrans" title="Transpose a semitone or an octave up or down. Selected notes, or the whole layer." aria-label="Transpose" aria-haspopup="menu"><span data-icon="transpose"></span><span class="chev" data-icon="chevD"></span></button>
+          <button class="btn ico wide" id="bClean" title="Clean up: shorten notes that run into the next note on their key, or remove notes that start twice on the same key. Selected notes, or the whole layer." aria-label="Clean up" aria-haspopup="menu"><span data-icon="clean"></span><span class="chev" data-icon="chevD"></span></button>
+          <span class="sep"></span>
+          <button class="btn ico" id="bDup" data-icon="dup" title="Duplicate the selected notes right after themselves (Ctrl+D)" aria-label="Duplicate notes"></button>
+          <button class="btn ico" id="bDel" data-icon="trash" title="Delete the selected notes (Delete)" aria-label="Delete notes"></button>
+          <button class="btn ico" id="bLoopSel" data-icon="loopSel" title="Loop the selected notes: the loop region is set around them (on the grid) and switched on" aria-label="Loop the selected notes"></button>
+        </div>
+        <div class="viewgrp">
+          <span class="f" id="octInfo" title="Z / X change the octave of the computer-keyboard piano"></span>
+          <button class="btn on" id="bFollow" title="Scroll with the playhead">Follow</button>
+          <div class="zoomgrp" role="group" aria-label="Zoom">
+            <span class="zl">Zoom</span>
+            <span class="zax" title="Time: how much of the song fits in view. Ctrl+wheel also works."><button class="zb" id="zxo" aria-label="Show more time">−</button><span class="zi" data-icon="axisT"></span><button class="zb" id="zxi" aria-label="Show less time">+</button></span>
+            <span class="zax" title="Key width. Ctrl+Shift+wheel, or just the wheel over the keys, also works."><button class="zb" id="zyo" aria-label="Narrower keys">−</button><span class="zi" data-icon="axisK"></span><button class="zb" id="zyi" aria-label="Wider keys">+</button></span>
+            <span class="zfit"><span class="zl">Fit</span><button class="zb zt" id="bFit" title="Fit the 88 piano keys to the window width">Piano</button><button class="zb zt" id="bFitN" title="Zoom the keyboard to the notes in your song">Notes</button></span>
+          </div>
+        </div>
       </div>
       <div id="rollwrap">
         <div id="rollcol"><button class="btn" id="bExpand" title="Show the layer panel" aria-label="Show the layer panel">Layers</button><button class="btn" id="bLaneExpand" title="Show the Values sidebar" aria-label="Show the Values sidebar">Values</button><div id="roll"><div id="stage"><canvas id="cv"></canvas></div></div></div>
@@ -741,6 +841,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           <details class="vsec vsub"><summary>Advanced position tuning</summary>
             <div class="vrow vband" id="vBandRow" hidden><label title="Top of the scan area, measured down from the top of the video">Scan from <input type="number" class="num" id="vBandTop" min="0" max="100" step="0.5">%</label><label title="Bottom of the scan area, measured down from the top of the video. Keep it above the effects drawn where notes reach the keys.">to <input type="number" class="num" id="vBandBot" min="0" max="100" step="0.5">%</label><label id="vBandHitL" title="Where the notes reach the keys (the top edge of the keys), measured down from the top of the video">Keys at <input type="number" class="num" id="vBandHit" min="0" max="100" step="0.5">%</label></div>
             <div class="vrow" id="vBandInfo" hidden><small class="vdim">Measured down from the top of the video. Notes falling through the whole scan area are read most precisely; the higher it ends above the keys, the fewer key effects it sees.</small></div>
+            <div class="vrow" id="vDirRow" hidden><label title="Which way the notes move on screen. Auto measures it and, when unsure, picks the way toward the keys. Force a direction when the result says the notes move the wrong way.">Notes move <select id="vDir"><option value="auto" selected>Auto</option><option value="down">Down</option><option value="up">Up</option></select></label></div>
             <div class="vrow"><label title="Use this when the keyboard looks tilted, rotated or is filmed at an angle. You mark the four outer corners of the keys instead."><input type="checkbox" id="vPersp"> Perspective correction (mark four corners)</label></div>
             <div class="vrow" id="vPerspOpts" hidden><label>White key sample height <input type="number" class="num" id="vHW" min="50" max="98" value="85">%</label><label>Black key sample height <input type="number" class="num" id="vHB" min="5" max="60" value="33">%</label></div>
             <div class="vrow"><label title="Works with and without perspective correction. 1.00 means the keyboard looks straight on."><span>Left/right perspective</span><input type="range" id="vLRm" min="0.5" max="2" step="0.01" value="1"><input type="number" class="num" id="vLRmN" min="0.5" max="2" step="0.01" value="1" aria-label="Left/right perspective multiplier"></label></div>
@@ -797,30 +898,6 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
     </div>
   </div>
 </dialog>
-<div id="toolsPanel" role="dialog" aria-label="Note tools" hidden>
-  <div class="tpHead"><strong>Note tools</strong><button class="mini" id="tpClose" aria-label="Close note tools">✕</button></div>
-  <div class="tpScope" id="tpScope">Applies to: the whole layer</div>
-  <section><h4>Snap to grid</h4>
-    <div class="tpRow"><button class="btn" id="bQuant" title="Snap note starts to the grid">Snap All</button></div>
-    <small>Moves each note's start to the nearest line of the grid set above the notes.</small></section>
-  <section><h4>Select across layers</h4>
-    <div class="tpRow"><button class="btn" id="tpSelAll" title="Every note in every layer that is shown and not locked (Ctrl+Shift+A)">All layers</button><button class="btn" id="tpSelKeys" title="Every note, in every layer, on a key the selected notes are on">Same keys</button></div>
-    <small>Shift+click a key to select every note on it, or Shift+drag along the time ruler for every note starting in that stretch. Hold Ctrl as well to add to the selection.</small></section>
-  <section><h4>Split and join</h4>
-    <div class="tpRow"><button class="btn" id="tpSplit" title="Cut the selected notes in two where the playhead crosses them (Ctrl+E)">Split at playhead</button><button class="btn" id="tpJoin" title="Make the selected notes on the same key one note (Ctrl+J)">Join</button></div>
-    <small>Join makes one note from the first start to the last end. With one note selected, it joins the next note on that key.</small></section>
-  <section><h4>Transpose</h4>
-    <div class="tpRow"><button class="mini" data-tr="-12">−12</button><button class="mini" data-tr="-1">−1</button><input type="number" class="num" id="tpSemi" value="0" min="-48" max="48" aria-label="Semitones"><button class="mini" data-tr="1">+1</button><button class="mini" data-tr="12">+12</button><button class="btn" id="tpTransApply">Apply</button></div></section>
-  <section><h4>Swing</h4>
-    <div class="tpRow"><label>Amount <input type="range" id="tpSwing" min="50" max="75" value="60"><input type="number" class="num" id="tpSwingN" min="50" max="75" aria-label="Swing amount in percent"></label></div>
-    <div class="tpRow"><label>Grid <select id="tpSwingGrid"><option value="240">1/8</option><option value="120" selected>1/16</option></select></label><button class="btn" id="tpSwingApply">Apply</button></div>
-    <small>50% is straight, about 67% feels like triplets. Every second grid step is delayed.</small></section>
-  <section><h4>Humanize</h4>
-    <div class="tpRow"><label>Timing ± <input type="number" class="num" id="tpHumT" value="10" min="0" max="120"> ticks</label><label>Velocity ± <input type="number" class="num" id="tpHumV" value="8" min="0" max="60"></label><button class="btn" id="tpHumApply">Apply</button></div></section>
-  <section><h4>Legato</h4>
-    <div class="tpRow"><label><input type="checkbox" id="tpLegLonger" checked> Only lengthen</label><label>Gap <input type="number" class="num" id="tpLegGap" value="0" min="0" max="240"> ticks</label><button class="btn" id="tpLegApply">Apply</button></div>
-    <small>Each note is extended to the start of the next one.</small></section>
-</div>
 <dialog id="mergeDlg" aria-labelledby="mgTitle">
   <div class="setHead"><h2 id="mgTitle">Merge layers</h2></div>
   <div class="setBody"><p id="mgMsg" style="margin:12px 0 0"></p><div id="mgList"></div>
@@ -1540,7 +1617,11 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const FAMILIES=['Piano','Chromatic percussion','Organ','Guitar','Bass','Strings','Ensemble','Brass','Reed','Pipe','Synth lead','Synth pad','Synth effects','Ethnic','Percussive','Sound effects'];
 const GRIDS=[{k:'1/1',t:4*PPQ},{k:'1/2',t:2*PPQ},{k:'1/4',t:PPQ},{k:'1/8',t:PPQ/2},{k:'1/16',t:PPQ/4},{k:'1/32',t:PPQ/8},{k:'1/64',t:PPQ/16},{k:'1/4 triplet',t:PPQ*2/3},{k:'1/8 triplet',t:PPQ/3},{k:'1/16 triplet',t:PPQ/6},{k:'1/32 triplet',t:PPQ/12}];
-const FINES=[{k:'1/32',t:PPQ/8},{k:'1/64',t:PPQ/16},{k:'1/128',t:PPQ/32},{k:'1 tick',t:1}];
+// The fine grid: what moving and resizing snap to. Only the values from the main grid down are offered (see fineList).
+// Tabs save the place in this list, so new values go at the end.
+const FINES=[{k:'1/32',t:PPQ/8},{k:'1/64',t:PPQ/16},{k:'1/128',t:PPQ/32},{k:'1 tick',t:1},
+  {k:'1/1',t:4*PPQ},{k:'1/2',t:2*PPQ},{k:'1/4',t:PPQ},{k:'1/8',t:PPQ/2},{k:'1/16',t:PPQ/4},
+  {k:'1/4 triplet',t:PPQ*2/3,tri:1},{k:'1/8 triplet',t:PPQ/3,tri:1},{k:'1/16 triplet',t:PPQ/6,tri:1},{k:'1/32 triplet',t:PPQ/12,tri:1}];
 const SCALES={off:null,major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],'harmonic minor':[0,2,3,5,7,8,11],dorian:[0,2,3,5,7,9,10],mixolydian:[0,2,4,5,7,9,10],'major pentatonic':[0,2,4,7,9],'minor pentatonic':[0,3,5,7,10],blues:[0,3,5,6,7,10],chromatic:[0,1,2,3,4,5,6,7,8,9,10,11]};
 const TSIGS=[[4,4],[3,4],[2,4],[5,4],[6,8],[7,8],[12,8],[3,8]];
 let KEYH=124;const RULERW=52,LANEPAD=10;
@@ -2035,7 +2116,7 @@ function drawRoll(){
   let ghost=null,ghostDone=false;
   // full-screen playback with its bars tucked away: no placement ghost or hover label (the cursor is hidden too)
   const idle=document.body.classList.contains('hide-bar');
-  if(S.set.hover&&S.hv&&!idle&&!P.mode&&S.tool==='draw'&&!S.hv.over&&!act.lock&&!act.hide)ghost={p:S.hv.p,tick:S.hv.tick};
+  if(S.set.hover&&S.hv&&!idle&&!P.mode&&!S.pick&&S.tool==='draw'&&!S.hv.over&&!act.lock&&!act.hide)ghost={p:S.hv.p,tick:S.hv.tick};
   const drawGhost=()=>{
     const x0=keyX0(ghost.p)+1,x1=keyX1(ghost.p)-1,gh=Math.max(4,gridT()*ppt),yB=yOfTick(ghost.tick);
     g.globalAlpha=.4;g.fillStyle=noteFill(act,ghost.p,.9);rr(g,x0,yB-gh,x1-x0,gh,3);g.fill();g.globalAlpha=1;
@@ -2079,6 +2160,7 @@ function drawRoll(){
   }
   // the stretch of time being picked along the ruler
   if(P.mode==='rsel'){const y0=yOfTick(Math.max(P.ra,P.rb)),y1=yOfTick(Math.min(P.ra,P.rb));g.fillStyle=C.accentSoft;g.fillRect(RULERW,y0,W-RULERW,Math.max(2,y1-y0));g.strokeStyle=C.accent;g.lineWidth=1;g.setLineDash([4,3]);g.strokeRect(RULERW+.5,y0+.5,W-RULERW-1,Math.max(2,y1-y0)-1);g.setLineDash([]);}
+  drawPick(g);
   if(P.mode==='box'&&P.box){const b=P.box,bx=Math.min(b.x0,b.x),by=Math.min(b.y0,b.y),bw=Math.abs(b.x-b.x0),bh=Math.abs(b.y-b.y0);g.fillStyle=C.accentSoft;g.strokeStyle=C.accent;g.lineWidth=1;g.setLineDash([4,3]);g.fillRect(bx,by,bw,bh);g.strokeRect(bx+.5,by+.5,bw,bh);g.setLineDash([]);}
   if(STAGE.on&&S.set.fadeAmt>0){const fa=S.set.fadeAmt/100,hh=AH*(.1+.3*fa),gr=g.createLinearGradient(0,0,0,hh);gr.addColorStop(0,rgbaOf(C.bg,.95*fa));gr.addColorStop(1,rgbaOf(C.bg,0));g.fillStyle=gr;g.fillRect(RULERW,0,W-RULERW,hh);}
   if(STAGE.on&&S.set.stageFx&&FX.ripples.length){
@@ -2642,6 +2724,13 @@ cv.addEventListener('pointerdown',e=>{
   // a bookmark's name tag on the notes: click jumps there, Shift+click or a double-click edits it
   if(e.button===0){const h=BM.hits.find(h=>x>=h.x0&&x<=h.x1&&y>=h.y0&&y<=h.y1);if(h){const i=song.marks.indexOf(h.m);if(i>=0){if(e.shiftKey||e.detail>1)bmEdit(i,'name');else bmJump(i);}return;}}
   if(y<AH&&e.button===0&&Math.abs(y-yOfTick(S.playhead))<=4){P.mode='ruler';seek(playTickAt(y,e.altKey));return;}
+  if(S.pick&&e.button===0){pickClick(x,y,e.altKey);return;}
+  const ctrl=e.ctrlKey||e.metaKey;
+  // Shift selects, whatever the tool: dragging draws a selection box, a click without dragging selects the note there
+  // (see endPointer). Ctrl as well adds to what is selected.
+  if(e.shiftKey&&e.button===0){
+    const h0=hitNote(x,y);P.mode='box';P.box={x0:x,y0:y,x,y};P.add=ctrl;P.base=ctrl?new Set(S.sel):new Set();P.shiftNote=h0;if(!ctrl)S.sel.clear();updateInspector();redraw();return;
+  }
   if(S.tool==='hand'){P.mode='pan';P.sl=roll.scrollLeft;P.st=roll.scrollTop;return;}
   let h=hitNote(x,y);
   if(e.button===2||S.tool==='erase'){P.mode='erase';if(h)delNote(h.tr,h.n);return;}
@@ -2652,12 +2741,14 @@ cv.addEventListener('pointerdown',e=>{
     if(i>=0&&all.length>1){h=all[i];P.cycle={all,i};}
   }
   if(h){
-    // a note of another layer: that layer is selected, keeping the selection when the note is in it (or Shift adds it)
-    if(h.tr!==activeTrack()){if(S.sel.has(h.n)||e.shiftKey){S.active=h.tr.id;renderTracks();}else setActive(h.tr.id);}
-    if(e.shiftKey){if(S.sel.has(h.n))S.sel.delete(h.n);else S.sel.add(h.n);updateInspector();redraw();P.mode='shift';return;}
-    if(!S.sel.has(h.n)){S.sel.clear();S.sel.add(h.n);}
+    // a note of another layer: that layer is selected, keeping the selection when the note is in it (or Ctrl adds it)
+    if(h.tr!==activeTrack()){if(S.sel.has(h.n)||ctrl){S.active=h.tr.id;renderTracks();}else setActive(h.tr.id);}
+    // Ctrl adds the note to the selection, and dragging then copies them all; letting go without dragging a note that
+    // was selected already takes it out again (see endPointer)
+    if(ctrl){P.unsel=S.sel.has(h.n);S.sel.add(h.n);}
+    else if(!S.sel.has(h.n)){S.sel.clear();S.sel.add(h.n);}
     P.mode=h.edge==='r'?'rsz':h.edge==='l'?'lsz':'move';P.n=h.n;
-    P.orig=[...S.sel].map(n=>({n,s:n.s,d:n.d,p:n.p}));P.prim=P.orig.find(o=>o.n===h.n);P.copy=(e.ctrlKey||e.metaKey)&&P.mode==='move';P.lastP=h.n.p;
+    P.orig=[...S.sel].map(n=>({n,s:n.s,d:n.d,p:n.p}));P.prim=P.orig.find(o=>o.n===h.n);P.copy=ctrl&&P.mode==='move';P.lastP=h.n.p;
     P.ox=x-(keyX0(h.n.p)+keyX1(h.n.p))/2;
     audition(activeTrack(),h.n.p,h.n.v,.18,false,h.n);updateInspector();redraw();return;
   }
@@ -2667,7 +2758,8 @@ cv.addEventListener('pointerdown',e=>{
     touch('Draw note');const n={id:nextId++,s:tick,d:e.altKey?fineT():gridT(),p,...newNoteVals(tr)};tr.notes.push(n);S.sel.clear();S.sel.add(n);
     P.mode='new';P.n=n;P.t0=performance.now();audition(tr,p,n.v,.25,false,n);updateInspector();redraw();
   }else{
-    P.mode='box';P.box={x0:x,y0:y,x,y};P.base=e.shiftKey?new Set(S.sel):new Set();if(!e.shiftKey)S.sel.clear();updateInspector();redraw();
+    // with Select across layers on, or while Alt is held, the box takes notes from every shown, unlocked layer
+    P.mode='box';P.box={x0:x,y0:y,x,y};P.base=ctrl?new Set(S.sel):new Set();if(!ctrl)S.sel.clear();updateInspector();redraw();
   }
 });
 cv.addEventListener('pointermove',e=>{
@@ -2680,9 +2772,9 @@ cv.addEventListener('pointermove',e=>{
     else if(TM.hits.some(h=>x>=h.x0&&x<=h.x1&&y>=h.y0&&y<=h.y1))cur='pointer';
     else if(Math.abs(y-yOfTick(S.playhead))<=4)cur='row-resize';
     else{
-      const h=S.tool==='hand'?null:hitNote(x,y);
-      cur=S.tool==='hand'?'grab':h?(h.edge==='m'?'grab':'ns-resize'):(S.tool==='draw'?'crosshair':S.tool==='erase'?'not-allowed':'default');
-      if(S.tool!=='hand')hv={x,y,p:pitchAtX(x),tick:Math.max(0,snapDown(tickOfY(y))),over:h?h.n:null};
+      const h=S.tool==='hand'&&!S.pick?null:hitNote(x,y);
+      cur=S.pick?(S.pick==='split'?'crosshair':'pointer'):S.tool==='hand'?'grab':h?(h.edge==='m'?'grab':'ns-resize'):(S.tool==='draw'?'crosshair':S.tool==='erase'?'not-allowed':'default');
+      if(S.tool!=='hand'||S.pick)hv={x,y,p:pitchAtX(x),tick:Math.max(0,snapDown(tickOfY(y))),over:h?h.n:null};
     }
     const old=S.hv;S.hv=hv;if(hv||old)redraw();
     cv.style.cursor=cur;return;
@@ -2704,7 +2796,7 @@ function dragMove(e){
     case'box':{
       P.box.x=x;P.box.y=y;const b=P.box,bx0=Math.min(b.x0,x),bx1=Math.max(b.x0,x),by0=Math.min(b.y0,y),by1=Math.max(b.y0,y);
       S.sel.clear();for(const n of P.base)S.sel.add(n);
-      for(const n of tr.notes){const nx0=keyX0(n.p),nx1=keyX1(n.p),yB=yOfTick(n.s),yT=yB-Math.max(2,n.d*ppt);if(nx0<=bx1&&nx1>=bx0&&yT<=by1&&yB>=by0)S.sel.add(n);}
+      for(const t of xselOn()||e.altKey?pickable():[tr])for(const n of t.notes){const nx0=keyX0(n.p),nx1=keyX1(n.p),yB=yOfTick(n.s),yT=yB-Math.max(2,n.d*ppt);if(nx0<=bx1&&nx1>=bx0&&yT<=by1&&yB>=by0)S.sel.add(n);}
       updateInspector();redraw();break;
     }
     case'new':{
@@ -2721,7 +2813,7 @@ function dragMove(e){
       let minS=Infinity,minP=Infinity,maxP=-Infinity;for(const o of P.orig){minS=Math.min(minS,o.s);minP=Math.min(minP,o.p);maxP=Math.max(maxP,o.p);}
       dT=Math.max(dT,-minS);dP=clamp(dP,-minP,127-maxP);
       touch(P.copy?'Copy notes':'Move notes');
-      if(P.copy&&!P.copyMade){P.copyMade=true;const tm=noteTracks(P.orig.map(o=>o.n));for(const o of P.orig)(tm.get(o.n)||tr).notes.push({...o.n,id:nextId++,s:o.s,d:o.d,p:o.p});}
+      if(P.copy&&!P.copyMade){P.copyMade=true;P.copies=[];const tm=noteTracks(P.orig.map(o=>o.n));for(const o of P.orig){const t=tm.get(o.n)||tr,c={...o.n,id:nextId++,s:o.s,d:o.d,p:o.p};t.notes.push(c);P.copies.push({t,c});}}
       for(const o of P.orig){o.n.s=o.s+dT;o.n.p=o.p+dP;}
       if(P.prim.p+dP!==P.lastP){P.lastP=P.prim.p+dP;audition(tr,P.lastP,P.n.v,.15,false,P.n);}
       break;
@@ -2753,7 +2845,7 @@ function autoScroll(){
   autoRAF=requestAnimationFrame(()=>{autoRAF=0;if(!P.mode)return;roll.scrollLeft+=dx;roll.scrollTop+=dy;dragMove({altKey:false});});
 }
 function endPointer(){
-  const m=P.mode;
+  let m=P.mode;
   if(m==='keyh')saveUI();
   if(m==='key'&&P.key!=null)liveOff('mouse',P.key);
   if(m==='loop'&&!P.moved){S.loop.on=!S.loop.on;if(S.loop.b<=S.loop.a){S.loop.a=0;S.loop.b=barTicks()*2;}syncHeader();}
@@ -2761,6 +2853,19 @@ function endPointer(){
   if(m==='rsel'){let a=Math.min(P.ra,P.rb),b=Math.max(P.ra,P.rb);if(b-a<gridT()){const bi=barInfo(a);a=bi.start;b=bi.start+bi.len;}selectRange(a,b,P.add);}
   // a click on a note without dragging is remembered; a click on that spot again moves on to the next note stacked
   // there (done on the click itself, so a quick double-click still deletes instead)
+  // Ctrl+click on a note that was selected already, without dragging: it leaves the selection
+  if(m==='move'&&P.unsel&&!P.moved){S.sel.delete(P.n);updateInspector();}
+  // a copy dragged back to exactly where it came from is no copy: the copies go again, and so does the undo step
+  if(m==='move'&&P.copyMade&&P.orig.every(o=>o.n.s===o.s&&o.n.p===o.p)){
+    for(const {t,c} of P.copies){const i=t.notes.indexOf(c);if(i>=0)t.notes.splice(i,1);}
+    if(H.undo.length&&H.undo[H.undo.length-1].label==='Copy notes'){H.undo.pop();syncUndo();}
+    flatDirty=true;updateInspector();m=null;
+  }
+  // Shift+click without dragging: the note there is selected (Ctrl as well: added, or taken out if it was in)
+  if(m==='box'&&P.shiftNote&&Math.hypot(P.x-P.x0,P.y-P.y0)<=3){
+    const {n,tr}=P.shiftNote;if(P.add&&P.base.has(n))S.sel.delete(n);else S.sel.add(n);
+    if(tr!==activeTrack()){S.active=tr.id;renderTracks();}updateInspector();
+  }
   if(m==='move'||m==='rsz'||m==='lsz'){
     if(Math.hypot(P.x-P.x0,P.y-P.y0)>3)CYC={x:0,y:0,n:null,next:null};
     else if(P.cycle){const {all,i}=P.cycle;CYC.next=all[(i+1)%all.length];}
@@ -2993,16 +3098,188 @@ function nudge(dt,dp){
   if(dp>0&&Math.max(...a.map(n=>n.p))+dp>127)dp=127-Math.max(...a.map(n=>n.p));
   touch('Nudge notes');for(const n of a){n.s+=dt;n.p+=dp;}if(dp)audition(activeTrack(),a[0].p,a[0].v,.15,false,a[0]);endEdit();
 }
-function quantize(){
-  if(!canEdit())return;H.nextLabel='Snap all';
-  const tr=activeTrack(),a=S.sel.size?selArr():tr.notes,g=gridT();if(!a.length)return;
-  act(()=>{for(const n of a)n.s=Math.max(0,Math.round(n.s/g)*g);});toast('Snapped '+a.length+' notes to '+GRIDS[S.gridIdx].k);
+// Snap to the grid: the selected notes (in any layer), or the whole selected layer. start: starts move to the nearest
+// line, lengths kept. end: ends move, starts kept. both: starts and ends. len: lengths round to whole grid steps.
+// Whatever moves an end keeps a note at least one grid step long.
+const SNAP_KIND={start:'starts',end:'ends',both:'starts and ends',len:'lengths'};
+function snapNotes(kind){
+  const {notes}=toolTargets();if(!notes.length||!toolEditable())return;
+  const g=gridT(),r=t=>Math.max(0,Math.round(t/g)*g),moves=[];
+  for(const n of notes){
+    let s=n.s,e=n.s+n.d;
+    if(kind==='start'){s=r(s);e=s+n.d;}
+    else if(kind==='end'){e=r(e);if(e<=s)e=Math.ceil((s+1)/g)*g;}
+    else if(kind==='both'){s=r(s);e=Math.max(r(e),s+g);}
+    else e=s+Math.max(g,Math.round(n.d/g)*g);
+    if(s!==n.s||e-s!==n.d)moves.push([n,s,e-s]);
+  }
+  if(!moves.length){toast('The '+SNAP_KIND[kind]+' are already on the '+GRIDS[S.gridIdx].k+' grid');return;}
+  act(()=>{for(const [n,s,d] of moves){n.s=s;n.d=d;}},'Snap '+SNAP_KIND[kind]);
+  toast('Snapped the '+SNAP_KIND[kind]+' of '+moves.length+' note'+(moves.length>1?'s':'')+' to '+GRIDS[S.gridIdx].k);
+}
+/* Select tools: a small panel under its button. Where (this layer or every shown, unlocked one) and whether to add to
+   the selection are chosen at the top; each line then selects by what the selected notes have in common. It stays open,
+   so choices can be combined (with "Add" on, one after another). */
+const SELT={el:null,scope:null,add:false};
+const pcName=p=>NOTE_NAMES[p%12];
+function selTools(x,y){
+  if(SELT.el){selToolsClose();return;}
+  if(SELT.scope==null)SELT.scope=xselOn()?'all':'layer';
+  const m=document.createElement('div');m.className='ctxmenu selpop';m.setAttribute('role','dialog');m.setAttribute('aria-label','Select tools');
+  SELT.el=m;document.body.appendChild(m);selToolsRender();
+  const r=m.getBoundingClientRect();m.style.left=clamp(x,4,innerWidth-r.width-4)+'px';m.style.top=(y+r.height>innerHeight-4?Math.max(4,y-r.height):y)+'px';
+  m.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b||b.disabled)return;
+    if(b.dataset.sc){SELT.scope=b.dataset.sc;selToolsRender();return;}
+    if(b.dataset.sel){selBy(b.dataset.sel);selToolsRender();}
+  });
+  m.addEventListener('change',e=>{if(e.target.matches('.spAdd input'))SELT.add=e.target.checked;});
+  m.addEventListener('keydown',e=>{
+    e.stopPropagation();const bs=[...m.querySelectorAll('button[data-sel]:not(:disabled)')],i=bs.indexOf(document.activeElement);
+    if(e.key==='Escape'){e.preventDefault();selToolsClose();$('bSelTools').focus();}
+    else if(e.key==='ArrowDown'){e.preventDefault();bs[(i+1)%bs.length].focus();}
+    else if(e.key==='ArrowUp'){e.preventDefault();bs[(i-1+bs.length)%bs.length].focus();}
+  });
+  setTimeout(()=>{document.addEventListener('pointerdown',selToolsOutside,true);},0);
+  const f=m.querySelector('button[data-sel]:not(:disabled)');if(f)f.focus({preventScroll:true});
+}
+function selToolsOutside(e){if(SELT.el&&!SELT.el.contains(e.target)&&!e.target.closest('#bSelTools'))selToolsClose();}
+function selToolsClose(){if(!SELT.el)return;SELT.el.remove();SELT.el=null;document.removeEventListener('pointerdown',selToolsOutside,true);}
+function selToolsRender(){
+  const m=SELT.el;if(!m)return;const ref=[...S.sel],none=!ref.length,list=(a,f,max=4)=>{const u=[...new Set(a.map(f))];return u.slice(0,max).join(', ')+(u.length>max?' …':'');};
+  const keys=none?'':list(ref,n=>noteName(n.p)),pcs=none?'':list(ref,n=>pcName(n.p)),fa=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.sel;
+  const it=(k,label,hint,dis)=>`<button data-sel="${k}"${dis?' disabled':''}><span>${label}</span>${hint?`<kbd>${esc(hint)}</kbd>`:''}</button>`;
+  m.innerHTML=`<div class="spHead"><span class="slseg" role="radiogroup" aria-label="Where to select"><button role="radio" data-sc="layer" aria-checked="${SELT.scope==='layer'}">This layer</button><button role="radio" data-sc="all" aria-checked="${SELT.scope==='all'}">Every layer</button></span>
+    <label class="spAdd" title="Keep what is selected and add to it, so several choices combine"><input type="checkbox"${SELT.add?' checked':''}> Add</label></div>`+
+    it('all','All notes',SELT.scope==='all'?'Ctrl+Shift+A':'Ctrl+A')+
+    `<div class="ctxsep"></div><div class="spSub">${none?'Select a note first, then pick what to match:':'Like the selected notes:'}</div>`+
+    it('key','Same key',keys,none)+it('note','Same note, every octave',pcs&&('every '+pcs),none)+
+    it('keylen','Same key and length','',none)+it('len','Same length','',none)+it('vel','Same velocity','',none)+
+    it('span','In the same stretch of time',none?'':fmtPos(Math.min(...ref.map(n=>n.s)))+' – '+fmtPos(Math.max(...ref.map(n=>n.s+n.d))),none)+
+    `<div class="ctxsep"></div>`+it('invert','Everything not selected')+it('none','Nothing','Esc',none)+
+    `<div class="spFoot">Shift+click a key on the keyboard to select every note on it.</div>`;
+  if(fa){const b=m.querySelector(`[data-sel="${fa}"]:not(:disabled)`);if(b)b.focus({preventScroll:true});}
+}
+// select the notes of this layer (or every layer) that match, by what the selected notes have in common
+function selBy(kind){
+  const ref=[...S.sel],layers=SELT.scope==='all'?pickable():[activeTrack()].filter(t=>!t.hide),add=SELT.add,where=SELT.scope==='all'?' in every layer':'';
+  if(kind==='none'){S.sel.clear();updateInspector();redraw();return;}
+  const keys=new Set(ref.map(n=>n.p)),pcs=new Set(ref.map(n=>n.p%12)),kl=new Set(ref.map(n=>n.p+':'+n.d)),lens=new Set(ref.map(n=>n.d)),vels=new Set(ref.map(n=>n.v));
+  const lo=ref.length?Math.min(...ref.map(n=>n.s)):0,hi=ref.length?Math.max(...ref.map(n=>n.s+n.d)):0,was=new Set(ref);
+  const pred={all:()=>true,key:n=>keys.has(n.p),note:n=>pcs.has(n.p%12),keylen:n=>kl.has(n.p+':'+n.d),len:n=>lens.has(n.d),vel:n=>vels.has(n.v),span:n=>n.s>=lo&&n.s<hi,invert:n=>!was.has(n)}[kind];
+  if(!add||kind==='invert')S.sel.clear();
+  for(const t of layers)for(const n of t.notes)if(pred(n))S.sel.add(n);
+  selDone({all:'',key:'on the same keys',note:'on the same notes in every octave',keylen:'with the same key and length',len:'with the same length',vel:'with the same velocity',span:'in that stretch of time',invert:'that were not selected'}[kind]+where);
+}
+/* Split and Join where you click (the Split and Join buttons switch these on; Esc or the button again stops them).
+   Split cuts at the height clicked, snapped to the fine grid (Alt: the main grid): every selected note crossing it,
+   or else the note clicked. Join makes one note of the two on a key that meet nearest the height clicked: on every
+   key with selected notes (one of the two selected), or else on the key clicked. */
+function setPick(m){
+  S.pick=m&&S.pick!==m?m:null;
+  for(const [id,k] of [['bSplit','split'],['bJoin','join']]){$(id).classList.toggle('on',S.pick===k);$(id).setAttribute('aria-pressed',String(S.pick===k));}
+  if(S.pick)toast(S.pick==='split'?'Click where to split: '+(S.sel.size?'the selected notes are cut at that height':'a note is cut where you click')+'. Esc stops.':'Click where two notes meet to join them'+(S.sel.size?', on every key with selected notes':'')+'. Esc stops.');
+  redraw();
+}
+// whether every layer these notes are in can be edited (says which cannot)
+function canEditNotes(notes){
+  for(const t of new Set(noteTracks(notes).values())){if(t.hide){toast('“'+t.name+'” is hidden. Show it to edit.');return false;}if(t.lock){toast('“'+t.name+'” is locked.');return false;}}
+  return true;
+}
+function splitTargets(x,y,alt){
+  const t=snapRound(Math.max(0,tickOfY(y)),!alt),cross=n=>n.s<t&&n.s+n.d>t;
+  let notes=S.sel.size?[...S.sel].filter(cross):[];
+  if(!notes.length){const h=hitNote(x,y);if(h&&cross(h.n))notes=[h.n];}
+  return{t,notes};
+}
+// the two notes of a key (in one layer) that meet nearest tick t: t lies within the pair, the meeting point is closest
+function pairAt(ns,t){
+  ns=[...ns].sort((a,b)=>a.s-b.s);let best=null,bd=Infinity;
+  for(let i=0;i<ns.length-1;i++){const a=ns[i],b=ns[i+1];if(t<a.s||t>b.s+b.d)continue;const d=Math.abs(t-(a.s+a.d+b.s)/2);if(d<bd){bd=d;best=[a,b];}}
+  return best;
+}
+function joinTargets(x,y){
+  const t=tickOfY(y),out=[];
+  if(S.sel.size){
+    const tm=noteTracks(S.sel),keys=new Map();
+    for(const n of S.sel){const tr=tm.get(n);if(tr)keys.set(tr.id+':'+n.p,{tr,p:n.p});}
+    for(const {tr,p} of keys.values()){const pr=pairAt(tr.notes.filter(n=>n.p===p),t);if(pr&&(S.sel.has(pr[0])||S.sel.has(pr[1])))out.push({tr,a:pr[0],b:pr[1]});}
+    if(out.length)return out;
+  }
+  const p=pitchAtX(x),act=activeTrack();
+  for(const tr of [act,...song.tracks.filter(t=>t!==act&&S.ghost>0)]){if(tr.hide||tr.lock)continue;const pr=pairAt(tr.notes.filter(n=>n.p===p),t);if(pr)return[{tr,a:pr[0],b:pr[1]}];}
+  return out;
+}
+function pickClick(x,y,alt){
+  if(S.pick==='split'){
+    const {t,notes}=splitTargets(x,y,alt);
+    if(!notes.length){toast('No note to split there');return;}if(!canEditNotes(notes))return;
+    const tm=noteTracks(notes);
+    act(()=>{for(const n of notes){const b={...n,id:nextId++,s:t,d:n.s+n.d-t};n.d=t-n.s;tm.get(n).notes.push(b);if(S.sel.has(n))S.sel.add(b);}},'Split notes');
+    toast('Split '+notes.length+' note'+(notes.length>1?'s':'')+' at '+fmtPos(t));
+  }else{
+    const prs=joinTargets(x,y);
+    if(!prs.length){toast('No two notes meet there on that key');return;}if(!canEditNotes(prs.flatMap(o=>[o.a,o.b])))return;
+    act(()=>{for(const {tr,a,b} of prs){a.d=Math.max(a.s+a.d,b.s+b.d)-a.s;tr.notes=tr.notes.filter(n=>n!==b);if(S.sel.delete(b))S.sel.add(a);}},'Join notes');
+    toast('Joined '+prs.length+' pair'+(prs.length>1?'s':'')+' of notes');
+  }
+}
+// what a click would do, drawn under the pointer: the cut line on each note, or an outline around each pair
+function drawPick(g){
+  const hv=S.hv;if(!S.pick||!hv||P.mode)return;
+  g.save();g.strokeStyle=C.accent;g.fillStyle=C.accentSoft;g.lineWidth=2;
+  if(S.pick==='split'){
+    const {t,notes}=splitTargets(hv.x,hv.y,S.xselHold);const y=Math.round(yOfTick(t))+.5;g.setLineDash([5,3]);
+    for(const n of notes){g.beginPath();g.moveTo(keyX0(n.p)-3,y);g.lineTo(keyX1(n.p)+3,y);g.stroke();}
+  }else{
+    g.setLineDash([4,3]);
+    for(const {a,b} of joinTargets(hv.x,hv.y)){const x0=keyX0(a.p)-1,x1=keyX1(a.p)+1,yB=yOfTick(a.s),yT=yOfTick(Math.max(a.s+a.d,b.s+b.d));g.fillRect(x0,yT,x1-x0,yB-yT);g.strokeRect(x0+.5,yT+.5,x1-x0-1,yB-yT-1);}
+  }
+  g.restore();
+}
+function transMenu(x,y){
+  showMenu(x,y,[{label:'Up a semitone',fn:()=>toolTranspose(1)},{label:'Down a semitone',fn:()=>toolTranspose(-1)},
+    {label:'Up an octave',fn:()=>toolTranspose(12)},{label:'Down an octave',fn:()=>toolTranspose(-12)}]);
+}
+// Clean up, per layer and key. Overlaps: a note that runs past the start of the next one on its key ends there.
+// Duplicates: of notes starting together on one key, the longest stays.
+function cleanNotes(kind){
+  const {notes}=toolTargets();if(!notes.length||!toolEditable())return;
+  const tm=noteTracks(notes),groups=new Map(),cut=[],drop=new Set();
+  for(const n of notes){const t=tm.get(n),k=t.id+':'+n.p;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(n);}
+  for(const g of groups.values()){
+    g.sort((a,b)=>a.s-b.s||b.d-a.d);
+    if(kind==='dupes'){for(let i=1;i<g.length;i++)if(g[i].s===g[i-1].s)drop.add(g[i]);}
+    else for(let i=0;i<g.length-1;i++){const n=g[i],nx=g[i+1];if(nx.s>n.s&&n.s+n.d>nx.s)cut.push([n,nx.s-n.s]);}
+  }
+  if(kind==='dupes'){
+    if(!drop.size){toast('No notes start twice on the same key');return;}
+    act(()=>{for(const t of song.tracks)t.notes=t.notes.filter(n=>!drop.has(n));for(const n of drop)S.sel.delete(n);},'Remove duplicate notes');
+    toast('Removed '+drop.size+' duplicate note'+(drop.size>1?'s':''));
+  }else{
+    if(!cut.length){toast('No notes run into the next one on their key');return;}
+    act(()=>{for(const [n,d] of cut)n.d=d;},'Fix overlapping notes');
+    toast('Shortened '+cut.length+' overlapping note'+(cut.length>1?'s':''));
+  }
+}
+function cleanMenu(x,y){
+  showMenu(x,y,[{label:'Fix overlapping notes',fn:()=>cleanNotes('overlaps')},{label:'Remove duplicate notes',fn:()=>cleanNotes('dupes')}]);
+}
+// the loop region around the selected notes, out to the grid lines on either side
+function loopSel(){
+  if(!S.sel.size){toast('Select the notes to loop');return;}
+  const a=[...S.sel],g=gridT(),s=Math.floor(Math.min(...a.map(n=>n.s))/g)*g,e=Math.ceil(Math.max(...a.map(n=>n.s+n.d))/g)*g;
+  S.loop.a=s;S.loop.b=Math.max(e,s+g);S.loop.on=true;syncHeader();redraw();toast('Looping '+fmtPos(S.loop.a)+' to '+fmtPos(S.loop.b));
+}
+function snapMenu(x,y){
+  showMenu(x,y,[{label:'Snap starts',hint:'Q',fn:()=>snapNotes('start')},{label:'Snap ends',fn:()=>snapNotes('end')},
+    {label:'Snap starts and ends',hint:'Shift+Q',fn:()=>snapNotes('both')},{label:'Snap lengths',fn:()=>snapNotes('len')}]);
 }
 
 /* ================= Inspector ================= */
 const INSP=[['p','Pitch',0,127],['s','Start',0,1e7],['d','Length',1,1e6],['v','Velocity',1,127],['pan','Pan',-64,63],['rev','Reverb',0,127],['muf','Muffle',0,127]];
 function updateInspector(){
-  if(!$('toolsPanel').hidden)tpScope();
+  syncActs();
   const box=$('insp');
   if(!S.sel.size){
     if(!box.dataset.empty){box.dataset.empty='1';box.innerHTML='<span class="hint">Nothing selected. Click a note to edit its start, length, velocity, pan, reverb and muffle here.</span>';}
@@ -3066,7 +3343,8 @@ const ICON_P={
   draw:'<path d="M2.5 13.5l.7-3.2L11 2.5a1.6 1.6 0 012.3 2.3L5.5 12.6z" '+stk+' stroke-width="1.5"/><path d="M9.8 3.7l2.5 2.5" '+stk+' stroke-width="1.5"/>',
   select:'<rect x="2" y="2" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2.2 1.8"/><path d="M8 8l6 2.2-2.6 1 1.6 2.6-1.3.8-1.6-2.6-1.7 1.7z" fill="currentColor"/>',
   erase:'<path d="M3 10.2l6.3-6.3a1.4 1.4 0 012 0l2.6 2.6a1.4 1.4 0 010 2l-4.4 4.4H5.5z" '+stk+' stroke-width="1.5"/><path d="M6.2 7l4.6 4.6M8 14h6" '+stk+' stroke-width="1.4"/>',
-  look:EYE,
+  // look around: arrows four ways (the eye is the layers' show/hide)
+  look:'<path d="M8 2v12M2 8h12" '+stk+' stroke-width="1.4"/><path d="M5.9 4.1L8 2l2.1 2.1M5.9 11.9L8 14l2.1-2.1M4.1 5.9L2 8l2.1 2.1M11.9 5.9L14 8l-2.1 2.1" '+stk+' stroke-width="1.5"/>',
   gear:GEAR_P,
   sun:'<circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4" '+stk+' stroke-width="1.5"/>',
   moon:'<path d="M12.6 9.8A5.3 5.3 0 016.2 3.4a5.3 5.3 0 106.4 6.4z" fill="currentColor"/>',
@@ -3089,19 +3367,43 @@ ICON_P.pencil='<path d="M2.5 13.5l.7-3.2L11 2.5a1.6 1.6 0 012.3 2.3L5.5 12.6z" '
 ICON_P.palette='<path d="M8 1.8a6.2 6.2 0 100 12.4c1 0 1.4-.6 1.4-1.2 0-.9-.8-1.2-.8-2 0-.7.6-1.2 1.3-1.2h1.6a2.8 2.8 0 002.7-2.8C14.2 4.2 11.5 1.8 8 1.8z" '+stk+' stroke-width="1.4"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="7.6" cy="4.6" r="1" fill="currentColor"/><circle cx="10.6" cy="5.4" r="1" fill="currentColor"/>';
 ICON_P.x='<path d="M4 4l8 8M12 4l-8 8" '+stk+' stroke-width="1.8"/>';
 ICON_P.dots='<circle cx="3.5" cy="8" r="1.4" fill="currentColor"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/><circle cx="12.5" cy="8" r="1.4" fill="currentColor"/>';
+// the note actions above the roll. Notes stand upright there (time runs up), and so they do in these icons.
+const NB_=(x,y,h,w=3.6)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1" fill="currentColor"/>`;
+Object.assign(ICON_P,{
+  layers:'<path d="M8 1.8l6.2 3.1L8 8 1.8 4.9z" fill="currentColor"/><path d="M2.2 8.1L8 11l5.8-2.9M2.2 11.2L8 14.1l5.8-2.9" '+stk+' stroke-width="1.4"/>',
+  selAll:'<rect x="1.6" y="1.6" width="12.8" height="12.8" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="2.2 1.6"/>'+NB_(4.4,6.5,5,3)+NB_(8.6,4,5.2,3),
+  snap:'<path d="M4.2 2v5.6a3.8 3.8 0 007.6 0V2" fill="none" stroke="currentColor" stroke-width="2.7"/><path d="M2.6 4.6h3.2M10.2 4.6h3.2" stroke="var(--panel2)" stroke-width="1.1"/>',
+  split:NB_(6.2,1.2,5.2)+NB_(6.2,9.6,5.2)+'<path d="M1.2 8h13.6" stroke="currentColor" stroke-width="1.3" stroke-dasharray="1.7 1.3"/>',
+  join:NB_(6.2,1.2,13.6)+'<path d="M1.5 8h2.6M11.9 8h2.6" '+stk+' stroke-width="1.5"/><path d="M3.1 6.4L4.6 8 3.1 9.6M12.9 6.4L11.4 8l1.5 1.6" '+stk+' stroke-width="1.3"/>',
+  legato:NB_(1.4,10,4.6)+NB_(6.2,5.4,4.6)+NB_(11,1,4.4)+'<path d="M3.2 9.4v-.6h4.8M8 4.8v-.6h4.8" '+stk+' stroke-width="1" opacity=".55"/>',
+  dup:'<path d="M10.5 3.6V3A1.4 1.4 0 009.1 1.6H3A1.4 1.4 0 001.6 3v6.1a1.4 1.4 0 001.4 1.4h.6" '+stk+' stroke-width="1.4"/><rect x="5.4" y="5.4" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9.9 7.7v4.4M7.7 9.9h4.4" '+stk+' stroke-width="1.4"/>',
+  // pitch runs across the roll, so a note changing key moves sideways
+  transpose:'<g opacity=".45">'+NB_(1.2,4,8,3.2)+'</g>'+NB_(11.6,4,8,3.2)+'<path d="M5.4 8h4.6M8.2 5.9L10.3 8l-2.1 2.1" '+stk+' stroke-width="1.5"/>',
+  // clean up: notes with a tick, tidied
+  clean:NB_(1.4,5,9.6,3.2)+NB_(5.6,2,6.6,3.2)+'<path d="M9.2 11.4l2 2 3.6-4.6" '+stk+' stroke-width="1.9"/>',
+  // swing: a long note then a short, late one; humanize: notes a little off from each other
+  swing:NB_(1.6,7.5,6.9,3.4)+NB_(11,1.6,4.4,3.4)+'<path d="M5.4 6.6C6.8 3.8 8.6 3 10.4 3.4" '+stk+' stroke-width="1.4"/><path d="M8.9 2.2l1.6 1.2-1.3 1.5" '+stk+' stroke-width="1.3"/>',
+  human:NB_(1.4,5.2,7.6,3.2)+NB_(6.4,2.4,8.6,3.2)+NB_(11.4,6.6,6.6,3.2)+'<path d="M1.4 14.6h13.2" '+stk+' stroke-width="1.1" stroke-dasharray="1.4 1.6" opacity=".6"/>',
+  loopSel:'<path d="M13 6.2A5.2 5.2 0 003.9 4.2M3 9.8A5.2 5.2 0 0012.1 11.8" '+stk+' stroke-width="1.5"/><path d="M3.9 1.6v2.8h2.8M12.1 14.4v-2.8H9.3" '+stk+' stroke-width="1.5"/>'+NB_(6.6,5.6,4.8,2.8),
+  metro:'<path d="M6.3 1.8h3.4l3 12.4H3.3z" '+stk+' stroke-width="1.4"/><path d="M3.6 11.2h8.8" '+stk+' stroke-width="1.3"/><path d="M8 11.2L12.6 3.4" '+stk+' stroke-width="1.6"/><circle cx="11.3" cy="5.6" r="1.3" fill="currentColor"/>',
+  // the two zoom axes: time runs up along a ruler, the keys lie side by side
+  axisT:'<path d="M5.5 1.8v12.4M3 4.3l2.5-2.5L8 4.3M3 11.7l2.5 2.5L8 11.7" '+stk+' stroke-width="1.5"/><path d="M10.6 3.5h3.2M10.6 6.5h2M10.6 9.5h3.2M10.6 12.5h2" '+stk+' stroke-width="1.3"/>',
+  axisK:'<path d="M1.8 4h12.4M4.1 1.7L1.8 4l2.3 2.3M11.9 1.7L14.2 4l-2.3 2.3" '+stk+' stroke-width="1.5"/><path d="M2 8.6h12v5.4H2zM6 8.6V14M10 8.6V14" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>'
+});
 function applyIcons(){
-  document.querySelectorAll('[data-icon]').forEach(el=>{const k=el.dataset.icon,z=el.classList.contains('big')?19:el.classList.contains('bmI')?13:el.classList.contains('ti')?17:el.classList.contains('mini')?14:17;el.innerHTML=svgI(ICON_P[k],z);});
+  document.querySelectorAll('[data-icon]').forEach(el=>{const k=el.dataset.icon,z=el.classList.contains('big')?19:el.classList.contains('bmI')?13:el.classList.contains('zi')?15:el.classList.contains('ti')?17:el.classList.contains('mini')?14:17;el.innerHTML=svgI(ICON_P[k],z);});
 }
 function syncThemeBtn(){const d=isDarkNow();$('themeIco').innerHTML=svgI(ICON_P[d?'moon':'sun'],16);$('themeLbl').textContent=d?'Dark mode':'Light mode';$('bTheme').title='Currently in '+(d?'dark':'light')+' mode. Click to switch to '+(d?'light':'dark')+' mode.';}
 const fmtSl=(k,v)=>k==='pan'?panLabel(v):String(v);
 function darkHdr(tr){return headerHex(trHex(tr));}
-// "More settings" stays closed until you open it, and then stays open for that layer while the list is redrawn
+// "More colors" stays closed until you open it, and then stays open for that layer while the list is redrawn
 const advOpen=new Set();
 function colorBlock(tr){
   const hex=trHex(tr),w=tr.colorWhite||hex,b=tr.colorBlack||hex;
-  const row=(key,label,val,reset,extra='')=>`<div class="colrow"><label>${label} <input type="color" class="cp" data-c="${key}" value="${val}" aria-label="${label} color"><input type="text" class="hx" data-c="${key}" value="${val}" maxlength="7" spellcheck="false" aria-label="${label} color as hex"></label>${reset?`<button class="mini" data-resetc="${key}" ${tr[key]?'':'disabled'} title="Use the layer color for ${label.toLowerCase()} again">Reset</button>`:''}${extra}</div>`;
-  const mix=S.slMode==='mix',sw=`<button class="mini slmode" title="${mix?'The sliders change the whole layer: every note in it, as it plays. Click to set what new notes start with instead.':'The sliders set what new notes in this layer start with. Click to change the whole layer instead.'}">${mix?'Whole layer':'New notes'} ⇄</button>`;
-  return row('color','Color',hex,false,sw)+`<details class="advcol"${advOpen.has(tr.id)?' open':''}><summary>More settings</summary>${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</details>`;
+  const row=(key,label,val,reset,extra='')=>`<div class="colrow"><label>${label}${label?' ':''}<input type="color" class="cp" data-c="${key}" value="${val}" aria-label="${label||'Layer'} color" title="${label||'Layer'} color"><input type="text" class="hx" data-c="${key}" value="${val}" maxlength="7" spellcheck="false" aria-label="${label||'Layer'} color as hex"></label>${reset?`<button class="mini" data-resetc="${key}" ${tr[key]?'':'disabled'} title="Use the layer color for ${label.toLowerCase()} again">Reset</button>`:''}${extra}</div>`;
+  const open=advOpen.has(tr.id),sw=`<button class="mini advtog${open?' on':''}" aria-expanded="${open}" title="More colors: separate ones for notes on white and black keys">More colors ${open?'▴':'▾'}</button>`;
+  // one row: the layer color, with the white/black key colors folded under "More colors" at the right
+  return row('color','',hex,false,sw)+(open?`<div class="advcol">${row('colorWhite','White keys',w,true)}${row('colorBlack','Black keys',b,true)}</div>`:'');
 }
 // The layer sliders, in two sets (see playVals): what notes drawn or recorded in the layer start with, or what the whole
 // layer does to its notes. The number box shows the value minus off (pan: -64 to 63 around the middle).
@@ -3112,8 +3414,8 @@ const SLIDERS={
   new:[VOL_SL,{k:'nvV',l:'Velocity',min:1,max:127,get:tr=>nvOf(tr).v,tip:'1 to 127'},{k:'nvPan',l:'Pan',min:0,max:127,off:64,get:tr=>nvOf(tr).pan,tip:PAN_TIP},
     {k:'nvRev',l:'Reverb',min:0,max:127,get:tr=>nvOf(tr).rev,tip:'0 to 127'},{k:'nvMuf',l:'Muffle',min:0,max:127,get:tr=>nvOf(tr).muf,tip:'0 to 127'}],
   mix:[VOL_SL,{k:'mxPan',l:'Pan',min:-64,max:63,get:tr=>tr.mxPan??0,tip:'Moves every note left (below 0) or right (above 0)'},
-    {k:'mxV',l:'Velocity %',min:0,max:200,get:tr=>tr.mxV??100,tip:PCT_TIP('velocity')},{k:'mxRev',l:'Reverb %',min:0,max:200,get:tr=>tr.mxRev??100,tip:PCT_TIP('reverb')},
-    {k:'mxMuf',l:'Muffle %',min:0,max:200,get:tr=>tr.mxMuf??100,tip:PCT_TIP('muffle')}]
+    {k:'mxV',l:'Velocity',min:0,max:200,get:tr=>tr.mxV??100,tip:PCT_TIP('velocity'),pct:1},{k:'mxRev',l:'Reverb',min:0,max:200,get:tr=>tr.mxRev??100,tip:PCT_TIP('reverb'),pct:1},
+    {k:'mxMuf',l:'Muffle',min:0,max:200,get:tr=>tr.mxMuf??100,tip:PCT_TIP('muffle'),pct:1}]
 };
 const slSpec=k=>SLIDERS.new.find(s=>s.k===k)||SLIDERS.mix.find(s=>s.k===k);
 S.slMode=(()=>{try{return localStorage.getItem('mc.slMode')==='mix'?'mix':'new';}catch(e){return'new';}})();
@@ -3122,7 +3424,7 @@ function syncLayerMode(){
   const vis=song.tracks.every(t=>!t.hide),one=song.tracks.length<=1;
   let only=S.layerMode==='only',all=!only&&vis&&(one?S.layerMode!=='only':true);
   if(!one&&!only&&!vis&&song.tracks.every(t=>t.id===S.active?!t.hide:t.hide))only=true;
-  $('bShowAll').classList.toggle('on',all);$('bOnlyActive').classList.toggle('on',only);
+  $('bShowAll').setAttribute('aria-checked',String(all));$('bOnlyActive').setAttribute('aria-checked',String(only));
 }
 function renderTracks(){
   if(S.layerMode==='only'){let ch=false;for(const t of song.tracks){const h=t.id!==S.active;if(t.hide!==h){t.hide=h;ch=true;}}if(ch){flatDirty=true;redraw();}}
@@ -3131,10 +3433,15 @@ function renderTracks(){
     const on=tr.id===S.active,el=document.createElement('div'),hex=trHex(tr);
     el.className='trk'+(on?' on':'')+(tr.hide?' hidden':'');el.dataset.id=tr.id;el.style.setProperty('--lc',hex);setHeaderColor(el,hex);
     // the selected layer shows the whole set, the others its first two
-    const set=SLIDERS[S.slMode],sl=s=>{const v=s.get(tr),o=s.off||0;return`<label><span>${s.l}</span><input type="range" min="${s.min}" max="${s.max}" value="${v}" data-k="${s.k}" aria-label="${s.l}"><input type="number" class="num" data-k="${s.k}" data-n="1" min="${s.min-o}" max="${s.max-o}" value="${v-o}" aria-label="${s.l} value" title="${s.tip}"></label>`;};
-    el.innerHTML=`<div class="trow nmrow"><input class="nm" value="${esc(tr.name)}" aria-label="Layer name"></div>
-      <div class="trow ic"><button class="mini ${tr.hide?'on':''}" data-a="hide" title="${tr.hide?'Show':'Hide'} this layer" aria-label="${tr.hide?'Show':'Hide'} layer">${ICON[tr.hide?'eyeoff':'eye']}</button><button class="mini ${tr.lock?'on':''}" data-a="lock" title="${tr.lock?'Unlock':'Lock'} this layer (locked layers can't be edited or clicked)" aria-label="${tr.lock?'Unlock':'Lock'} layer">${ICON[tr.lock?'lock':'unlock']}</button><button class="mini ${tr.mute?'on':''}" data-a="mute" title="Mute audio" aria-label="Mute">${ICON[tr.mute?'muted':'mute']}</button><button class="mini ${tr.solo?'on':''}" data-a="solo" title="Solo audio" aria-label="Solo">${ICON.solo}</button><span style="flex:1"></span><button class="mini" data-a="up" title="Move layer up" aria-label="Move layer up">${ICON.up}</button><button class="mini" data-a="down" title="Move layer down" aria-label="Move layer down">${ICON.down}</button><button class="mini" data-a="del" title="Delete layer (Ctrl+click skips the confirmation)" aria-label="Delete layer">${ICON.trash}</button><button class="mini" data-a="menu" title="More: duplicate, copy, paste, merge (or right-click the layer)" aria-label="More layer actions" aria-haspopup="menu">⋯</button></div>
-      <select class="ins" aria-label="Instrument">${INSTR_HTML}</select>
+    const set=SLIDERS[S.slMode],sl=s=>{const v=s.get(tr),o=s.off||0,al=s.l+(s.pct?' in percent':'');return`<label><span>${s.l}</span><input type="range" min="${s.min}" max="${s.max}" value="${v}" data-k="${s.k}" aria-label="${al}"><input type="number" class="num" data-k="${s.k}" data-n="1" min="${s.min-o}" max="${s.max-o}" value="${v-o}" aria-label="${al} value" title="${s.tip}"></label>`;};
+    // The header holds the name and the buttons that move, delete or do more. The show, lock, mute and solo switches sit
+    // above the sliders: beside the instrument on the other layers, and on the selected one beside the switch that picks
+    // what the sliders set.
+    const tg=`<span class="tg"><button class="mini ${tr.hide?'on':''}" data-a="hide" title="${tr.hide?'Show':'Hide'} this layer" aria-label="${tr.hide?'Show':'Hide'} layer" aria-pressed="${!!tr.hide}">${ICON[tr.hide?'eyeoff':'eye']}</button><button class="mini ${tr.lock?'on':''}" data-a="lock" title="${tr.lock?'Unlock':'Lock'} this layer (locked layers can't be edited or clicked)" aria-label="${tr.lock?'Unlock':'Lock'} layer" aria-pressed="${!!tr.lock}">${ICON[tr.lock?'lock':'unlock']}</button><button class="mini ${tr.mute?'on':''}" data-a="mute" title="${tr.mute?'Unmute':'Mute'} this layer" aria-label="Mute" aria-pressed="${!!tr.mute}">${ICON[tr.mute?'muted':'mute']}</button><button class="mini ${tr.solo?'on':''}" data-a="solo" title="${tr.solo?'Stop playing only the solo layers':'Solo: play only this layer (and other solo layers)'}" aria-label="Solo" aria-pressed="${!!tr.solo}">${ICON.solo}</button></span>`;
+    const mix=S.slMode==='mix',seg=`<span class="slseg" role="radiogroup" aria-label="What the sliders set"><button role="radio" data-slm="new" aria-checked="${!mix}" title="The sliders set what notes you draw or record in this layer start with. Notes already there keep their values.">New</button><button role="radio" data-slm="mix" aria-checked="${mix}" title="The sliders change the whole layer: every note in it, as it plays (velocity, reverb and muffle as a percentage of each note's own)">All</button></span>`;
+    el.innerHTML=`<div class="trow nmrow"><input class="nm" value="${esc(tr.name)}" aria-label="Layer name" title="Rename the layer"><span class="la"><button class="mini" data-a="up" title="Move layer up" aria-label="Move layer up">${ICON.up}</button><button class="mini" data-a="down" title="Move layer down" aria-label="Move layer down">${ICON.down}</button><button class="mini" data-a="del" title="Delete layer (Ctrl+click skips the confirmation)" aria-label="Delete layer">${ICON.trash}</button><button class="mini" data-a="menu" title="More: duplicate, copy, paste, merge, split into hands (or right-click the layer)" aria-label="More layer actions" aria-haspopup="menu">⋯</button></span></div>
+      <div class="trow ic"><select class="ins" aria-label="Instrument">${INSTR_HTML}</select>${on?'':tg}</div>
+      ${on?`<div class="trow ctl">${seg}${tg}</div>`:''}
       <div class="sl">${(on?set:set.slice(0,2)).map(sl).join('')}</div>${on?colorBlock(tr):''}`;
     el.querySelector('.ins').value=tr.drum?'drum':String(tr.program);
     box.appendChild(el);
@@ -3159,12 +3466,13 @@ function deleteLayer(tr){
   renderTracks();
 }
 const LAYER_LABELS={hide:'Show or hide layer',lock:'Lock or unlock layer',mute:'Mute layer',solo:'Solo layer'};
-$('tracks').addEventListener('toggle',e=>{const d=e.target,c=d.closest&&d.closest('.trk');if(!c||!d.classList.contains('advcol'))return;if(d.open)advOpen.add(+c.dataset.id);else advOpen.delete(+c.dataset.id);},true);
 $('tracks').addEventListener('click',e=>{
   if(e.target.closest('.pastetrk')){pasteLayer(null);return;}
   if(e.target.closest('.addtrk')){addLayer();return;}
   const card=e.target.closest('.trk');if(!card)return;const tr=song.tracks.find(t=>t.id===+card.dataset.id);
-  if(e.target.closest('.slmode')){S.slMode=S.slMode==='mix'?'new':'mix';try{localStorage.setItem('mc.slMode',S.slMode);}catch(err){}renderTracks();const b=$('tracks').querySelector('.trk.on .slmode');if(b)b.focus();return;}
+  if(e.target.closest('.advtog')){if(advOpen.has(tr.id))advOpen.delete(tr.id);else advOpen.add(tr.id);renderTracks();const b=$('tracks').querySelector('.trk.on .advtog');if(b)b.focus();return;}
+  const sm=e.target.closest('[data-slm]');
+  if(sm){if(S.slMode!==sm.dataset.slm){S.slMode=sm.dataset.slm;try{localStorage.setItem('mc.slMode',S.slMode);}catch(err){}renderTracks();}const b=$('tracks').querySelector('.trk.on [data-slm][aria-checked="true"]');if(b)b.focus();return;}
   const rb=e.target.closest('button[data-resetc]');
   if(rb){if(!rb.disabled){act(()=>{delete tr[rb.dataset.resetc];},'Reset note color');renderTracks();}return;}
   const btn=e.target.closest('button[data-a]'),a=btn&&btn.dataset.a;
@@ -3182,6 +3490,11 @@ $('tracks').addEventListener('click',e=>{
     act(()=>{tr[a]=!tr[a];if((a==='hide'||a==='lock')&&tr.id===S.active)S.sel.clear();},LAYER_LABELS[a]);for(const t of song.tracks)updateBus(t);renderTracks();return;
   }
   if(!e.target.closest('input,select,button,summary,details'))setActive(tr.id);
+});
+// the New notes / Layer switch answers the arrow keys like any pair of radio buttons
+$('tracks').addEventListener('keydown',e=>{
+  const b=e.target.closest&&e.target.closest('[data-slm]');if(!b||!/^Arrow(Left|Right|Up|Down)$/.test(e.key))return;
+  e.preventDefault();e.stopPropagation();const o=b.parentElement.querySelector(`[data-slm]:not([data-slm="${b.dataset.slm}"])`);if(o)o.click();
 });
 $('tracks').addEventListener('pointerdown',e=>{
   const card=e.target.closest('.trk');if(card&&+card.dataset.id!==S.active&&e.target.closest('input,select')){setActive(+card.dataset.id);}
@@ -3366,7 +3679,7 @@ document.addEventListener('keydown',e=>{
   const mod=e.ctrlKey||e.metaKey;
   if(mod){
     const k=e.key.toLowerCase();let used=true;
-    if(k==='z'){e.shiftKey?redo():undo();}else if(k==='y')redo();else if(k==='a'){if(e.shiftKey)selectEverywhere();else selectAll();}else if(k==='c')copySel();else if(k==='e')splitAtPlayhead();else if(k==='j')joinSel();
+    if(k==='z'){e.shiftKey?redo():undo();}else if(k==='y')redo();else if(k==='a'){if(e.shiftKey||xselOn())selectEverywhere();else selectAll();}else if(k==='c')copySel();else if(k==='e')splitAtPlayhead();else if(k==='j')joinSel();
     else if(k==='x'){copySel();deleteSel();}else if(k==='v')pasteClip(S.playhead);else if(k==='d')dupSel();else if(k==='s')saveMidi();else used=false;
     if(used)e.preventDefault();return;
   }
@@ -3374,7 +3687,7 @@ document.addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();togglePlay();return;}
   if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();deleteSel();return;}
   if(e.key==='Home'){seek(0);scrollToTick(0);return;}
-  if(e.key==='Escape'){if(STAGE.on){setStage(false);return;}S.sel.clear();updateInspector();redraw();return;}
+  if(e.key==='Escape'){if(STAGE.on){setStage(false);return;}if(S.pick){setPick(null);return;}S.sel.clear();updateInspector();redraw();return;}
   if(e.code==='Digit5'){setStage(!STAGE.on);return;}
   if(e.code==='KeyB'&&!e.shiftKey){bmAdd();return;}
   if(e.code==='Comma'){bmStep(-1);return;}if(e.code==='Period'){bmStep(1);return;}
@@ -3383,6 +3696,8 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowUp'||e.key==='ArrowDown'){if(S.sel.size){e.preventDefault();nudge((e.key==='ArrowUp'?1:-1)*(e.shiftKey?gridT():fineT()),0);}return;}
   const tools={Digit1:'draw',Digit2:'select',Digit3:'erase',Digit4:'hand'};
   if(tools[e.code]){setTool(tools[e.code]);return;}
+  if(e.code==='KeyQ'){snapNotes(e.shiftKey?'both':'start');return;}
+  if(e.code==='KeyM'){setXsel(!S.xsel,true);return;}
   if(e.code==='KeyZ'){S.octave=Math.max(-1,S.octave-1);octInfo();return;}
   if(e.code==='KeyX'){S.octave=Math.min(8,S.octave+1);octInfo();return;}
   if(e.code in KEYMAP&&!e.repeat&&!kbdDown.has(e.code)){
@@ -3398,7 +3713,7 @@ document.addEventListener('change',e=>{if(e.target.matches&&e.target.matches('se
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('button');if(b)b.blur();});
 
 /* ================= Header / toolbar wiring ================= */
-function setTool(t){S.tool=t;for(const [id,k] of [['tDraw','draw'],['tSelect','select'],['tErase','erase'],['tHand','hand']])$(id).classList.toggle('on',k===t);}
+function setTool(t){S.tool=t;if(S.pick)setPick(null);for(const [id,k] of [['tDraw','draw'],['tSelect','select'],['tErase','erase'],['tHand','hand']])$(id).classList.toggle('on',k===t);}
 $('tDraw').onclick=()=>setTool('draw');$('tSelect').onclick=()=>setTool('select');$('tErase').onclick=()=>setTool('erase');$('tHand').onclick=()=>setTool('hand');
 $('bPlay').onclick=togglePlay;$('bStop').onclick=stop;$('bHome').onclick=()=>{seek(0);scrollToTick(0);};
 $('bRec').onclick=()=>{
@@ -3411,7 +3726,35 @@ $('bLoop').onclick=()=>{
 };
 $('bMetro').onclick=()=>{S.metro=!S.metro;syncHeader();};
 $('bFollow').onclick=()=>{S.follow=!S.follow;$('bFollow').classList.toggle('on',S.follow);};
-$('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bQuant').onclick=quantize;
+$('bUndo').onclick=undo;$('bRedo').onclick=redo;
+// the note actions above the roll
+$('bXsel').onclick=()=>setXsel(!S.xsel,true);
+// a menu button opens its menu under itself (the split buttons under their pair)
+const menuAt=fn=>e=>{const b=e.currentTarget,r=(b.closest('.btnsplit')||b).getBoundingClientRect();fn(r.left,r.bottom+2);};
+$('bSelTools').onclick=menuAt(selTools);$('bSnapMore').onclick=menuAt(snapMenu);$('bTrans').onclick=menuAt(transMenu);$('bClean').onclick=menuAt(cleanMenu);
+$('bSnap').onclick=()=>snapNotes('start');$('bLoopSel').onclick=loopSel;
+$('bSplit').onclick=()=>setPick('split');$('bJoin').onclick=()=>setPick('join');$('bDup').onclick=dupSel;$('bDel').onclick=deleteSel;
+$('bLegato').onclick=menuAt(legatoMenu);$('bSwing').onclick=menuAt(swingMenu);$('bHuman').onclick=menuAt(humanMenu);
+// Select across layers: a selection box and Ctrl+A take notes from every shown, unlocked layer. It is on while the
+// button is (S.xsel, remembered), or while Alt is held (S.xselHold): letting go of Alt goes back to the button's state.
+S.xsel=(()=>{try{return localStorage.getItem('mc.xsel')==='1';}catch(e){return false;}})();S.xselHold=false;
+const xselOn=()=>S.xsel||S.xselHold;
+function syncXsel(){const b=$('bXsel'),on=xselOn();b.classList.toggle('on',on);b.classList.toggle('held',S.xselHold&&!S.xsel);b.setAttribute('aria-pressed',String(on));}
+function setXsel(on,say){
+  S.xsel=on;try{localStorage.setItem('mc.xsel',on?'1':'0');}catch(e){}
+  syncXsel();
+  if(say)toast(on?'Selecting across layers: a selection box and Ctrl+A pick notes in every layer':'Selecting in the selected layer only');
+}
+setXsel(S.xsel,false);
+function holdXsel(on){if(S.xselHold!==on){S.xselHold=on;syncXsel();}}
+addEventListener('keydown',e=>{if(e.key==='Alt')holdXsel(true);},true);
+// Alt let go on its own would also open the browser's menu on some systems
+addEventListener('keyup',e=>{if(e.key==='Alt'){holdXsel(false);if(!document.querySelector('dialog[open]'))e.preventDefault();}},true);
+addEventListener('blur',()=>holdXsel(false));
+// the key can be pressed or let go while another window has the focus: the next pointer move tells
+addEventListener('pointermove',e=>holdXsel(e.altKey),true);
+// the buttons that need selected notes are dimmed without them
+function syncActs(){const none=!S.sel.size;for(const id of ['bDup','bDel','bLoopSel'])$(id).disabled=none;}
 function toggleSide(){
   const mobile=matchMedia('(max-width:820px)').matches;
   if(mobile)document.body.classList.toggle('side-open');else document.body.classList.toggle('side-closed');
@@ -3485,14 +3828,48 @@ function tmEdit(kind,tick,x,y){
   setTimeout(()=>document.addEventListener('pointerdown',tmOutside,true),0);
   const f=p.querySelector('input,select');if(f){f.focus();if(f.select)f.select();}
 }
-$('gridSel').innerHTML=GRIDS.map((g,i)=>`<option value="${i}">${g.k}</option>`).join('');$('gridSel').value=S.gridIdx;
-$('gridSel').onchange=e=>{S.gridIdx=+e.target.value;redraw();};
-$('fineSel').innerHTML=FINES.map((g,i)=>`<option value="${i}">${g.k}</option>`).join('');$('fineSel').value=S.fineIdx;
-$('fineSel').onchange=e=>{S.fineIdx=+e.target.value;updateInspector();};
+$('gridSel').innerHTML=GRIDS.map((g,i)=>`<option value="${i}">${g.k.replace(' triplet','T')}</option>`).join('');$('gridSel').value=S.gridIdx;
+$('gridSel').onchange=e=>{S.gridIdx=+e.target.value;gridBtns();redraw();};
+// ‹ › beside Grid and Fine: a coarser or finer step. Triplets step among triplets, straight values among straight ones.
+function gridFamily(){const tri=/triplet/.test(GRIDS[S.gridIdx].k);return GRIDS.map((g,i)=>({g,i})).filter(o=>/triplet/.test(o.g.k)===tri).sort((a,b)=>b.g.t-a.g.t).map(o=>o.i);}
+// The fine grids on offer, coarsest first: from the main grid down to a single tick, with triplets when the main grid
+// is one.
+function fineList(){const g=GRIDS[S.gridIdx],tri=/triplet/.test(g.k);return FINES.map((f,i)=>({f,i})).filter(o=>o.f.t<=g.t&&(!o.f.tri||tri)).sort((a,b)=>b.f.t-a.f.t).map(o=>o.i);}
+// The Fine menu for the current grid. A fine grid that is no longer on offer (coarser than the new main grid, or a
+// triplet with a straight one) becomes the coarsest one that is, no coarser than it was.
+function syncFine(){
+  const L=fineList();
+  if(!L.includes(S.fineIdx)){const ft=Math.min(FINES[S.fineIdx].t,gridT());S.fineIdx=L.find(i=>FINES[i].t<=ft)??L[L.length-1];}
+  const s=$('fineSel');s.innerHTML=L.map(i=>`<option value="${i}">${FINES[i].k.replace(' triplet','T')}</option>`).join('');s.value=S.fineIdx;
+}
+function stepGrid(which,dir){
+  if(which==='fine'){const L=fineList(),j=L.indexOf(S.fineIdx);S.fineIdx=L[clamp(j+dir,0,L.length-1)];$('fineSel').value=S.fineIdx;updateInspector();}
+  else{const f=gridFamily(),j=f.indexOf(S.gridIdx);S.gridIdx=f[clamp(j+dir,0,f.length-1)];$('gridSel').value=S.gridIdx;redraw();}
+  gridBtns();
+}
+// The menus in the Grid, Fine and Scale pills are as wide as the value they show, not their longest option.
+const fitCtx=document.createElement('canvas').getContext('2d');
+function fitZsels(){
+  for(const s of document.querySelectorAll('select.zsel')){const o=s.options[s.selectedIndex];if(!o)continue;const cs=getComputedStyle(s);fitCtx.font=cs.fontSize+' '+cs.fontFamily;s.style.width=Math.ceil(fitCtx.measureText(o.text).width)+8+'px';}
+  fitBar2();
+}
+// above the width where the second bar always wraps (see the CSS), it wraps only when its content does not fit
+function fitBar2(){
+  const b=document.querySelector('.bar2');if(!b)return;b.classList.remove('wrap');
+  if(innerWidth>1100&&b.scrollWidth>b.clientWidth+1)b.classList.add('wrap');
+}
+addEventListener('resize',fitBar2);if(document.fonts)document.fonts.ready.then(fitZsels);
+function gridBtns(){
+  syncFine();fitZsels();
+  const f=gridFamily(),j=f.indexOf(S.gridIdx),L=fineList(),k=L.indexOf(S.fineIdx);
+  for(const b of document.querySelectorAll('[data-gstep]')){const [w,d]=b.dataset.gstep.split(','),at=w==='fine'?k:j,last=w==='fine'?L.length-1:f.length-1;b.disabled=+d<0?at<=0:at>=last;}
+}
+document.querySelectorAll('[data-gstep]').forEach(b=>b.onclick=()=>{const [w,d]=b.dataset.gstep.split(',');stepGrid(w,+d);});
+$('fineSel').onchange=e=>{S.fineIdx=+e.target.value;gridBtns();updateInspector();};gridBtns();
 $('stepSel').onchange=e=>{S.valStep=+e.target.value;};
 $('scRoot').innerHTML=NOTE_NAMES.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
 $('scType').innerHTML=Object.keys(SCALES).map(k=>`<option>${k}</option>`).join('');
-$('scRoot').onchange=e=>{S.scaleRoot=+e.target.value;redraw();};$('scType').onchange=e=>{S.scaleType=e.target.value;redraw();};
+$('scRoot').onchange=e=>{S.scaleRoot=+e.target.value;fitZsels();redraw();};$('scType').onchange=e=>{S.scaleType=e.target.value;fitZsels();redraw();};
 $('zxi').onclick=()=>zoomT(1.25);$('zxo').onclick=()=>zoomT(1/1.25);$('zyi').onclick=()=>zoomK(1.2);$('zyo').onclick=()=>zoomK(1/1.2);$('bFit').onclick=fitKeys;$('bFitN').onclick=fitNotes;
 document.querySelectorAll('[data-lane]').forEach(b=>b.onclick=()=>{S.lane=b.dataset.lane;document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x===b));pHeadSync();redraw();});
 function bindSN(rg,nm,fn){
@@ -3529,7 +3906,7 @@ function syncHeader(){
   syncUndo();
   $('pgPlay').innerHTML=svgI(ICON_P[S.playing?'pause':'play'],14);$('pgPlay').setAttribute('aria-label',S.playing?'Pause':'Play');
   $('bPlay').innerHTML=svgI(ICON_P[S.playing?'pause':'play'],19);$('bPlay').setAttribute('aria-label',S.playing?'Pause':'Play');$('bPlay').classList.toggle('on',S.playing);syncThemeBtn();
-  $('bFancy').classList.toggle('on',S.set.fancy);
+  $('sndSel').value=S.set.fancy?'fancy':'std';
   $('bRec').classList.toggle('on',S.rec);$('bLoop').classList.toggle('on',S.loop.on);$('bMetro').classList.toggle('on',S.metro);
   updatePos();
 }
@@ -3841,7 +4218,7 @@ function setFancy(on){
   S.set.fancy=on;saveSettings();syncHeader();syncSettingsUI();for(const t of song.tracks)updateBus(t);
   if(on&&fancyMissing().length)prepareFancy().then(ok=>{if(ok)toast('Fancy playback is ready.');});
 }
-$('bFancy').onclick=()=>setFancy(!S.set.fancy);
+$('sndSel').onchange=e=>{const on=e.target.value==='fancy';if(on!==!!S.set.fancy)setFancy(on);};
 $('prepCancel').onclick=()=>{if(EXPORT.busy){EXPORT.cancel=true;return;}FANCY.cancel=true;setFancy(false);toast('Fancy playback turned off.');};
 
 /* ================= Settings ================= */
@@ -4467,8 +4844,9 @@ function vidFallFrame(G,bg,d){
 // How fast the notes fall, in s units per second, from the edges seen in the frames: first the move between neighboring
 // frames that most edges agree on, then the same edges followed over about a quarter of a second for precision.
 // When the notes speed up or slow down along the way (a 3D view), the speed is a straight line in s: v0 + a·s.
-// Returns null when no steady movement is found.
-function vidFallSpeed(segs,off,times,F,band){
+// force: 1 or -1 looks only for movement down or up (s growing or shrinking), 0 measures it, preferring the way toward
+// (+1 or -1). Returns null when no steady movement is found.
+function vidFallSpeed(segs,off,times,F,band,force=0,toward=1){
   const edges=f=>{const o=[];for(let q=off[f];q<off[f+1];q+=8){const fl=segs[q+3],i=segs[q];if(!(fl&1))o.push(i*2,segs[q+1]);if(!(fl&2))o.push(i*2+1,segs[q+2]);}return o;};
   const dl=[];for(let f=1;f<F;f++)dl.push(times[f]-times[f-1]);dl.sort((a,b)=>a-b);const dt0=dl.length?dl[dl.length>>1]:1/30;
   const maxMove=.3*band,vmax=maxMove/dt0,NB=240,hist=new Float32Array(NB),votes=[],stride=Math.max(1,Math.floor(F/2500));
@@ -4479,9 +4857,17 @@ function vidFallSpeed(segs,off,times,F,band){
     const A=edges(f),B=edges(f+kk);
     for(let x=0;x<A.length;x+=2)for(let y=0;y<B.length;y+=2){if(A[x]!==B[y])continue;const dv=B[y+1]-A[x+1];if(Math.abs(dv)<=maxMove){const v=dv/dt;votes.push(v);hist[clamp(Math.floor((v+vmax)/(2*vmax)*NB),0,NB-1)]++;}}
   }
-  // still edges (a logo, a line in the background) are not notes
-  let pk=-1;for(let b=0;b<NB;b++){const c=(b+.5)/NB*2*vmax-vmax;if(Math.abs(c)<.03*vmax)continue;if(pk<0||hist[b]>hist[pk])pk=b;}
-  if(pk<0||hist[pk]<20)return null;
+  // The strongest movement either way; still edges (a logo, a line in the background) are not notes. Things that only
+  // flicker or pulse (a glowing end screen, twinkling stars) move edges up and down alike, while notes move one way, so
+  // a speed counts only the votes it has beyond the same speed the other way. Sparks and glow rising from the keys can
+  // still outvote the notes now and then, but seldom by much: the way toward the keys is taken unless the other way is
+  // clearly stronger. A forced direction looks only that way.
+  const net=new Float32Array(NB);for(let b=0;b<NB;b++)net[b]=hist[b]-hist[NB-1-b];
+  const best=sg=>{let pk=-1;for(let b=0;b<NB;b++){const c=(b+.5)/NB*2*vmax-vmax;if(Math.abs(c)<.03*vmax||c*sg<0)continue;if(pk<0||net[b]>net[pk])pk=b;}return pk;};
+  let pk;
+  if(force)pk=best(force);
+  else{const pt=best(toward),pa=best(-toward);pk=pt>=0&&net[pt]>=20&&(pa<0||3*net[pt]>=net[pa])?pt:pa;}
+  if(pk<0||net[pk]<20)return null;
   const bw=2*vmax/NB,pc=(pk+.5)*bw-vmax;let sum=0,n=0;for(const v of votes)if(Math.abs(v-pc)<=1.5*bw){sum+=v;n++;}
   const v1=sum/n,k=Math.max(1,Math.min(Math.round(.25/dt0),Math.floor(.6*band/Math.max(1e-6,Math.abs(v1)*dt0)))),pts=[];
   for(let f=0;f+k<F;f+=stride){
@@ -4499,7 +4885,16 @@ function vidFallSpeed(segs,off,times,F,band){
   kept=kept.filter(([s,v])=>Math.abs(v-(r.v0+r.a*s))<=3*mad+1e-6);if(kept.length>=10)r=fit(kept);
   // a change of under 2% across the scan area is measuring noise: one steady speed then
   if(Math.abs(r.a)*band<.02*Math.abs(r.mv))return{v0:r.mv,a:0};
-  return{v0:r.v0,a:r.a};
+  return{v0:r.v0,a:r.a,mv:r.mv};
+}
+// The fall speed of the frames read (vidDetectFall's data), in the direction the "Notes move" setting asks for.
+function vidFallSpeedFor(d){
+  const f=$('vDir').value,force=f==='down'?1:f==='up'?-1:0;
+  let tw=0;for(let i=0;i<d.N;i++)tw+=d.sK[i]-(d.sA[i]+d.sB[i])/2;
+  const sp=vidFallSpeed(d.segs,d.off,d.times,d.F,d.band,force,tw<0?-1:1);
+  // a speed that changes along the way has to keep its direction up to the keys, or it is one steady speed
+  if(sp&&sp.a){for(let i=0;i<d.N;i++)for(const s of [d.sA[i],d.sB[i],d.sK[i]])if((sp.v0+sp.a*s)*sp.v0<=0||sp.v0*sp.mv<=0){sp.v0=sp.mv;sp.a=0;}}
+  return sp&&{v0:sp.v0,a:sp.a};
 }
 // Falling notes to notes. Every stretch of a note seen in a frame says when that part will reach the keys: a point at s
 // arrives del(s) seconds later. Counted in arrival time a note stands still while the frames go by, so all the frames that
@@ -5008,7 +5403,7 @@ function vidSyncSteps(){
   // a new mark: Clear marks can no longer be undone
   if(vidCleared&&(VID.cal.some(v=>v!=null)||vidFallVals().some(v=>v!=null))){vidCleared=null;vidSyncClearBtn();}
   // reading the falling notes adds the scan area: steps 5 and 6, and 7 (where the notes reach the keys) without perspective
-  const fall=vidSrc()==='fall',fn=vidFallSteps(),fv=vidFallVals();$('vFallOpts').hidden=$('vBandRow').hidden=$('vBandInfo').hidden=!fall;
+  const fall=vidSrc()==='fall',fn=vidFallSteps(),fv=vidFallVals();$('vFallOpts').hidden=$('vBandRow').hidden=$('vBandInfo').hidden=$('vDirRow').hidden=!fall;
   [...$('vFSteps').children].forEach((b,i)=>{b.hidden=i>=fn;b.textContent=(i+5)+'. '+VFSTEPS[i];b.classList.toggle('on',VID.step>3&&VID.fstep===i);b.classList.toggle('done',fv[i]!=null);});
   vidSyncBandUI();
   const fallOk=!fall||fv.slice(0,fn).every(v=>v!=null);
@@ -5266,7 +5661,7 @@ function vidSeek(t,v=VID.v){
 }
 
 /* ---- remembering marks and settings ---- */
-const VOPT_IDS=['vHands','vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB','vSrc','vRows','vLaneW'];
+const VOPT_IDS=['vHands','vSplit','vSpread','vFlash','vMaxKeys','vSens','vMin','vGap','vFade','vFadeS','vMinLen','vBlackMs','vShiftMs','vShortW','vShortB','vTol','vBpm','vVel','vSnap','vTrim','vSpeed','vFps','vShow','vLRm','vHW','vHB','vSrc','vRows','vLaneW','vDir'];
 function vidSaveOpts(){const o={ver:3};for(const id of VOPT_IDS){const e=$(id);if(e)o[id]=e.type==='checkbox'?e.checked:e.value;}try{localStorage.setItem('mc.vid.opts',JSON.stringify(o));}catch(e){}}
 function vidLoadOpts(){
   try{const o=JSON.parse(localStorage.getItem('mc.vid.opts'));if(o&&!(o.ver>=2)){o.vShow=true;if(o.vSpeed==='auto')o.vSpeed='direct';}
@@ -5380,6 +5775,13 @@ $('vSrc').onchange=()=>{
 };
 $('vBandAuto').onclick=()=>{if(!VID.vw){toast('Choose a video first.');return;}vidAutoBand(false);};
 for(const id of ['vRows','vLaneW'])$(id).addEventListener('input',()=>{vidDrawPreview();vidOptsSoon();});
+// the frames already read are measured again in the new direction, so the result updates without reading the video again
+$('vDir').addEventListener('change',()=>{
+  vidOptsSoon();const fd=VID.kind==='fall'&&VID.fallData;if(!fd||!VID.samples)return;
+  const sp=vidFallSpeedFor(fd);
+  if(!sp){toast('No notes were seen moving '+($('vDir').value==='up'?'up':'down')+'. The result keeps the speed it had.');return;}
+  VID.fallData={...fd,v0:sp.v0,a:sp.a};vidWkSet=null;vidRedetect();
+});
 $('vPersp').onchange=e=>{VID.persp=e.target.checked;$('vPerspOpts').hidden=!VID.persp;VID.cal=[null,null,null,null];VID.step=0;vidSyncSteps();vidDrawPreview();vidSaveCal();};
 for(const id of ['vHW','vHB'])$(id).addEventListener('input',()=>vidDrawPreview());
 $('vSnapSides').onclick=()=>{
@@ -5698,11 +6100,10 @@ async function vidAnalyze(){
         const segs=new Float32Array(tot),off=new Uint32Array(F+1),kb=new Uint8Array(F*N*3);let q=0;
         r.cols.forEach((c,i)=>{off[i]=q;segs.set(c.s,q);q+=c.s.length;kb.set(c.k,i*N*3);});off[F]=q;
         let band=0;for(let i=0;i<N;i++)band=Math.max(band,Math.abs(G.sB[i]-G.sA[i]));
-        const sp=vidFallSpeed(segs,off,times,F,band);
-        if(!sp)throw new Error('the notes do not seem to move through the scan area. Check that it sits where the notes fall, above the keys.');
-        // a speed that changes along the way has to keep its direction up to the keys
-        if(sp.a){for(let i=0;i<N;i++)for(const s of [G.sA[i],G.sB[i],G.sK[i]])if((sp.v0+sp.a*s)*sp.v0<=0)sp.a=0;}
-        fd={segs,off,times,F,N,sK:G.sK,sA:G.sA,sB:G.sB,p:map.map(m=>m.p),black:map.map(m=>m.black),v0:sp.v0,a:sp.a,band,rng:[t0,t1],kb};
+        fd={segs,off,times,F,N,sK:G.sK,sA:G.sA,sB:G.sB,p:map.map(m=>m.p),black:map.map(m=>m.black),v0:0,a:0,band,rng:[t0,t1],kb};
+        const sp=vidFallSpeedFor(fd);
+        if(!sp)throw new Error('the notes do not seem to move '+({down:'down ',up:'up '}[$('vDir').value]||'')+'through the scan area. Check that it sits where the notes fall, above the keys.');
+        fd.v0=sp.v0;fd.a=sp.a;
         cols=segs;
       }else{
         // the colors at the marked heights, and the black keys higher and lower on the key (for vidKeysGlow)
@@ -6078,55 +6479,63 @@ $('vImport').onclick=()=>{
   toast('Imported '+picks.reduce((a,p)=>a+p.notes.length,0)+' notes on '+picks.length+' layer'+(picks.length>1?'s':''));
 };
 
-/* ================= Note tools: transpose, swing, humanize, legato ================= */
-function toolTargets(){
-  const tr=activeTrack(),sel=S.sel.size>0;
-  return{tr,notes:sel?[...S.sel]:tr.notes,scope:sel?S.sel.size+' selected note'+(S.sel.size>1?'s':''):'the whole layer ('+tr.notes.length+' notes)'};
-}
-function tpScope(){const t=toolTargets();$('tpScope').textContent='Applies to: '+t.scope;}
+/* ================= Note actions: transpose, swing, humanize, legato ================= */
+// What the note actions work on: the selected notes, in whichever layers they are, or the whole selected layer when
+// nothing is selected.
+function toolTargets(){const tr=activeTrack();return{tr,notes:S.sel.size?[...S.sel]:tr.notes};}
+// whether the layers the actions would change can be edited (says why not)
+const toolEditable=()=>S.sel.size?canEditSel():canEdit();
 function toolTranspose(semi){
-  const {notes}=toolTargets();if(!canEdit()||!notes.length||!semi)return;
+  const {notes}=toolTargets();if(!notes.length||!semi||!toolEditable())return;
   const lo=Math.min(...notes.map(n=>n.p)),hi=Math.max(...notes.map(n=>n.p)),d=clamp(semi,-lo,127-hi);
   if(!d){toast('Those notes cannot move any further in that direction.');return;}
   act(()=>{for(const n of notes)n.p+=d;},'Transpose');
   toast('Transposed '+notes.length+' notes by '+(d>0?'+':'')+d+(d!==semi?' (limited by the keyboard range)':''));
 }
+// Swing on a grid of g ticks: every note starting on the second step of each pair moves pct% of the pair in (50%:
+// straight again, which also takes swing back out).
 function toolSwing(pct,g){
-  const {notes}=toolTargets();if(!canEdit()||!notes.length)return;
-  const delay=Math.round((pct/100-.5)*2*g);
-  if(delay<=0){toast('Set the swing above 50% to hear a difference.');return;}
-  let c=0;
-  act(()=>{for(const n of notes){const pos=Math.floor((n.s+g/4)/g);if(pos%2===1){n.s=pos*g+delay;c++;}}},'Swing');
-  toast('Swung '+c+' off-beat notes');
+  const {notes}=toolTargets();if(!notes.length||!toolEditable())return;
+  const delay=Math.round((pct/100-.5)*2*g),mv=[];
+  for(const n of notes){const pos=Math.floor((n.s+g/4)/g);if(pos%2===1&&n.s!==pos*g+delay)mv.push([n,pos*g+delay]);}
+  if(!mv.length){toast(delay?'Those notes already swing this way':'There is no swing to take out');return;}
+  act(()=>{for(const [n,s] of mv)n.s=s;},delay?'Swing':'Straighten');
+  toast((delay?'Swung ':'Straightened ')+mv.length+' off-beat note'+(mv.length>1?'s':''));
+}
+function swingMenu(x,y){
+  const g=gridT(),k=GRIDS[S.gridIdx].k.replace(' triplet','T');
+  showMenu(x,y,[{label:'Light swing ('+k+', 55%)',fn:()=>toolSwing(55,g)},{label:'Medium swing ('+k+', 60%)',fn:()=>toolSwing(60,g)},
+    {label:'Triplet feel ('+k+', 67%)',fn:()=>toolSwing(67,g)},{label:'Hard swing ('+k+', 72%)',fn:()=>toolSwing(72,g)},{sep:true},
+    {label:'Straighten ('+k+')',fn:()=>toolSwing(50,g)}]);
 }
 function toolHumanize(timing,vel){
-  const {notes}=toolTargets();if(!canEdit()||!notes.length||(!timing&&!vel))return;
+  const {notes}=toolTargets();if(!notes.length||(!timing&&!vel)||!toolEditable())return;
   act(()=>{for(const n of notes){if(timing)n.s=Math.max(0,n.s+Math.round((Math.random()*2-1)*timing));if(vel)n.v=clamp(n.v+Math.round((Math.random()*2-1)*vel),1,127);}},'Humanize');
   toast('Humanized '+notes.length+' notes');
 }
+function humanMenu(x,y){
+  showMenu(x,y,[{label:'A little (timing ±5 ticks, velocity ±4)',fn:()=>toolHumanize(5,4)},{label:'Some (timing ±10 ticks, velocity ±8)',fn:()=>toolHumanize(10,8)},
+    {label:'A lot (timing ±20 ticks, velocity ±15)',fn:()=>toolHumanize(20,15)},{sep:true},
+    {label:'Timing only (±10 ticks)',fn:()=>toolHumanize(10,0)},{label:'Velocity only (±10)',fn:()=>toolHumanize(0,10)}]);
+}
 function toolLegato(onlyLonger,gap){
-  const {notes}=toolTargets();if(!canEdit()||notes.length<2)return;
-  const starts=[...new Set(notes.map(n=>n.s))].sort((a,b)=>a-b),next=new Map();
-  for(let i=0;i<starts.length-1;i++)next.set(starts[i],starts[i+1]);
-  let c=0;
-  act(()=>{for(const n of notes){const nx=next.get(n.s);if(nx==null)continue;const nd=Math.max(1,nx-n.s-gap);if(onlyLonger&&nd<n.d)continue;if(nd!==n.d){n.d=nd;c++;}}},'Legato');
-  toast('Connected '+c+' notes');
+  const {notes}=toolTargets();if(notes.length<2){toast('Legato needs at least two notes');return;}if(!toolEditable())return;
+  // each layer on its own: a note runs up to the next start in its own layer
+  const byTr=new Map(),tm=noteTracks(notes),ch=[];
+  for(const n of notes){const t=tm.get(n);if(!byTr.has(t))byTr.set(t,[]);byTr.get(t).push(n);}
+  for(const ns of byTr.values()){
+    const starts=[...new Set(ns.map(n=>n.s))].sort((a,b)=>a-b),next=new Map();
+    for(let i=0;i<starts.length-1;i++)next.set(starts[i],starts[i+1]);
+    for(const n of ns){const nx=next.get(n.s);if(nx==null)continue;const nd=Math.max(1,nx-n.s-gap);if(onlyLonger&&nd<n.d)continue;if(nd!==n.d)ch.push([n,nd]);}
+  }
+  if(!ch.length){toast('Those notes already reach the next ones');return;}
+  act(()=>{for(const [n,nd] of ch)n.d=nd;},'Legato');
+  toast('Connected '+ch.length+' note'+(ch.length>1?'s':''));
 }
-function openTools(on){
-  const p=$('toolsPanel');p.hidden=!on;$('bTools').classList.toggle('on',on);
-  if(on){tpScope();$('tpSemi').focus();}
+function legatoMenu(x,y){
+  showMenu(x,y,[{label:'Lengthen up to the next note',fn:()=>toolLegato(true,0)},{label:'Lengthen or shorten to the next note',fn:()=>toolLegato(false,0)},
+    {label:'Up to the next note, with a small gap ('+FINES[S.fineIdx].k.replace(' triplet','T')+')',fn:()=>toolLegato(false,fineT())}]);
 }
-$('bTools').onclick=()=>openTools($('toolsPanel').hidden);
-$('tpClose').onclick=()=>{openTools(false);$('bTools').focus();};
-$('toolsPanel').addEventListener('keydown',e=>{if(e.key==='Escape'){openTools(false);$('bTools').focus();}});
-document.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>toolTranspose(+b.dataset.tr));
-$('tpSelAll').onclick=selectEverywhere;$('tpSplit').onclick=splitAtPlayhead;$('tpJoin').onclick=joinSel;
-$('tpSelKeys').onclick=()=>{if(!S.sel.size){toast('Select a note first');return;}selectPitches([...new Set([...S.sel].map(n=>n.p))]);};
-$('tpTransApply').onclick=()=>toolTranspose(Math.round(+$('tpSemi').value||0));
-const tpSwingUI=bindSN($('tpSwing'),$('tpSwingN'),()=>{});tpSwingUI(60);
-$('tpSwingApply').onclick=()=>toolSwing(+$('tpSwing').value,+$('tpSwingGrid').value);
-$('tpHumApply').onclick=()=>toolHumanize(Math.max(0,+$('tpHumT').value||0),Math.max(0,+$('tpHumV').value||0));
-$('tpLegApply').onclick=()=>toolLegato($('tpLegLonger').checked,Math.max(0,Math.round(+$('tpLegGap').value||0)));
 
 /* ================= Audio export (WAV) ================= */
 const EXPORT={busy:false,cancel:false};
@@ -6205,7 +6614,7 @@ const FX={last:null,ripples:[]};
 function stageShowBar(){
   if(document.body.classList.contains('hide-bar')){document.body.classList.remove('hide-bar');redraw();}clearTimeout(STAGE.timer);if(!STAGE.on)return;
   STAGE.timer=setTimeout(()=>{
-    const top=$('top'),ob=document.querySelector('.opts'),ae=document.activeElement,busy=top.matches(':hover')||(ob&&ob.matches(':hover'))||document.querySelector('dialog[open]')||!$('toolsPanel').hidden||(ae&&top.contains(ae)&&/INPUT|SELECT/.test(ae.tagName));
+    const top=$('top'),ob=document.querySelector('.opts'),ae=document.activeElement,busy=top.matches(':hover')||(ob&&ob.matches(':hover'))||document.querySelector('dialog[open]')||(ae&&top.contains(ae)&&/INPUT|SELECT/.test(ae.tagName));
     if(busy)stageShowBar();else{document.body.classList.add('hide-bar');redraw();}
   },STAGE.y>($('top').offsetHeight||120)+30?450:1100);
 }
@@ -6290,7 +6699,7 @@ function applyTabSettings(set){
   S.gridIdx=GRIDS[o.gridIdx]?o.gridIdx:TAB_DEF.gridIdx;S.fineIdx=FINES[o.fineIdx]?o.fineIdx:TAB_DEF.fineIdx;
   S.valStep=+o.valStep||TAB_DEF.valStep;S.scaleRoot=clamp(o.scaleRoot|0,0,11);S.scaleType=o.scaleType in SCALES?o.scaleType:'off';
   S.layerMode=o.layerMode==='only'||o.layerMode==='all'?o.layerMode:null;S.lane=o.lane in LANES?o.lane:'vel';S.ghost=clamp(+o.ghost,0,1);S.drawVel=clamp(o.drawVel|0,1,127)||100;S.metro=!!o.metro;S.follow=o.follow!==false;S.octave=clamp(o.octave|0,-1,8);
-  $('gridSel').value=S.gridIdx;$('fineSel').value=S.fineIdx;$('stepSel').value=S.valStep;$('scRoot').value=S.scaleRoot;$('scType').value=S.scaleType;
+  $('gridSel').value=S.gridIdx;$('fineSel').value=S.fineIdx;gridBtns();$('stepSel').value=S.valStep;$('scRoot').value=S.scaleRoot;$('scType').value=S.scaleType;fitZsels();
   document.querySelectorAll('[data-lane]').forEach(x=>x.classList.toggle('on',x.dataset.lane===S.lane));pHeadSync();
   setGhostUI(Math.round(S.ghost*100));$('bFollow').classList.toggle('on',S.follow);octInfo();
 }
@@ -6910,7 +7319,7 @@ let rstT=0;const rstSoon=()=>{clearTimeout(rstT);rstT=setTimeout(rstSync,60);};
   for(const e of $('settings').querySelectorAll('.setRow input,.setRow select'))e.dataset.def=e.type==='checkbox'?(e.checked?'1':'0'):e.value;
   Object.assign(S.set,cur);syncSettingsUI();
   for(const row of $('settings').querySelectorAll('.setRow'))rstAdd([...row.querySelectorAll('input,select')],lblText(row.querySelector('label')),b=>row.insertBefore(b,row.children[1]));
-  // Video import, Note tools and the mixer under the layers: the defaults are the values written in the page
+  // Video import and the mixer under the layers: the defaults are the values written in the page
   const seen=new Set();
   const byLabel=(ids,inside)=>{for(const id of ids){
     const el=$(id);if(!el)continue;const l=el.closest('label');
@@ -6919,7 +7328,6 @@ let rstT=0;const rstSoon=()=>{clearTimeout(rstT);rstT=setTimeout(rstSync,60);};
     rstAdd([...l.querySelectorAll('input,select')],lblText(l),b=>inside?l.appendChild(b):l.after(b));
   }};
   byLabel(VOPT_IDS.filter(id=>id!=='vBpm'));
-  byLabel(['tpSemi','tpSwing','tpSwingGrid','tpHumT','tpHumV','tpLegLonger','tpLegGap']);
   byLabel(['mVol','mRev','mSpace','ghostSl'],true);
   for(const ev of ['input','change','click'])document.addEventListener(ev,rstSoon,true);
   rstSync();
