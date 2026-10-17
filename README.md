@@ -48,7 +48,7 @@ It is a single web page. There is nothing to install, no account and no server: 
 ## Getting started
 
 1. Download or clone this repository.
-2. Open `index.html` in a modern browser: Chrome, Edge, Firefox or Safari. Chrome or Edge are recommended for the video import.
+2. Open `index.html` or visit [patatanl.github.io/MIDI-creator/](https://patatanl.github.io/MIDI-creator/) in a modern browser: Chrome, Edge, Firefox or Safari. Chrome or Edge are recommended for the video import.
 3. Click above the keyboard to place a note, then press **Space** to hear it.
 
 That's all. Your work is auto-saved in the browser's database, so it's still there when you come back, even for very large projects. You can turn this off in Settings. To keep a song for good, or to move it to another computer, use **Save project** or **Save MIDI**.
