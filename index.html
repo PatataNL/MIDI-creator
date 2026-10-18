@@ -164,7 +164,7 @@ body.side-closed #side,body.side-closed #splitV{display:none}
 .acts .btnsplit>.more{min-width:0;padding:4px 2px}.acts .more svg,.acts .chev svg{width:11px;height:11px}
 .acts .btn.wide{gap:1px;padding:4px 3px 4px 6px}.acts .chev{display:inline-flex;color:var(--dim)}
 .viewgrp{display:flex;align-items:center;gap:8px;margin-left:auto}
-#octInfo{white-space:nowrap}
+.zoomgrp .zv{min-width:24px;text-align:center;font-variant-numeric:tabular-nums}
 .zoomgrp{display:inline-flex;align-items:center;height:26px;box-sizing:border-box;padding:0 2px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);white-space:nowrap}
 .zoomgrp .zl{color:var(--dim);padding:0 4px}
 .zax,.zfit{display:inline-flex;align-items:center;height:100%;border-left:1px solid var(--line);padding:0 2px}
@@ -574,6 +574,14 @@ body.stage .tabbar{display:none}
 .selpop .spSub{font-size:11.5px;color:var(--dim);padding:3px 10px 1px}
 .selpop .spFoot{font-size:11.5px;color:var(--dim);padding:6px 10px 3px;border-top:1px solid var(--line);margin-top:4px}
 .selpop button[data-sel] kbd{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the Swing panel */
+.swpop{position:fixed;z-index:200;width:290px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.28);padding:10px 12px;display:flex;flex-direction:column;gap:9px;font-size:13px}
+.swpop .swHead{display:flex;flex-direction:column;gap:1px}.swpop .swHead span{color:var(--dim);font-size:11.5px}
+.swpop .swRow{display:flex;align-items:center;gap:8px;color:var(--dim)}
+.swpop .swRow input[type=range]{flex:1;min-width:0;accent-color:var(--accent);margin:0}.swpop .swRow input.num{width:52px}
+.swpop .swPre{gap:4px}.swpop .swPre .mini{flex:1;padding:3px 0}
+.swpop small{color:var(--dim);font-size:11.5px;line-height:1.35}
+.swpop .swFoot{display:flex;justify-content:flex-end;gap:6px}
 /* the small editor for a tempo or time signature change */
 .tmpop{position:fixed;z-index:200;width:250px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.28);padding:10px 12px;display:flex;flex-direction:column;gap:10px;font-size:13px}
 .tmpop .tmHead{display:flex;flex-direction:column;gap:2px}.tmpop .tmHead span{color:var(--dim);font-size:11.5px}
@@ -633,7 +641,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
         <button class="btn big ico" id="bStop" title="Stop and return to where playback began (or the loop start)" aria-label="Stop" data-icon="stop"></button>
         <button class="btn big ico rec" id="bRec" title="Record notes you play onto the selected layer while the song plays" aria-label="Record" data-icon="rec"></button>
         <span class="sep"></span>
-        <button class="btn" id="bLoop" title="Loop the region marked on the thin strip at the right edge of the time ruler">Loop</button>
+        <button class="btn ico" id="bLoop" title="Loop: play the region marked on the thin strip at the right edge of the time ruler over and over" aria-label="Loop" data-icon="loop"></button>
         <button class="btn ico" id="bMetro" title="Metronome" aria-label="Metronome" data-icon="metro"></button>
         <span class="sep"></span>
         <div class="readout" id="pos"><span id="posM">1.1.000</span><span id="posT">00:00.0</span></div>
@@ -679,7 +687,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           <button class="btn ico" id="bSplit" data-icon="split" aria-pressed="false" title="Split where you click: click a note to cut it there, or with notes selected, cut every selected note at that height. Click again or press Esc to stop. Ctrl+E splits at the playhead." aria-label="Split where you click"></button>
           <button class="btn ico" id="bJoin" data-icon="join" aria-pressed="false" title="Join where you click: click where two notes on one key meet (or a note and the next one on its key) to make them one. With notes selected, it joins at that height on every selected key. Click again or press Esc to stop. Ctrl+J joins the selected notes." aria-label="Join where you click"></button>
           <button class="btn ico wide" id="bLegato" title="Legato: each note runs up to the next one in its layer. Selected notes, or the whole layer." aria-label="Legato" aria-haspopup="menu"><span data-icon="legato"></span><span class="chev" data-icon="chevD"></span></button>
-          <button class="btn ico wide" id="bSwing" title="Swing: notes on every second step of the Grid move later, from light to a triplet feel, or straight again. Selected notes, or the whole layer." aria-label="Swing" aria-haspopup="menu"><span data-icon="swing"></span><span class="chev" data-icon="chevD"></span></button>
+          <button class="btn ico wide" id="bSwing" title="Swing: the notes on every second grid step move later, by an amount you set, or back on the grid. Selected notes, or the whole layer." aria-label="Swing" aria-haspopup="dialog"><span data-icon="swing"></span><span class="chev" data-icon="chevD"></span></button>
           <button class="btn ico wide" id="bHuman" title="Humanize: small random changes to timing and velocity, so it sounds less like a machine. Selected notes, or the whole layer." aria-label="Humanize" aria-haspopup="menu"><span data-icon="human"></span><span class="chev" data-icon="chevD"></span></button>
           <button class="btn ico wide" id="bTrans" title="Transpose a semitone or an octave up or down. Selected notes, or the whole layer." aria-label="Transpose" aria-haspopup="menu"><span data-icon="transpose"></span><span class="chev" data-icon="chevD"></span></button>
           <button class="btn ico wide" id="bClean" title="Clean up: shorten notes that run into the next note on their key, or remove notes that start twice on the same key. Selected notes, or the whole layer." aria-label="Clean up" aria-haspopup="menu"><span data-icon="clean"></span><span class="chev" data-icon="chevD"></span></button>
@@ -689,7 +697,7 @@ dialog#mergeDlg::backdrop{background:rgba(0,0,0,.4)}
           <button class="btn ico" id="bLoopSel" data-icon="loopSel" title="Loop the selected notes: the loop region is set around them (on the grid) and switched on" aria-label="Loop the selected notes"></button>
         </div>
         <div class="viewgrp">
-          <span class="f" id="octInfo" title="Z / X change the octave of the computer-keyboard piano"></span>
+          <div class="zoomgrp" role="group" aria-label="Computer keyboard octave"><span class="zax" title="Play notes on your computer keyboard: the A to ' row plays the white keys (A is C) and W E T Y U O P the black keys, starting at this C. Z and X, or ‹ ›, move it an octave down or up."><span class="zi" data-icon="kbd"></span><button class="zb" id="octDn" aria-label="Octave down (Z)">‹</button><span class="zv" id="octInfo" aria-live="polite"></span><button class="zb" id="octUp" aria-label="Octave up (X)">›</button></span></div>
           <button class="btn on" id="bFollow" title="Scroll with the playhead">Follow</button>
           <div class="zoomgrp" role="group" aria-label="Zoom">
             <span class="zl">Zoom</span>
@@ -3381,10 +3389,14 @@ Object.assign(ICON_P,{
   transpose:'<g opacity=".45">'+NB_(1.2,4,8,3.2)+'</g>'+NB_(11.6,4,8,3.2)+'<path d="M5.4 8h4.6M8.2 5.9L10.3 8l-2.1 2.1" '+stk+' stroke-width="1.5"/>',
   // clean up: notes with a tick, tidied
   clean:NB_(1.4,5,9.6,3.2)+NB_(5.6,2,6.6,3.2)+'<path d="M9.2 11.4l2 2 3.6-4.6" '+stk+' stroke-width="1.9"/>',
-  // swing: a long note then a short, late one; humanize: notes a little off from each other
-  swing:NB_(1.6,7.5,6.9,3.4)+NB_(11,1.6,4.4,3.4)+'<path d="M5.4 6.6C6.8 3.8 8.6 3 10.4 3.4" '+stk+' stroke-width="1.4"/><path d="M8.9 2.2l1.6 1.2-1.3 1.5" '+stk+' stroke-width="1.3"/>',
+  // swing: two beamed eighth notes (how swing is written) under a swinging arc; humanize: notes a little off from each other
+  swing:'<ellipse cx="3.6" cy="12.6" rx="2.1" ry="1.6" fill="currentColor" transform="rotate(-20 3.6 12.6)"/><ellipse cx="12.2" cy="12.6" rx="2.1" ry="1.6" fill="currentColor" transform="rotate(-20 12.2 12.6)"/><path d="M5.5 12.2V6.2M14.1 12.2V6.2" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 6.2h8.6" stroke="currentColor" stroke-width="2.2"/><path d="M4 3.6c2.5-2.4 6.5-2.4 9 0" '+stk+' stroke-width="1.3"/>',
+  // the computer keyboard, for the octave its letter keys play
+  kbd:'<rect x="1.4" y="4" width="13.2" height="8.6" rx="1.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3.8 6.6h.01M6.3 6.6h.01M8.8 6.6h.01M11.3 6.6h.01M4.8 8.8h.01M7.3 8.8h.01M9.8 8.8h.01M5.2 10.6h5.6" '+stk+' stroke-width="1.4"/>',
   human:NB_(1.4,5.2,7.6,3.2)+NB_(6.4,2.4,8.6,3.2)+NB_(11.4,6.6,6.6,3.2)+'<path d="M1.4 14.6h13.2" '+stk+' stroke-width="1.1" stroke-dasharray="1.4 1.6" opacity=".6"/>',
   loopSel:'<path d="M13 6.2A5.2 5.2 0 003.9 4.2M3 9.8A5.2 5.2 0 0012.1 11.8" '+stk+' stroke-width="1.5"/><path d="M3.9 1.6v2.8h2.8M12.1 14.4v-2.8H9.3" '+stk+' stroke-width="1.5"/>'+NB_(6.6,5.6,4.8,2.8),
+  // loop: the usual repeat sign, two arrows chasing each other round
+  loop:'<path d="M2.6 7.6V6.4a2.6 2.6 0 012.6-2.6h7.4" '+stk+' stroke-width="1.5"/><path d="M10.6 1.6l2.2 2.2-2.2 2.2" '+stk+' stroke-width="1.5"/><path d="M13.4 8.4v1.2a2.6 2.6 0 01-2.6 2.6H3.4" '+stk+' stroke-width="1.5"/><path d="M5.4 9.8L3.2 12l2.2 2.2" '+stk+' stroke-width="1.5"/>',
   metro:'<path d="M6.3 1.8h3.4l3 12.4H3.3z" '+stk+' stroke-width="1.4"/><path d="M3.6 11.2h8.8" '+stk+' stroke-width="1.3"/><path d="M8 11.2L12.6 3.4" '+stk+' stroke-width="1.6"/><circle cx="11.3" cy="5.6" r="1.3" fill="currentColor"/>',
   // the two zoom axes: time runs up along a ruler, the keys lie side by side
   axisT:'<path d="M5.5 1.8v12.4M3 4.3l2.5-2.5L8 4.3M3 11.7l2.5 2.5L8 11.7" '+stk+' stroke-width="1.5"/><path d="M10.6 3.5h3.2M10.6 6.5h2M10.6 9.5h3.2M10.6 12.5h2" '+stk+' stroke-width="1.3"/>',
@@ -3671,7 +3683,10 @@ $('bMidi').onclick=connectMidi;
 /* ================= Keyboard ================= */
 const KEYMAP={KeyA:0,KeyW:1,KeyS:2,KeyE:3,KeyD:4,KeyF:5,KeyT:6,KeyG:7,KeyY:8,KeyH:9,KeyU:10,KeyJ:11,KeyK:12,KeyO:13,KeyL:14,KeyP:15,Semicolon:16,Quote:17};
 const kbdDown=new Map();
-function octInfo(){$('octInfo').textContent='Keys: C'+S.octave+' (Z/X)';}
+// the octave the computer-keyboard piano starts at (A plays its C), -1 to 8
+function octInfo(){$('octInfo').textContent='C'+S.octave;$('octDn').disabled=S.octave<=-1;$('octUp').disabled=S.octave>=8;}
+function stepOct(d){S.octave=clamp(S.octave+d,-1,8);octInfo();}
+$('octDn').onclick=()=>stepOct(-1);$('octUp').onclick=()=>stepOct(1);
 document.addEventListener('keydown',e=>{
   if(document.querySelector('dialog[open]'))return;
   const t=e.target,typing=t.matches&&t.matches('input:not([type=range]),textarea,select');
@@ -3698,8 +3713,8 @@ document.addEventListener('keydown',e=>{
   if(tools[e.code]){setTool(tools[e.code]);return;}
   if(e.code==='KeyQ'){snapNotes(e.shiftKey?'both':'start');return;}
   if(e.code==='KeyM'){setXsel(!S.xsel,true);return;}
-  if(e.code==='KeyZ'){S.octave=Math.max(-1,S.octave-1);octInfo();return;}
-  if(e.code==='KeyX'){S.octave=Math.min(8,S.octave+1);octInfo();return;}
+  if(e.code==='KeyZ'){stepOct(-1);return;}
+  if(e.code==='KeyX'){stepOct(1);return;}
   if(e.code in KEYMAP&&!e.repeat&&!kbdDown.has(e.code)){
     const p=12*(S.octave+1)+KEYMAP[e.code];if(p>127)return;kbdDown.set(e.code,p);liveOn('kbd',p,nvOf(activeTrack()).v);
   }
@@ -6492,22 +6507,54 @@ function toolTranspose(semi){
   act(()=>{for(const n of notes)n.p+=d;},'Transpose');
   toast('Transposed '+notes.length+' notes by '+(d>0?'+':'')+d+(d!==semi?' (limited by the keyboard range)':''));
 }
-// Swing on a grid of g ticks: every note starting on the second step of each pair moves pct% of the pair in (50%:
-// straight again, which also takes swing back out).
+// Swing on a grid of g ticks: within every pair of steps, the first grows and the second shrinks, so the note on the
+// second step starts pct% of the way through the pair (50%: straight). Notes in between, and note ends, move in
+// proportion, so finer notes keep their order instead of piling onto the off-beat. A swung note remembers where it
+// was straight (_sw: start, length, grid, and where swing put it), so each Apply sets the amount afresh, and 50%
+// (Straighten) puts it back exactly. A note moved by hand since then counts as straight again.
 function toolSwing(pct,g){
   const {notes}=toolTargets();if(!notes.length||!toolEditable())return;
-  const delay=Math.round((pct/100-.5)*2*g),mv=[];
-  for(const n of notes){const pos=Math.floor((n.s+g/4)/g);if(pos%2===1&&n.s!==pos*g+delay)mv.push([n,pos*g+delay]);}
-  if(!mv.length){toast(delay?'Those notes already swing this way':'There is no swing to take out');return;}
-  act(()=>{for(const [n,s] of mv)n.s=s;},delay?'Swing':'Straighten');
-  toast((delay?'Swung ':'Straightened ')+mv.length+' off-beat note'+(mv.length>1?'s':''));
+  const delay=(pct/100-.5)*2*g,warp=t=>{const k=Math.floor(t/(2*g)),u=t-2*k*g;return Math.round(2*k*g+(u<=g?u*(g+delay)/g:g+delay+(u-g)*(g-delay)/g));},ch=[];
+  for(const n of notes){
+    const r=n._sw&&n._sw[2]===g&&n.s===n._sw[3]&&n.d===n._sw[4]?n._sw:null,s0=r?r[0]:n.s,d0=r?r[1]:n.d;
+    const s=warp(s0),d=Math.max(1,warp(s0+d0)-s);
+    if(s!==n.s||d!==n.d||(!delay&&n._sw))ch.push([n,s,d,s0,d0]);
+  }
+  if(!ch.length){toast(delay?'Those notes already swing this way':'There is no swing to take out');return;}
+  act(()=>{for(const [n,s,d,s0,d0] of ch){n.s=s;n.d=d;if(delay)n._sw=[s0,d0,g,s,d];else delete n._sw;}},delay?'Swing':'Straighten');
+  toast((delay?'Swung ':'Straightened ')+ch.length+' note'+(ch.length>1?'s':''));
 }
+/* The Swing panel: how much (a slider, 50% straight to 75%), on which grid (1/8, 1/16 or 1/32), presets, and Apply or
+   Straighten. It stays open, so amounts can be tried one after another: each Apply sets the off-beats afresh. */
+const SWING={el:null,pct:60,g:null};
+const SW_GRIDS=[['1/8',PPQ/2],['1/16',PPQ/4],['1/32',PPQ/8]],SW_PRESETS=[['Light',55],['Medium',60],['Triplet',67],['Hard',72]];
 function swingMenu(x,y){
-  const g=gridT(),k=GRIDS[S.gridIdx].k.replace(' triplet','T');
-  showMenu(x,y,[{label:'Light swing ('+k+', 55%)',fn:()=>toolSwing(55,g)},{label:'Medium swing ('+k+', 60%)',fn:()=>toolSwing(60,g)},
-    {label:'Triplet feel ('+k+', 67%)',fn:()=>toolSwing(67,g)},{label:'Hard swing ('+k+', 72%)',fn:()=>toolSwing(72,g)},{sep:true},
-    {label:'Straighten ('+k+')',fn:()=>toolSwing(50,g)}]);
+  if(SWING.el){swingClose();return;}
+  if(SWING.g==null)SWING.g=SW_GRIDS.some(([,t])=>t===gridT())?gridT():PPQ/4;
+  const m=document.createElement('div');m.className='swpop';m.setAttribute('role','dialog');m.setAttribute('aria-label','Swing');
+  m.innerHTML=`<div class="swHead"><b>Swing</b><span>the selected notes, or the whole layer</span></div>
+    <label class="swRow"><span>Amount</span><input type="range" id="swAmt" min="50" max="75" step="1" aria-label="Swing amount"><input type="number" class="num" id="swAmtN" min="50" max="75" aria-label="Swing amount in percent">%</label>
+    <div class="swRow swPre">${SW_PRESETS.map(([l,v])=>`<button class="mini" data-swp="${v}" title="${v}%">${l}</button>`).join('')}</div>
+    <div class="swRow"><span>Every second</span><span class="slseg" role="radiogroup" aria-label="Grid to swing">${SW_GRIDS.map(([l,t])=>`<button role="radio" data-swg="${t}">${l}</button>`).join('')}</span></div>
+    <small>50% is straight; about 67% feels like triplets. The notes on every second step move later.</small>
+    <div class="swFoot"><button class="btn" data-sw="0" title="Put the off-beat notes back on the grid">Straighten</button><button class="btn on" data-sw="1">Apply</button></div>`;
+  document.body.appendChild(m);SWING.el=m;
+  const sync=()=>{$('swAmt').value=SWING.pct;$('swAmtN').value=SWING.pct;for(const b of m.querySelectorAll('[data-swg]'))b.setAttribute('aria-checked',String(+b.dataset.swg===SWING.g));for(const b of m.querySelectorAll('[data-swp]'))b.classList.toggle('on',+b.dataset.swp===SWING.pct);};
+  sync();
+  m.addEventListener('input',e=>{if(e.target.id==='swAmt'||e.target.id==='swAmtN'){const v=Math.round(+e.target.value);if(v>=50&&v<=75){SWING.pct=v;sync();}}});
+  m.addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.swp){SWING.pct=+b.dataset.swp;sync();}
+    else if(b.dataset.swg){SWING.g=+b.dataset.swg;sync();}
+    else if(b.dataset.sw)toolSwing(b.dataset.sw==='1'?SWING.pct:50,SWING.g);
+  });
+  m.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape'){e.preventDefault();swingClose();$('bSwing').focus();}else if(e.key==='Enter'&&!e.target.closest('button')){e.preventDefault();toolSwing(SWING.pct,SWING.g);}});
+  const r=m.getBoundingClientRect();m.style.left=clamp(x,4,innerWidth-r.width-4)+'px';m.style.top=(y+r.height>innerHeight-4?Math.max(4,y-r.height):y)+'px';
+  setTimeout(()=>document.addEventListener('pointerdown',swingOutside,true),0);
+  $('swAmt').focus({preventScroll:true});
 }
+function swingOutside(e){if(SWING.el&&!SWING.el.contains(e.target)&&!e.target.closest('#bSwing'))swingClose();}
+function swingClose(){if(!SWING.el)return;SWING.el.remove();SWING.el=null;document.removeEventListener('pointerdown',swingOutside,true);}
 function toolHumanize(timing,vel){
   const {notes}=toolTargets();if(!notes.length||(!timing&&!vel)||!toolEditable())return;
   act(()=>{for(const n of notes){if(timing)n.s=Math.max(0,n.s+Math.round((Math.random()*2-1)*timing));if(vel)n.v=clamp(n.v+Math.round((Math.random()*2-1)*vel),1,127);}},'Humanize');
