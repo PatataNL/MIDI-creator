@@ -196,6 +196,84 @@ const UNIT=[
     makeIndependent(R2);R.notes[0].p=50;markEdited();if(isRef(R2)||key(R2)!==follows)bad.push('an independent layer still follows');
     return{ok:!bad.length,detail:bad.length?bad.join(' · '):'moved and transposed, followed the original, kept in project and MIDI files, survived deleting the original'};
   }],
+  ['Layer View: blocks, rows and moving',async()=>{
+    const bar=barTicks(),A=newTrack({name:'A',notes:[nt(60,0,480),nt(62,bar*3+240,240)]}),B=newTrack({name:'B',notes:[nt(40,bar,bar)]}),bad=[];
+    song.tracks=[A,B];S.active=A.id;S.sel.clear();refLayer(A);const R=activeTrack();R.off=bar*4;markEdited();
+    const lay=()=>[...lvLayout()].map(([t,o])=>t.name+':'+o.row+':'+o.s/bar+'-'+o.e/bar).sort().join(' '),key=t=>t.notes.map(n=>n.p+'@'+n.s).join(' ');
+    // the blocks span whole bars; the reference packs into its original's row, the bass below
+    const l0=lay();if(l0!=='A (ref):0:4-8 A:0:0-4 B:1:1-2')bad.push('packed as '+l0);
+    // a bar later with the arrow keys: onto the reference, so to the nearest free row; the reference stays put
+    const r0=key(R);S.active=A.id;lvNudge(1,true,false);const l1=lay();
+    if(l1!=='A (ref):0:4-8 A:2:1-5 B:1:1-2')bad.push('moved to '+l1);
+    if(key(R)!==r0)bad.push('the reference moved along: '+key(R));
+    if(A.notes[0].s!==bar)bad.push('notes not moved: '+A.notes[0].s);
+    // rows and blocks are kept in a project file
+    const back=projFrom(JSON.parse(JSON.stringify(serProject({name:'x',tempos:song.tempos,ts:song.ts,sigs:[],marks:[],tracks:song.tracks}))));
+    if(back.tracks.map(t=>t.row).join()!==song.tracks.map(t=>t.row).join()||JSON.stringify(back.tracks[0].blk)!==JSON.stringify(A.blk))bad.push('the project file lost rows or blocks');
+    return{ok:!bad.length,detail:bad.length?bad.join(' · '):'packed into rows, moved a bar to the nearest free row with its reference staying put, kept in a project file'};
+  }],
+  ['Layer View: trimming, repeating, stretching, splitting and removed stretches',async()=>{
+    const bar=barTicks(),A=newTrack({name:'A',notes:[0,1,2,3].map(i=>nt(60+i,i*bar,bar/2))}),bad=[],tick=()=>new Promise(r=>setTimeout(r,0));
+    song.tracks=[A];S.active=A.id;S.sel.clear();refLayer(A);const R=activeTrack();R.off=bar*8;markEdited();
+    const D=(t,side,to,stretch)=>{LV.drag={mode:'edge',side,stretch,t,x0:0,moved:false};lvEdge(1e9,false);LV.drag.x0=lvX(side==='r'?LV.drag.b.e:LV.drag.b.s);lvEdge(lvX(to),false);LV.drag=null;endEdit();};
+    const rk=()=>R.notes.map(n=>n.s+':'+n.p+':'+n.d).sort().join(),r0=rk(),vis=t=>t.notes.filter(n=>!n.out);
+    // lengthened from 4 to 8 bars: its notes come round again as its own, a seam where; the reference stays as it was
+    D(A,'r',bar*8);await tick();if(A.notes.length!==8||A.notes[4].s!==bar*4||(A.seams||[]).join()!==String(bar*4))bad.push('lengthened: '+A.notes.length+' notes');
+    // trimmed back to 3 bars: the notes after are left out, not removed
+    D(A,'r',bar*3);await tick();if(vis(A).length!==3||A.notes.length!==8||blockOf(A).e!==bar*3)bad.push('trimmed: '+vis(A).length+' of '+A.notes.length+' notes play');
+    // stretched twice as long (Ctrl), then over its start backwards would be: here forwards
+    D(A,'r',bar*6,true);await tick();if(vis(A)[1].s!==bar*2||vis(A)[1].d!==bar||A.sx!==2)bad.push('stretched: '+vis(A)[1].s+'+'+vis(A)[1].d);
+    if(rk()!==r0)bad.push('the reference changed with its original\'s block');
+    // the reference lengthened past its block repeats it, and follows a change in its original's notes
+    D(R,'r',bar*20);await tick();const reps=R.notes.length;A.notes[0].p=72;markEdited();
+    if(reps!==12||R.notes.filter(n=>n.p===72).length!==3)bad.push('reference repeats: '+reps+' notes, '+R.notes.filter(n=>n.p===72).length+' changed');
+    // split at bar 2: two layers; the original keeps its second half, left out
+    const rs=rk();lvSplit([A],bar*2);await tick();const A2=song.tracks.find(t=>t.name==='A (2)');
+    if(!A2||vis(A).length!==1||vis(A2).length!==2||A2.row!==A.row)bad.push('split: '+(A2?vis(A).length+'+'+vis(A2).length:'no second half'));
+    if(rk()!==rs)bad.push('the reference changed with the split');
+    // a stretch removed from the reference: joined up, then put back
+    lvSplice([R],bar*8,bar*10);await tick();if(R.notes.length!==10||!R.cuts||blockOf(R).e!==bar*18)bad.push('removed from the reference: '+R.notes.length+' notes, ends at bar '+blockOf(R).e/bar);
+    lvRestoreOne(R,0);await tick();if(rk()!==rs||R.cuts)bad.push('restored: '+R.notes.length+' notes');
+    // two stretches removed from an original, the first put back alone: the second stays out
+    const O=newTrack({name:'O',notes:[0,1,2,3,4,5,6,7].map(i=>nt(60+i,i*bar,bar/2))});song.tracks.push(O);markEdited();
+    lvSplice([O],bar,bar*2);lvSplice([O],bar*3,bar*4);lvRestoreOne(O,0);await tick();
+    const ps=[...O.notes].sort((x,y)=>x.s-y.s).map(n=>n.p).join();
+    if(ps!=='60,61,62,63,65,66,67'||(O.cuts||[]).length!==1)bad.push('one stretch put back: '+ps);
+    // notes cut where a stretch is removed (across it, into it, out of it), and whole again when it is put back
+    const N=newTrack({name:'N',notes:[nt(48,0,bar*4),nt(50,bar/2,bar),nt(52,bar*1.5,bar)]});song.tracks.push(N);markEdited();
+    const nk=()=>[...N.notes].sort((x,y)=>x.p-y.p).map(n=>n.s/bar+'+'+n.d/bar).join(' ');lvSplice([N],bar,bar*2);const cutK=nk();lvRestoreOne(N,0);
+    if(cutK!=='0+3 0.5+0.5 1+0.5'||nk()!=='0+4 0.5+1 1.5+1')bad.push('notes cut: '+cutK+', put back: '+nk());
+    // a muted part in the second half
+    lvMutePart([A2],bar*4,bar*6,true);if(!inPart(A2.mutes,vis(A2)[1].s)||inPart(A2.mutes,vis(A2)[0].s))bad.push('muted part '+JSON.stringify(A2.mutes));
+    return{ok:!bad.length,detail:bad.length?bad.join(' · '):'lengthened with repeats, trimmed and stretched with the reference unchanged, a reference repeating its original, split, a stretch removed and put back, one muted'};
+  }],
+  ['References: swing, humanize, legato, snap and clean up',async()=>{
+    const A=newTrack({name:'A',notes:[nt(60,0,120),nt(60,0,60),nt(62,240,120),nt(64,480,120),nt(65,720,120)]}),bad=[],tick=()=>new Promise(r=>setTimeout(r,0));
+    song.tracks=[A];S.active=A.id;S.sel.clear();refLayer(A);const R=activeTrack();S.sel.clear();
+    const rk=()=>[...R.notes].sort((x,y)=>x.s-y.s||x.p-y.p).map(n=>n.s+'+'+n.d).join(' ');
+    // swung 67% on eighths: the second of each pair starts later; the original stays straight
+    toolSwing(67,PPQ/2);await tick();if(!R.notes.some(n=>n.s===322)||A.notes[2].s!==240)bad.push('swung: '+rk());
+    // legato, then the duplicate on the first key cleaned up
+    toolLegato(false,0);cleanNotes('dupes');await tick();
+    if(rk()!=='0+322 322+158 480+322 802+79'||A.notes.length!==5)bad.push('legato and clean up: '+rk());
+    // a note added to the original: swung too, and the note before now runs up to it
+    A.notes.push(nt(67,960,120));markEdited();await tick();if(rk()!=='0+322 322+158 480+322 802+158 960+161')bad.push('after changing the original: '+rk());
+    // snap (lengths, to 1/16) and humanize (timing): the nudges stay the same when the reference moves
+    const gi=S.gridIdx;S.gridIdx=GRIDS.findIndex(g=>g.k==='1/16');snapNotes('len');S.gridIdx=gi;toolHumanize(10,0);await tick();
+    const h0=R.notes.map(n=>n.s).join();shiftRef(R,PPQ*4,0,'Move reference');endEdit();await tick();const h1=R.notes.map(n=>n.s-PPQ*4).join();
+    if(h0!==h1||R.notes.some((n,i)=>Math.abs(n.s-PPQ*4-[0,322,480,802,960][i])>10))bad.push('humanized '+h0+', moved '+h1);
+    if(R.fx.map(fxKey).join()!=='swing,legato,clean:dupes,snap:len,human')bad.push('changes '+R.fx.map(fxKey).join());
+    // kept in a project file
+    const back=projFrom(JSON.parse(JSON.stringify(serProject({name:'x',tempos:song.tempos,ts:song.ts,sigs:[],marks:[],tracks:song.tracks}))));
+    if(back.tracks[1].notes.map(n=>n.s+'+'+n.d).join()!==R.notes.map(n=>n.s+'+'+n.d).join())bad.push('the project file plays it differently');
+    // each taken off again: the original's notes, moved, once more
+    for(const k of ['swing','legato','clean:dupes','snap:len','human'])refFx(R,null,k);await tick();
+    if(R.fx||R.notes.length!==6||rk()!=='1920+120 1920+60 2160+120 2400+120 2640+120 2880+120')bad.push('taken off: '+rk());
+    // undone: humanize back; made independent: the notes it plays stay, as its own
+    undo();await tick();const R2=song.tracks.find(isRef),u=R2&&R2.notes.map(n=>n.s).join();
+    makeIndependent(R2);await tick();if(!R2||R2.fx||isRef(R2)||R2.notes.map(n=>n.s).join()!==u)bad.push('undone and made independent: '+(R2?R2.notes.map(n=>n.s).join():'gone'));
+    return{ok:!bad.length,detail:bad.length?bad.join(' · '):'swung, legato, cleaned up, snapped and humanized as it plays; kept up with a new note in the original, kept its nudges when moved and in a project file, came off again'};
+  }],
   ['Hands: a two-hand piece split back into its hands',async()=>{
     let ok=0,n=0;for(const seed of [3,7,11]){const {rh,lh}=twoHands(seed),notes=rh.map(x=>({...x,h:0})).concat(lh.map(x=>({...x,h:1}))),lab=splitHands(notes);notes.forEach((x,i)=>{n++;if(lab[i]===x.h)ok++;});}
     const pct=ok/n*100;return{ok:pct>=98,detail:pct.toFixed(1)+'% of '+n+' notes in the right hand'};

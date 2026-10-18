@@ -15,6 +15,7 @@ It is a single web page. There is nothing to install, no account and no server: 
 - [A tour of the screen](#a-tour-of-the-screen)
 - [Writing notes](#writing-notes)
 - [Layers](#layers)
+- [Layer View](#layer-view)
 - [The Values sidebar](#the-values-sidebar)
 - [Playing, listening and recording](#playing-listening-and-recording)
 - [Bookmarks and loops](#bookmarks-and-loops)
@@ -33,7 +34,7 @@ It is a single web page. There is nothing to install, no account and no server: 
 - **A vertical piano roll.** Notes fall toward a full piano keyboard, as in piano tutorial videos. Draw, select, move, stretch, copy and erase with the mouse or a touch screen.
 - **Layers** with their own instrument (all 128 General MIDI instruments plus drums), colour, volume, pan, reverb and muffle. You can hide, lock, mute, solo, merge and reorder them.
 - **References.** A layer can play the notes of another layer, moved in time and pitch, with its own instrument and values. Change the original and every reference follows.
-- **References.** A layer can play the notes of another layer, moved in time and pitch, with its own instrument and values. Change the original and every reference follows.
+- **Layer View.** Every layer as a block on a horizontal timeline, to arrange the song: drag blocks in time and between rows, and double-click one to edit its notes.
 - **Per-note values.** Velocity, pan, reverb and muffle are edited in the Values sidebar or the note info bar. There is also a sustain pedal lane.
 - **Two kinds of layer sliders.** One sets the values new notes start with. The other changes the whole layer as it plays, without touching the notes.
 - **Tempo and time-signature changes** anywhere in the song.
@@ -66,11 +67,11 @@ From top to bottom:
 | Area | What it does |
 |---|---|
 | **Top bar** | Undo/redo; New, Open… and From video…; Save MIDI, Save score, Save project, Export WAV, Open in Keys (and copy a Keys link); Connect MIDI and the input picker; output level meter; full screen; light/dark mode; Settings. |
-| **Second bar** | The four tools (Draw, Select, Erase, Look). In the middle the transport: back to start, play/pause, stop, record, then Loop, Metronome, the position readout (bar.beat.tick and time), BPM and time signature. On the right Grid, Fine grid and Scale highlight. |
+| **Second bar** | The **Notes | Layers** switch between [Note View and Layer View](#layer-view) (Tab also switches), and the four tools (Draw, Select, Erase, Look). In the middle the transport: back to start, play/pause, stop, record, then Loop, Metronome, the position readout (bar.beat.tick and time), BPM and time signature. On the right Grid, Fine grid and Scale highlight. |
 | **Tabs** | One tab per open project. The arrow at the far right of the second bar hides or shows the tab bar. |
 | **Layer panel** (left) | Your layers, the Show all / Only this buttons, the opacity of other layers, and at the bottom the master volume, reverb mix, reverb space and the Sound menu (Standard or Fancy). |
 | **Note toolbar** | On the left, buttons for the notes: select across layers, select tools, snap, split and join (where you click), legato, swing, humanize, transpose, clean up, duplicate, delete and loop selection. On the right, the computer-keyboard octave (⌨ ‹ C4 ›), Follow and Zoom. |
-| **Piano roll** | Time runs upward: the playhead line moves up through the notes toward the keyboard at the bottom. The time ruler is on the left. |
+| **Piano roll** | Time runs upward: the playhead line moves up through the notes toward the keyboard at the bottom. The time ruler is on the left. In Layer View, the timeline of blocks takes its place. |
 | **Playback bar** | A song-wide progress bar with bookmarks and the loop region. Drag it to look through the song, let go to jump there. |
 | **Note info bar** | Pitch, start, length, velocity, pan, reverb and muffle of the selected note(s). |
 | **Status line** | The note and position under the cursor. |
@@ -174,7 +175,7 @@ With notes selected, the bar under the roll shows their **pitch, start, length, 
 
 Each layer is a card in the layer panel. Click a card to select that layer: new notes go there, and its card shows all its controls.
 
-- **Header:** the name (click and type), with move up/down, delete, and **⋯** for more.
+- **Header:** the arrow at its left collapses the card to just this strip (Alt+click: every card), and opens it again. A collapsed card still shows whether the layer is hidden, locked, muted or solo; click one of those to turn it off. Then the name (click and type), with move up/down, delete, and **⋯** for more.
 - **Instrument:** any General MIDI instrument, grouped by family, or drums.
 - **Switches:** show/hide, lock (locked layers can't be edited or clicked), mute and solo. Switched on, they light up: hidden and locked in the accent colour, muted in red, solo in yellow. On the other layers they sit beside the instrument.
 - **Sliders**, in two sets. Pick one with **New / All**, to the left of the switches.
@@ -196,6 +197,7 @@ The **⋯** menu, or a right-click on a card, has:
 - **Split into right and left hand:** divides a piano layer the way a pianist would play it, into "… – right hand" (keeping the colour) and "… – left hand" (a contrasting colour). It works on the whole piece at once: each hand can only stretch so far, chords struck together stay together, and each hand stays near where it has been playing. On a test set of 29 piano scores, about 96% of notes land in the hand they're written for. Ctrl+Z undoes it.
 - **Merge with the layer below** and **Merge layers…**. The merged notes move into one layer. With "Keep how each layer sounds", each note keeps its volume, pan, reverb and muffle.
 - **Delete layer** (optionally with a confirmation; Ctrl+click on the delete button skips it). A layer with references asks what to do with them.
+- **Collapse every layer** and **Expand every layer**.
 
 On a reference, the menu starts with **Go to the original** and **Make independent**. Splitting into hands and merging into it are not available.
 
@@ -210,6 +212,7 @@ On a reference, the menu starts with **Go to the original** and **Make independe
   - **Ctrl**+drag a note's end (or start) to make every note longer or shorter by the same factor, each keeping its start;
   - the arrow keys and **Transpose** move the selected reference too;
   - grabbing the notes of a reference that is not selected selects it first, as for any layer.
+- **Swing, Humanize, Legato, Snap and Clean up** work on a selected reference too. They don't change its notes. Each is kept as a change to how it plays, worked out again whenever the original's notes change, so a new note in the original is swung (or snapped) as well. Applying one again changes it (Humanize rolls new random nudges); they apply in the order added. Humanize gives each note the same nudge every time, also after moving the reference or reopening the file. The changes show as chips on the card; click one to take it off. In Layer View they are listed on the block and in its right-click menu.
 - **Changing single notes** happens in the original. Clicking a reference's note without dragging, right-clicking it, or trying to draw in a reference opens a menu: **Edit this note in the original** selects that layer and the note there, and **Make this layer independent** turns the notes it plays into its own. You can still select a reference's notes to copy them.
 - **A reference of a reference** links to the same original.
 - **Deleting an original** asks whether to delete its references too. If you keep them, the first one keeps the notes it plays as its own and becomes the original of the others.
@@ -220,6 +223,75 @@ On a reference, the menu starts with **Go to the original** and **Make independe
 ### Layer colours
 
 A layer's colour can come from its name. Name a layer "Blue right hand" or "Melody #ff8800" and it takes that colour. This also works for track names in imported MIDI files.
+
+---
+
+## Layer View
+
+**Layers** at the left of the second bar (or **Tab**) switches from Note View to Layer View: every layer as a block on a horizontal timeline, to arrange the song. **Notes** (or Tab again) switches back.
+
+- **Blocks** span a layer's notes, out to whole bars. Along the top: the layer's name and instrument, how far the block is stretched (×1.5; ⇄ when backwards) and a speaker button to mute it. Below: its notes in miniature, with its lowest and highest C marked to show which octaves it covers.
+  - References are striped and dashed, with a link mark.
+  - Muted layers are grey with a red speaker. Layers that aren't playing because others are soloed are faint.
+  - Selected blocks have an accent outline.
+  - Hovering a block shows its name, instrument, bars and key range in the status line.
+- **Rows** go down the view. The row a block is in changes nothing about how it sounds. Until you move a block, the layers pack into rows by themselves: each in the first row where it fits, so a reference later in the song shares its original's row. Once you move one, every layer keeps its row. Two blocks never overlap in one row.
+
+### Blocks and references
+
+Changing an original's block here leaves its references as they are: moving, trimming, lengthening, stretching, splitting, transposing and removing stretches. Only changes to its notes (in Note View) reach them. The references keep their own block from then on, and are moved or stretched back by as much as the original. So an original never loses notes to these changes:
+- **Trimmed off:** notes trimmed off its block are kept, left out. They don't play and aren't exported, show faint and dashed in Note View, and come back when you drag the end over them again.
+- **Removed stretches:** notes in a removed stretch are kept with it, to put back.
+
+### Selecting and moving
+
+- Click a block to select it (and its layer). Ctrl+click adds a block, or takes a selected one out. Drag over an empty spot for a selection box (Ctrl: added to the selection). Ctrl+A selects every block, Esc lets go.
+- Drag a block to move it, with the other selected blocks, in time: snapped to the Grid (hold Alt for the Fine grid). A single block can also go to another row. A row that's full at that time is skipped for the nearest free one. While you drag, a label shows where the block starts; **Esc** puts it back.
+- Moving a layer moves its notes; its references stay where they are.
+- **Ctrl+drag** moves copies of the blocks instead, leaving the blocks where they were. **Ctrl+Alt+drag** moves new references to them.
+- The arrow keys move the selected blocks: ← and → a grid step (Shift: a bar), ↑ and ↓ a row (one block).
+- **Double-click** a block to edit its notes in Note View, starting at the block.
+
+### Trimming, lengthening and stretching
+
+Drag a block's start or end (the cursor shows ↔). The dragged end snaps to the Grid (hold Shift for the Fine grid) and stops at the next block in its row. A label shows where it ends up.
+
+- **Trim:** dragging an end inward leaves out the notes beyond it. Dragging it back out brings them back.
+- **Lengthen:** dragging the end past the last note makes the block repeat. An original repeats as copies, notes of its own, with its muted parts. A reference repeats its original and keeps following it. A dashed seam with a small mark on the name strip shows where each repeat starts.
+- **Stretch:** **Ctrl**+drag an end to stretch the whole block, notes and all, from its other end. Drag it over the other end to play the block backwards. The block shows how far it is stretched.
+
+### Splitting, removing stretches and muting
+
+- **Split here** (right-click menu) or **Ctrl+E** (at the playhead) splits blocks in two. The second half is a new layer beside the first in its row. An original's notes from that point go to the new layer; a note running across the point stays in the first half. The first half keeps the second half's notes, left out. A reference becomes two references of the same original.
+- **Pick a stretch of time:** Shift+drag anywhere, on the ruler or across the blocks. It snaps to the Fine grid (hold Alt for the main Grid), and a label shows where it runs and how long it is. It shows as a highlighted band. Shift+click on an empty spot, or Esc, lets it go; Shift+click on a block adds it to the selection.
+- **Remove the picked stretch** (right-click menu, or **Delete**) takes it out of the selected blocks, and what came after moves up against what came before. Notes are cut precisely: a note running into the stretch is cut short where it starts, one running out of it keeps its part after, one across it loses the stretch, and one inside it goes. A red zigzag marks where the two sides now meet; right-click it and choose **Restore this removed stretch** to put that one back, with its notes whole again. Hovering the zigzag says so in the status line.
+- **Mute the picked stretch** silences it in the selected blocks without removing anything: their notes there don't play, as in a muted layer. Muted parts are darkened, with a crossed speaker, and their notes are faint in Note View. **Unmute the picked stretch**, or right-click inside a muted part and choose **Unmute this part**, brings it back. Like a muted layer, a muted part still goes into MIDI, MusicXML and Keys; only playback and WAV leave it out.
+- Muted parts and removed stretches stay with the same notes: they move, stretch and close up with the block.
+
+### The toolbar, the menu and shortcuts
+
+- **The toolbar** works on the selected blocks, or on the selected layer when none are selected:
+  - The note tools as in Note View: **Snap** (Q; the arrow beside it has ends, starts and ends, and lengths), **Legato**, **Swing**, **Humanize**, **Transpose** and **Clean up**. Each changes the whole layer. On a reference it changes how the reference plays (see [References](#references)); Transpose moves it. Used on several blocks, it is one step to undo.
+  - **Split** at the playhead, **Duplicate** right after, **Reference** (a reference of each block right after it), **Mute** (or unmute), **Loop** (the loop region around the blocks, or around the picked stretch) and **Delete**.
+  - While a stretch is picked, **Remove stretch** and **Mute stretch**.
+- **Keys and mouse**, in the bottom right corner, lists what the mouse and keys do here. Click its title to fold it away (it stays that way).
+- **Right-click** a block for its menu: **Edit the notes**, **Transpose** (−12, −1, +1, +12 semitones; the menu stays open to click again), **Notes** (Swing, Humanize, Legato, Snap and Clean up on the whole layer; on a reference as it plays, see [References](#references)), **Take off** for each change a reference has, **Mute** and **Solo**, **Split here** and **Split at the playhead**, the picked stretch's **Remove** and **Mute**, **Restore this removed stretch** (on a zigzag), then the usual layer menu. With several blocks selected and one of them clicked, it works on all of them.
+- **Delete** deletes the selected layers (or removes the picked stretch from them). **Ctrl+D** puts copies of the selected blocks right after them. **Ctrl+C**, **Ctrl+X** and **Ctrl+V** copy, cut and paste layers; pasted ones start at the playhead.
+
+### The ruler and the view
+
+- **The ruler** works as in Note View:
+  - Each bar shows its number and the time it starts.
+  - Click or drag it to move the playhead.
+  - The thin strip along its top is the loop: drag along it to set the loop, click it to switch the loop on or off.
+  - Right-click it to add or change a tempo or time signature there.
+  - Tempo and time-signature changes and bookmarks show as tags. Click a tempo or time-signature tag to change or remove it, and a bookmark to jump there (Shift+click or double-click to rename it). Bookmarks also show as dashed lines across the rows.
+- **Viewing:**
+  - The wheel scrolls through time (down: back towards the start), Shift+wheel through the rows, Ctrl+wheel zooms the time. Drag with the middle mouse button to pan.
+  - The bar above has Follow, time and row-height zoom, and **Fit Song**.
+  - The view and zoom are remembered.
+
+Note tools, the note info bar and the Values sidebar belong to Note View and are hidden here. Full-screen playback (5) switches to Note View.
 
 ---
 
@@ -468,6 +540,7 @@ The gear button opens Settings. The search box at the top finds any setting.
 | Space | Play / pause |
 | Home | Back to the start |
 | 1 / 2 / 3 / 4 | Draw / Select / Erase / Look |
+| Tab | Switch between Note View and Layer View |
 | 5 | Full-screen playback (Esc also leaves it) |
 | Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y | Undo, redo |
 | Ctrl+A | Select all notes in the layer (every layer while *Select across layers* is on) |
@@ -483,6 +556,8 @@ The gear button opens Settings. The search box at the top finds any setting.
 | Delete / Backspace | Delete the selected notes |
 | Arrow left / right | Move the selection (or the selected reference) down / up by a semitone (Shift: an octave) |
 | Arrow up / down | Move the selection (or the selected reference) later / earlier (Shift: by the main grid) |
+| Arrow keys in Layer View | Move the selected blocks a grid step (Shift: a bar) earlier or later, or one block a row up or down |
+| Ctrl+D, Ctrl+E, Ctrl+C / X / V in Layer View | Copy the selected blocks right after themselves, split them at the playhead, copy / cut / paste layers |
 | Esc | Clear the selection |
 | B | Add a bookmark at the playhead |
 | , and . | Previous / next bookmark |
@@ -548,7 +623,9 @@ A project is JSON:
   - its new-note values: `nvV`, `nvPan`, `nvRev`, `nvMuf`;
   - its whole-layer values: `mxV`, `mxPan`, `mxRev`, `mxMuf`;
   - separate note colours: `colorWhite`, `colorBlack`.
-- A reference has `link`: the place of its original in `tracks`, counting from 0. `str` stretches it in time (2 = twice as long) and `len` makes its notes longer again, each 1 when missing; then `off` moves it later in ticks and `tp` up in semitones. Its `notes` and `pedal` hold what it plays, so older versions open it as an ordinary layer; on opening they are worked out again from the original.
+- A reference has `link`: the place of its original in `tracks`, counting from 0. `str` stretches it in time (2 = twice as long) and `len` makes its notes longer again, each 1 when missing; then `off` moves it later in ticks and `tp` up in semitones. Its `notes` and `pedal` hold what it plays, so older versions open it as an ordinary layer; on opening they are worked out again from the original. `fx` lists its note changes in order: `swing` (`pct`, grid `g`), `human` (`time`, `vel`, `seed`), `legato` (`longer`, `gap`), `snap` (`kind`: `start`, `end`, `both` or `len`; grid `g`) and `clean` (`kind`: `overlaps` or `dupes`), each with `k` naming it (and `gl`, the grid's name, where it has one).
+- A collapsed layer card has `fold: true`.
+- Layer View keeps a layer's `row` (from 0) and, once its block has been moved, `blk`: where the block starts and ends (`s`, `e`, in ticks). Notes left out of the block have `out: 1`. A lengthened original has `seams` (ticks), a stretched one `sx` (how far, below 0 backwards). Muted parts are in `mutes` (a list of `{ "s", "e" }`), removed stretches in `cuts` (`at`, `len`, `dir`, and for an original the `notes`, `pedal`, `mutes` and `seams` to put back, and a `tag` that the parts left of the notes it cut carry as `cut`). A reference arranged in Layer View has `win` (its block before its removed stretches) and `per` and `ph` (the stretch of its original it repeats: how long, and where it starts).
 
 ### MIDI extensions
 
@@ -562,7 +639,7 @@ Saved MIDI files stay fully standard. Two extras ride along in ways other progra
 ### Tests
 
 Open `index.html#test` (or [`tests/index.html`](tests/index.html)) to run the test suite inside the app.
-- **Built-in tests** need no files and take a few seconds. They cover a synthetic falling-notes video, file round trips, time signatures, tempo changes, selection, split/join, references, hands and the layer sliders.
+- **Built-in tests** need no files and take a few seconds. They cover a synthetic falling-notes video, file round trips, time signatures, tempo changes, selection, split/join, references, Layer View, hands and the layer sliders.
 - **Video tests** check the video import note by note against recorded results on six real tutorials, which you supply yourself.
 
 See [`tests/README.md`](tests/README.md).
