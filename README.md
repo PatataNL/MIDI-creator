@@ -32,6 +32,8 @@ It is a single web page. There is nothing to install, no account and no server: 
 
 - **A vertical piano roll.** Notes fall toward a full piano keyboard, as in piano tutorial videos. Draw, select, move, stretch, copy and erase with the mouse or a touch screen.
 - **Layers** with their own instrument (all 128 General MIDI instruments plus drums), colour, volume, pan, reverb and muffle. You can hide, lock, mute, solo, merge and reorder them.
+- **References.** A layer can play the notes of another layer, moved in time and pitch, with its own instrument and values. Change the original and every reference follows.
+- **References.** A layer can play the notes of another layer, moved in time and pitch, with its own instrument and values. Change the original and every reference follows.
 - **Per-note values.** Velocity, pan, reverb and muffle are edited in the Values sidebar or the note info bar. There is also a sustain pedal lane.
 - **Two kinds of layer sliders.** One sets the values new notes start with. The other changes the whole layer as it plays, without touching the notes.
 - **Tempo and time-signature changes** anywhere in the song.
@@ -190,10 +192,30 @@ Above the layers:
 
 The **⋯** menu, or a right-click on a card, has:
 
-- **Duplicate layer**, **Copy layer** and **Paste layer below**. A copied layer can also be pasted into another tab.
+- **Duplicate layer**, **Duplicate as reference** (see [References](#references)), **Copy layer** and **Paste layer below**. A copied layer can also be pasted into another tab.
 - **Split into right and left hand:** divides a piano layer the way a pianist would play it, into "… – right hand" (keeping the colour) and "… – left hand" (a contrasting colour). It works on the whole piece at once: each hand can only stretch so far, chords struck together stay together, and each hand stays near where it has been playing. On a test set of 29 piano scores, about 96% of notes land in the hand they're written for. Ctrl+Z undoes it.
 - **Merge with the layer below** and **Merge layers…**. The merged notes move into one layer. With "Keep how each layer sounds", each note keeps its volume, pan, reverb and muffle.
-- **Delete layer** (optionally with a confirmation; Ctrl+click on the delete button skips it).
+- **Delete layer** (optionally with a confirmation; Ctrl+click on the delete button skips it). A layer with references asks what to do with them.
+
+On a reference, the menu starts with **Go to the original** and **Make independent**. Splitting into hands and merging into it are not available.
+
+### References
+
+**Duplicate as reference** adds a layer that plays the notes of the original: the same notes with the same values, and the same sustain pedal. Change the notes of the original and the reference follows straight away. A reference has its own name, instrument, colour, switches and sliders, so the same part can be doubled on another instrument, or played again later and higher.
+
+- **On its card**, a dashed button names the original; click it to select that layer. A reference has no new notes, so its sliders are always the whole-layer set, without the New / All switch. A layer with references has a dashed button beside its instrument showing how many; click it to list them and pick one.
+- **In the note area**, a reference's notes are striped, and they move together:
+  - drag a note to move the whole reference in time and pitch;
+  - drag a note's end to stretch the reference in time, with its start staying put, or a note's start, with its end staying put. The dragged edge snaps to the Fine grid (Alt: the main grid);
+  - **Ctrl**+drag a note's end (or start) to make every note longer or shorter by the same factor, each keeping its start;
+  - the arrow keys and **Transpose** move the selected reference too;
+  - grabbing the notes of a reference that is not selected selects it first, as for any layer.
+- **Changing single notes** happens in the original. Clicking a reference's note without dragging, right-clicking it, or trying to draw in a reference opens a menu: **Edit this note in the original** selects that layer and the note there, and **Make this layer independent** turns the notes it plays into its own. You can still select a reference's notes to copy them.
+- **A reference of a reference** links to the same original.
+- **Deleting an original** asks whether to delete its references too. If you keep them, the first one keeps the notes it plays as its own and becomes the original of the others.
+- **Files:** project files keep the links. MIDI, MusicXML, WAV and Keys get every reference as an ordinary layer with its notes.
+
+**Show the notes of references** in Settings can hide the notes of references among the other layers (the selected layer always shows its notes). They still play.
 
 ### Layer colours
 
@@ -428,9 +450,9 @@ The gear button opens Settings. The search box at the top finds any setting.
 
 | Section | Settings |
 |---|---|
-| **Appearance** | Color mode (auto/light/dark); color theme; base and accent color saturation; layer panel position; note names on notes; which keys show labels; note area brightness; preview of the note under the cursor. |
+| **Appearance** | Color mode (auto/light/dark); color theme; base and accent color saturation; layer panel position; note names on notes; the notes of references; which keys show labels; note area brightness; preview of the note under the cursor. |
 | **Sound** | Fancy playback; *Piano tweaks*: brightness, low-note volume and focus, bass reduction, hammer knock. |
-| **Editing** | Anti-resize delay (so a fresh note isn't stretched by accident); Values lane grab delay; stretch handle size; value bar and black-key hitboxes; play notes while editing; confirm before deleting a layer. |
+| **Editing** | Anti-resize delay (so a fresh note isn't stretched by accident); Values lane grab delay; stretch handle size; how close to an edge a drag must come to scroll the view; value bar and black-key hitboxes; play notes while editing; confirm before deleting a layer. |
 | **Full-screen mode** | Landing ripples; fade at the top. |
 | **Playback** | Stop returns to the loop start; metronome volume. |
 | **Storage** | Auto-save to this browser. |
@@ -459,8 +481,8 @@ The gear button opens Settings. The search box at the top finds any setting.
 | Ctrl+J | Join the selected notes on the same key |
 | Ctrl+S | Save MIDI |
 | Delete / Backspace | Delete the selected notes |
-| Arrow left / right | Move the selection down / up by a semitone (Shift: an octave) |
-| Arrow up / down | Move the selection later / earlier (Shift: by the main grid) |
+| Arrow left / right | Move the selection (or the selected reference) down / up by a semitone (Shift: an octave) |
+| Arrow up / down | Move the selection (or the selected reference) later / earlier (Shift: by the main grid) |
 | Esc | Clear the selection |
 | B | Add a bookmark at the playhead |
 | , and . | Previous / next bookmark |
@@ -478,7 +500,7 @@ On a Mac, use ⌘ instead of Ctrl.
 - **No sound?** Click anywhere in the app first: browsers only start audio after a click. Check that the layer isn't muted and that Master isn't at 0.
 - **The first Fancy playback takes a moment.** The instruments are being calculated; later plays start right away.
 - **A note won't stretch right after placing it.** That's the anti-resize delay, set in Settings.
-- **Can't edit a layer?** It may be hidden or locked. The card shows which.
+- **Can't edit a layer?** It may be hidden, locked or a reference of another layer. The card shows which.
 - **My work is gone after clearing browser data.** Auto-save lives in the browser. Use Save project for anything you want to keep.
 - **Video: "Fastest" isn't available.** Reading the file directly needs WebCodecs (Chrome or Edge) and an MP4 file. Other browsers and formats fall back to playing the video.
 
@@ -526,6 +548,7 @@ A project is JSON:
   - its new-note values: `nvV`, `nvPan`, `nvRev`, `nvMuf`;
   - its whole-layer values: `mxV`, `mxPan`, `mxRev`, `mxMuf`;
   - separate note colours: `colorWhite`, `colorBlack`.
+- A reference has `link`: the place of its original in `tracks`, counting from 0. `str` stretches it in time (2 = twice as long) and `len` makes its notes longer again, each 1 when missing; then `off` moves it later in ticks and `tp` up in semitones. Its `notes` and `pedal` hold what it plays, so older versions open it as an ordinary layer; on opening they are worked out again from the original.
 
 ### MIDI extensions
 
@@ -539,7 +562,7 @@ Saved MIDI files stay fully standard. Two extras ride along in ways other progra
 ### Tests
 
 Open `index.html#test` (or [`tests/index.html`](tests/index.html)) to run the test suite inside the app.
-- **Built-in tests** need no files and take a few seconds. They cover a synthetic falling-notes video, file round trips, time signatures, tempo changes, selection, split/join, hands and the layer sliders.
+- **Built-in tests** need no files and take a few seconds. They cover a synthetic falling-notes video, file round trips, time signatures, tempo changes, selection, split/join, references, hands and the layer sliders.
 - **Video tests** check the video import note by note against recorded results on six real tutorials, which you supply yourself.
 
 See [`tests/README.md`](tests/README.md).
