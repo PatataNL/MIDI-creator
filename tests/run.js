@@ -170,6 +170,32 @@ const UNIT=[
     const ok=pitch===2&&range===3&&split==='3+3'&&joined==='0+960'&&pasted==='4+6';
     return{ok,detail:`pitch ${pitch}, range ${range}, after split ${split}, joined ${joined}, after paste ${pasted}`};
   }],
+  ['References: follow their original, saved, exported and deleted',async()=>{
+    const A=newTrack({name:'A',notes:[nt(60,0,480),nt(64,480,480)],pedal:[{s:0,d:960}]}),key=t=>t.notes.map(n=>n.p+'@'+n.s).sort().join(' '),bad=[];
+    song.tracks=[A];S.active=A.id;S.sel.clear();
+    refLayer(A);const R=activeTrack();R.off=PPQ*4;R.tp=12;markEdited();
+    if(key(R)!=='72@1920 76@2400')bad.push('plays '+key(R));
+    if(JSON.stringify(R.pedal)!=='[{"s":1920,"d":960}]')bad.push('pedal '+JSON.stringify(R.pedal));
+    A.notes[0].p=62;A.notes.push(nt(67,960,480));markEdited();
+    const follows=key(R);if(follows!=='74@1920 76@2400 79@2880')bad.push('after changing the original: '+follows);
+    if(canEdit()||pickable().includes(R))bad.push('its notes can be changed');
+    // stretched to twice as long, then moved a beat earlier and an octave down as the arrow keys do
+    R.str=2;markEdited();const str=key(R),lens=R.notes.map(n=>n.d).join(',');
+    if(str!=='74@1920 76@2880 79@3840'||lens!=='960,960,960')bad.push('stretched: '+str+' lengths '+lens);
+    R.len=1.5;markEdited();const longer=R.notes.map(n=>n.d).join(',');if(longer!=='1440,1440,1440'||key(R)!==str)bad.push('longer notes: '+key(R)+' lengths '+longer);
+    delete R.len;markEdited();
+    S.sel.clear();nudge(-PPQ,-12);if(key(R)!=='62@1440 64@2400 67@3360')bad.push('moved: '+key(R));
+    delete R.str;R.off=PPQ*4;R.tp=12;markEdited();
+    refLayer(R);const R2=activeTrack();if(R2.ref!==A.id||key(R2)!==follows)bad.push('a reference of it does not link to the original');
+    const back=projFrom(JSON.parse(JSON.stringify(serProject({name:'x',tempos:song.tempos,ts:song.ts,sigs:[],marks:[],tracks:song.tracks}))));
+    if(back.tracks[1].ref!==back.tracks[0].id||key(back.tracks[1])!==follows)bad.push('the project file lost the link');
+    const bytes=writeMidi(song),r=parseMidi(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
+    if(r.groups.length!==3||key(r.groups[1])!==follows)bad.push('the MIDI file has '+(r.groups[1]?key(r.groups[1]):'no second layer'));
+    // deleting the original: the first reference keeps its notes and becomes the original of the other
+    deleteLayer(A);if(isRef(R)||key(R)!==follows||R2.ref!==R.id||key(R2)!==follows)bad.push('deleting the original broke its references');
+    makeIndependent(R2);R.notes[0].p=50;markEdited();if(isRef(R2)||key(R2)!==follows)bad.push('an independent layer still follows');
+    return{ok:!bad.length,detail:bad.length?bad.join(' · '):'moved and transposed, followed the original, kept in project and MIDI files, survived deleting the original'};
+  }],
   ['Hands: a two-hand piece split back into its hands',async()=>{
     let ok=0,n=0;for(const seed of [3,7,11]){const {rh,lh}=twoHands(seed),notes=rh.map(x=>({...x,h:0})).concat(lh.map(x=>({...x,h:1}))),lab=splitHands(notes);notes.forEach((x,i)=>{n++;if(lab[i]===x.h)ok++;});}
     const pct=ok/n*100;return{ok:pct>=98,detail:pct.toFixed(1)+'% of '+n+' notes in the right hand'};

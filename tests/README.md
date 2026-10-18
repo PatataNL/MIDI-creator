@@ -18,6 +18,7 @@ While the tests run, auto-save is switched off and your saved video settings are
 | Time signatures | Bar lines, beats and positions follow time-signature changes. |
 | Tempo changes | Times follow the tempo map. |
 | Split, join and select | Selecting by key and by time across layers, splitting at the playhead, joining, and copy/paste back into each note's own layer. |
+| References | A reference plays its original's notes and pedal moved and transposed, follows changes to the original, stretches, moves as a whole with the arrow keys, can't have single notes edited, links to the original when made from another reference, and keeps its link in a project file. MIDI export holds its notes; deleting the original leaves the references working; an independent layer no longer follows. |
 | Hands | A generated two-hand piece is split back into its hands (at least 98% right). |
 | Layer sliders | The new-note values and whole-layer values. |
 
